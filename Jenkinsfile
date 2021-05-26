@@ -7,11 +7,11 @@ pipeline {
 
     stages {
 
-        stage('Stop ms-article '){
+        stage('Stop ms-article-service '){
 
             steps{
                 // arrête du service
-                sh """echo max | sudo -S systemctl stop ms-article"""
+                sh """echo max | sudo -S systemctl stop ms-article-service"""
             }
 
         }
@@ -24,7 +24,7 @@ pipeline {
             }
         }
 
-        stage('Start ms-article '){
+        stage('Start ms-article-service '){
 
             steps{
 
@@ -32,7 +32,7 @@ pipeline {
                   sh """echo max | sudo -S systemctl daemon-reload"""
 
                 // lancement du service
-                sh """echo max | sudo -S systemctl start ms-article"""
+                sh """echo max | sudo -S systemctl start ms-article-service"""
             }
 
         }
