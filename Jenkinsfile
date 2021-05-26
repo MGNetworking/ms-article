@@ -11,7 +11,7 @@ pipeline {
 
             steps{
                 // arrête du service
-                //sh """echo max | sudo -S systemctl stop ms-article"""
+                sh """echo max | sudo -S systemctl stop ms-article"""
             }
 
         }
