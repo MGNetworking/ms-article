@@ -7,11 +7,11 @@ pipeline {
 
     stages {
 
-        stage('Stop eureka-service '){
+        stage('Stop ms-article '){
 
             steps{
                 // arrête du service
-                sh """echo max | sudo -S systemctl stop eureka-service"""
+                sh """echo max | sudo -S systemctl stop ms-article"""
             }
 
         }
@@ -24,7 +24,7 @@ pipeline {
             }
         }
 
-        stage('Start eureka-service '){
+        stage('Start ms-article '){
 
             steps{
 
@@ -32,7 +32,7 @@ pipeline {
                   sh """echo max | sudo -S systemctl daemon-reload"""
 
                 // lancement du service
-                sh """echo max | sudo -S systemctl start eureka-service"""
+                sh """echo max | sudo -S systemctl start ms-article"""
             }
 
         }

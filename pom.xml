@@ -12,7 +12,7 @@
 	<packaging>jar</packaging>
 
 	<name>ms-article</name>
-	<groupId>ghoverblog.ovh</groupId>
+	<groupId>org.ghoverblog.ovh</groupId>
 	<artifactId>blog-article</artifactId>
 	<version>1.0.0-V</version>
 	<description>Micro service article to blog</description>
