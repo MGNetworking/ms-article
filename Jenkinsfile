@@ -11,7 +11,7 @@ pipeline {
 
             steps{
                 // arrête du service
-                sh """echo max | sudo -S systemctl stop ms-article"""
+                //sh """echo max | sudo -S systemctl stop ms-article"""
             }
 
         }
@@ -29,10 +29,10 @@ pipeline {
             steps{
 
                 // rechargement des deamons
-                  sh """echo max | sudo -S systemctl daemon-reload"""
+                  //sh """echo max | sudo -S systemctl daemon-reload"""
 
                 // lancement du service
-                sh """echo max | sudo -S systemctl start ms-article"""
+               // sh """echo max | sudo -S systemctl start ms-article"""
             }
 
         }
