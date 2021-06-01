@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 
 @RepositoryRestResource
 @CrossOrigin(origins = "*")
-//@CrossOrigin("http://ghoverblog")
-//@CrossOrigin( origins = "http://localhost/*")
 public interface ArticleRepository extends JpaRepository<Article, Long> {
+
+    // List<Item> findByCategory(@Param("category") String category);
 }
