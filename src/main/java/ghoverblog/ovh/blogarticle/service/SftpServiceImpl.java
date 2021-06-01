@@ -20,7 +20,6 @@ public class SftpServiceImpl implements SftpService {
 
     FileSftp fileSftp = new FileSftp();
 
-
     @Override
     public void uploadFile(String pathLocalFile,
                            String pathRemoteFile) throws Exception {
