@@ -19,6 +19,7 @@ public class ArticleServiceImpl implements ArticleService {
 
     @Override
     public Article saveArticle(Article article) {
+
         return articleRepository.save(article);
     }
 
@@ -30,6 +31,7 @@ public class ArticleServiceImpl implements ArticleService {
 
     @Override
     public void saveAll(List<Article> articleList) {
+
         articleRepository.saveAll(articleList);
     }
 
