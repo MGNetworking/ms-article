@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Value;
 @ToString
 public class FileSftp {
 
-
     @Value("${sftp.host}")
     private String hostRemote;
 
