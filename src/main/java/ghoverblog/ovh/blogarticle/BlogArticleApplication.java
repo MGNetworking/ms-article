@@ -14,13 +14,39 @@ import org.springframework.boot.CommandLineRunner;
 
 @SpringBootApplication
 @EnableDiscoveryClient
+@Configuration
 public class BlogArticleApplication  {
+
+    // extends SpringBootServletInitializer
 
     @Autowired
     private ArticleService articleService;
 
+
     public static void main(String[] args) {
         SpringApplication.run(BlogArticleApplication.class, args);
     }
+
+
+
+/*
+implements CommandLineRunner
+@Override
+    public void run(String... args) throws Exception {
+
+        // ajoute en base de donnée une list d'article
+
+        add adl = new add();
+
+        System.out.println("*****************************");
+
+        adl.getList().forEach(l -> l.toString());
+
+        System.out.println("*****************************");
+
+        articleService.saveAll(adl.getList());
+    }
+*/
+
 
 }

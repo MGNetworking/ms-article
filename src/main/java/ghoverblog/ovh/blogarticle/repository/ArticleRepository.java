@@ -11,7 +11,8 @@ import org.springframework.data.rest.core.annotation.RestResource;
 
 import java.util.List;
 
-@CrossOrigin(origins = "*git ")
+@RepositoryRestResource
+@CrossOrigin(origins = "*")
 public interface ArticleRepository extends JpaRepository<Article, Long> {
 
 /*
@@ -19,5 +20,4 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
     @Query("select art from Article art  where art.name like :x")
     public List<Article> searchArticleTitle(@Param("x") String x);
  */
-
 }
