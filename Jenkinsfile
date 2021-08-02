@@ -20,7 +20,7 @@ pipeline {
 
             steps{
             sh """mvn -version"""
-            sh """mvn clean install _P prod"""
+            sh """mvn clean install -P prod"""
             }
         }
 
