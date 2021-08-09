@@ -8,7 +8,7 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 
 
 @Configuration
-public class persistanceConf implements RepositoryRestConfigurer {
+public class PersistanceConfiguration implements RepositoryRestConfigurer {
 
     /**
      * Cette configuration permet d'exposer l'id de l'objet article.
