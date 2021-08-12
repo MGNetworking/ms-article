@@ -7,9 +7,11 @@ import ArticleWebService.entities.DTOArticle;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -22,12 +24,9 @@ public class ControllerArticle {
 
     @Autowired
     private ArticleRepository articleRepository;
-    private Environment environment;
 
-    public ControllerArticle(ArticleRepository articleRP, Environment env) {
-        this.articleRepository = articleRP;
-        this.environment = env;
-    }
+    @Autowired
+    private Environment environment;
 
     @GetMapping("/getListArticle")
     public List<Article> articleList() {
@@ -37,37 +36,41 @@ public class ControllerArticle {
     }
 
     @GetMapping("/getListArticlePage")
-    public Article listArticle(@RequestParam(name = "page") int page,
-                               @RequestParam(name = "size") int size) {
+    public ResponseEntity<Page<Article>> listArticle(@RequestParam(defaultValue  = "0", name = "page") int page,
+                                                     @RequestParam(defaultValue  = "0", name = "size") int size) {
 
         if ((page < 0 || size <= 0)) {
-            log.error(String.format("page number %d", page));
-            log.error(String.format("Elements Size %d", size));
             throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Your parameter in correcte ");
         }
 
         Pageable pageable = PageRequest.of(page, size);
 
-        log.info("Pageable : "+ pageable);
+        log.info("Pageable : " + pageable);
 
-        log.info("articleRepository : "+ articleRepository);
+        log.info("articleRepository : " + articleRepository);
 
-        return articleRepository
-                .findAllArticles(pageable)
-                .orElseThrow(() -> new ArticleNotFoundException("No items were found matching your search"));
+        Page<Article> articlePage = articleRepository
+                .findAllArticleWithPagination(pageable);
+
+        if (articlePage == null) {
+            throw new ArticleNotFoundException("No items were found matching your search");
+        }
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(articlePage);
     }
 
     @GetMapping("/getArticle")
-    public Article getArticle(@RequestParam(value = "idArticle") Long idArticle) {
-        log.info("Get article by id : " + idArticle);
+    public Article getArticle(@RequestParam(required = false, value = "idArticle") Long articleId) {
 
-        if (idArticle == null || idArticle <= 0) {
+        if (articleId == null || articleId <= 0) {
             throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Error to id article");
         }
 
         return articleRepository
-                .findById(idArticle)
-                .orElseThrow(() -> new ArticleNotFoundException(idArticle));
+                .findById(articleId)
+                .orElseThrow(() -> new ArticleNotFoundException(articleId));
 
     }
 
