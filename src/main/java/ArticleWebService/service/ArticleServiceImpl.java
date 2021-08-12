@@ -1,7 +1,7 @@
-package ghoverblog.ovh.blogarticle.service;
+package ArticleWebService.service;
 
-import ghoverblog.ovh.blogarticle.entities.Article;
-import ghoverblog.ovh.blogarticle.repository.ArticleRepository;
+import ArticleWebService.entities.Article;
+import ArticleWebService.repository.ArticleRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,7 +13,12 @@ public class ArticleServiceImpl implements ArticleService {
 
     private ArticleRepository articleRepository;
 
+    public ArticleServiceImpl() {
+
+    }
+
     public ArticleServiceImpl(ArticleRepository articleRepository) {
+
         this.articleRepository = articleRepository;
     }
 

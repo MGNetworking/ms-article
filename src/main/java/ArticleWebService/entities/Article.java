@@ -1,4 +1,4 @@
-package ghoverblog.ovh.blogarticle.entities;
+package ArticleWebService.entities;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,6 +1,6 @@
-package ghoverblog.ovh.blogarticle.service;
+package ArticleWebService.service;
 
-import ghoverblog.ovh.blogarticle.entities.Article;
+import ArticleWebService.entities.Article;
 
 import java.util.List;
 

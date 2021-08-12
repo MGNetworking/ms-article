@@ -20,13 +20,16 @@
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <spring-cloud.version>2020.0.2</spring-cloud.version>
+        <maven.compiler.target>${maven.compiler.source}</maven.compiler.target>
+
         <jar.finalName>${project.name}</jar.finalName>
+        <spring-cloud.version>2020.0.2</spring-cloud.version>
+
+        <junit-jupiter.version>5.5.2</junit-jupiter.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
-    <!-- Gestion des profiles -->
+    <!-- Managing profiles -->
     <profiles>
 
         <profile>
@@ -45,6 +48,7 @@
                 <activatedProperties>prod</activatedProperties>
             </properties>
         </profile>
+
     </profiles>
 
     <dependencies>
@@ -56,11 +60,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-rest</artifactId>
         </dependency>
 
         <dependency>
@@ -83,6 +82,7 @@
             <artifactId>spring-cloud-starter-openfeign</artifactId>
         </dependency>
 
+        <!-- as developement tools -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
@@ -102,12 +102,11 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- dependence to testing for Spring -->
         <dependency>
-            <!-- test Unitaire -->
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
-
             <!-- exclude junit 4 -->
             <exclusions>
                 <exclusion>
@@ -115,7 +114,6 @@
                     <artifactId>junit</artifactId>
                 </exclusion>
             </exclusions>
-
         </dependency>
 
         <!-- junit 5 -->
@@ -124,35 +122,26 @@
             <artifactId>junit-jupiter-api</artifactId>
             <scope>test</scope>
         </dependency>
-
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
+            <version>${junit-jupiter.version}</version>
             <scope>test</scope>
         </dependency>
 
-        <!-- end Unitaire teste -->
 
-        <!-- JSch nous permet d'utiliser l'authentification par mot de passe ou
-        l'authentification par clé publique pour accéder à un serveur distant. -->
+        <!-- This 2 dependence its useful for used keycloak -->
+        <!-- dependence for adaptateur keycloak -->
         <dependency>
-            <groupId>com.jcraft</groupId>
-            <artifactId>jsch</artifactId>
-            <version>0.1.55</version>
-        </dependency>
-
-        <!-- dependance pour l'adaptateur keycloak -->
-<!--        <dependency>
             <groupId>org.keycloak</groupId>
             <artifactId>keycloak-spring-boot-starter</artifactId>
             <version>12.0.1</version>
         </dependency>
-
+        <!-- dependence for security -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
-        </dependency>-->
-
+        </dependency>
 
 
     </dependencies>
@@ -170,6 +159,7 @@
 
     <build>
         <plugins>
+
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

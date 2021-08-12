@@ -1,4 +1,4 @@
-package ghoverblog.ovh.blogarticle.entities;
+package ArticleWebService.entities;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,7 +9,7 @@ import java.util.Date;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class RegisterArticle {
+public class DTOArticle {
 
     private String userId;
 
