@@ -6,11 +6,17 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContexts;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.context.annotation.Profile;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
@@ -26,16 +32,14 @@ import java.security.NoSuchAlgorithmException;
 /**
  * @SpringBootTest for integration testing
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest()
+@WebMvcTest(controllers = ControllerArticle.class)
 public class ControllerArticleTest {
-
-    @LocalServerPort
-    int randomServerPort;
 
     @Autowired
     private TestRestTemplate restTemplate;
 
-
+    
     @Test
     public void getArticleTest() throws ResponseStatusException, URISyntaxException {
 
@@ -44,7 +48,7 @@ public class ControllerArticleTest {
                 HttpStatus.INTERNAL_SERVER_ERROR);
 
         String parameter = "?idArticle=0";
-        String basUrl = String.format("http://localhost:8077/ARTICLE-SERVICE/",
+        String basUrl = String.format("https://localhost:8077/ARTICLE-SERVICE/",
                 "/getArticle",
                 parameter);
 
