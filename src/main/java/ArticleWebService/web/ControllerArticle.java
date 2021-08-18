@@ -5,6 +5,7 @@ import ArticleWebService.entities.Article;
 import ArticleWebService.repository.ArticleRepository;
 import ArticleWebService.entities.DTOArticle;
 
+import ArticleWebService.service.ArticleService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
@@ -24,19 +25,9 @@ import java.util.List;
 public class ControllerArticle {
 
     @Autowired
-    private ArticleRepository articleRepository;
+    private ArticleService articleService;
 
-    @Autowired
-    private Environment environment;
-
-    @GetMapping("/getListArticle")
-    public List<Article> articleList() {
-
-        log.info("Get list articles");
-        return articleRepository.findAll();
-    }
-
-    @GetMapping("/getListArticlePage")
+    @GetMapping("/getPaginationArticle")
     public ResponseEntity<Page<Article>> listArticle(@RequestParam(defaultValue  = "0", name = "page") int page,
                                                      @RequestParam(defaultValue  = "0", name = "size") int size) {
 
@@ -44,22 +35,9 @@ public class ControllerArticle {
             throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Your parameter in correcte ");
         }
 
-        Pageable pageable = PageRequest.of(page, size);
-
-        log.info("Pageable : " + pageable);
-
-        log.info("articleRepository : " + articleRepository);
-
-        Page<Article> articlePage = articleRepository
-                .findAllArticleWithPagination(pageable);
-
-        if (articlePage == null) {
-            throw new ArticleNotFoundException("No items were found matching your search");
-        }
-
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(articlePage);
+                .body(this.articleService.getAllArticlePageable(page, size));
     }
 
     @GetMapping("/getArticle")
@@ -69,18 +47,22 @@ public class ControllerArticle {
             throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Error to id article");
         }
 
-        return articleRepository
-                .findById(articleId)
+        return this.articleService
+                .getArticleById(articleId)
                 .orElseThrow(() -> new ArticleNotFoundException(articleId));
+
 
     }
 
+/*
     @PostMapping("/saveArticle")
     public Article saveArticle(@RequestBody DTOArticle DTOArticle) {
 
         log.info("save articles");
 
         // faire le mapping de l'objet article et RegisterArticle
+        // TODO object Mapper
+        // TODO Creation du service avec @Transactional
         Article article = new Article();
         article.setUserId(DTOArticle.getUserId());
         article.setTitre(DTOArticle.getTitre());
@@ -92,13 +74,10 @@ public class ControllerArticle {
         // modification du nom de l'image par Id de l'article
         articleDb.setPath(articleDb.getArticleId().toString());
 
-        // enregistrement dans les asset de spring l'image avec le nouveau nom
-
-        // Ajout du path image sur le server apache via le service sftp
-
 
         return articleDb;
     }
+*/
 
 
 }
