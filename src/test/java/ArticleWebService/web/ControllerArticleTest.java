@@ -36,7 +36,6 @@ public class ControllerArticleTest {
     private TestRestTemplate restTemplate;
 
 
-/*
     @Test
     public void getArticleTest() throws ResponseStatusException, URISyntaxException {
 
@@ -45,42 +44,16 @@ public class ControllerArticleTest {
                 HttpStatus.INTERNAL_SERVER_ERROR);
 
         String parameter = "?idArticle=0";
-        String basUrl = String.format("http://localhost:8077/ARTICLE-SERVICE/getArticle",
+        String basUrl = String.format("http://localhost:8077/ARTICLE-SERVICE/",
+                "/getArticle",
                 parameter);
 
         URI uri = new URI(basUrl);
 
-        // this part allow to ignore the ssl certification
-        try {
-            SSLContext sslContext = SSLContexts.custom()
-                    .loadTrustMaterial(null, (chain, authType) -> true)
-                    .build();
-
-            SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(
-                   sslContext,
-                    new String[]{"TLSv1"},
-                    null,
-                    new NoopHostnameVerifier());
-
-            CloseableHttpClient httpClient = HttpClients.custom().setSSLSocketFactory(sslsf).build();
-            HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
-            requestFactory.setHttpClient(httpClient);
-
-            this.restTemplate.getRestTemplate().setRequestFactory(requestFactory);
-
-
-
-
-        } catch (NoSuchAlgorithmException | KeyStoreException | KeyManagementException ex) {
-
-            Assertions.assertNotEquals(406, result.getStatusCode());
-        }
-
         result = this.restTemplate.getForEntity(uri, String.class);
-        Assertions.assertEquals(406, result.getStatusCode());
+        Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
 
     }
-*/
 
 
 }

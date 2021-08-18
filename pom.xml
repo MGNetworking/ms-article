@@ -20,16 +20,21 @@
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <jar.finalName>${project.name}</jar.finalName>
         <maven.compiler.target>${maven.compiler.source}</maven.compiler.target>
 
-        <jar.finalName>${project.name}</jar.finalName>
         <spring-cloud.version>2020.0.2</spring-cloud.version>
-
         <junit-jupiter.version>5.5.2</junit-jupiter.version>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <maven.compiler.showDeprecation>true</maven.compiler.showDeprecation>
+        <maven.compiler.showWarnings>true</maven.compiler.showWarnings>
+
     </properties>
 
+    <!--============================= -->
     <!-- Managing profiles -->
+    <!--============================= -->
     <profiles>
 
         <profile>
@@ -50,8 +55,11 @@
         </profile>
 
     </profiles>
-
+    <!--============================= -->
+    <!--         dependence           -->
+    <!--============================= -->
     <dependencies>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
@@ -102,6 +110,13 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+
         <!-- dependence to testing for Spring -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -129,7 +144,6 @@
             <scope>test</scope>
         </dependency>
 
-
         <!-- This 2 dependence its useful for used keycloak -->
         <!-- dependence for adaptateur keycloak -->
         <dependency>
@@ -143,8 +157,11 @@
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
-
     </dependencies>
+
+    <!--============================= -->
+    <!-- Management                   -->
+    <!--============================= -->
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -157,6 +174,9 @@
         </dependencies>
     </dependencyManagement>
 
+    <!--============================= -->
+    <!-- Pluging                      -->
+    <!--============================= -->
     <build>
         <plugins>
 
