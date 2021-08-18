@@ -39,7 +39,7 @@ public class ControllerArticleTest {
     @Autowired
     private TestRestTemplate restTemplate;
 
-    
+/*
     @Test
     public void getArticleTest() throws ResponseStatusException, URISyntaxException {
 
@@ -57,7 +57,7 @@ public class ControllerArticleTest {
         result = this.restTemplate.getForEntity(uri, String.class);
         Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
 
-    }
+    }*/
 
 
 }
