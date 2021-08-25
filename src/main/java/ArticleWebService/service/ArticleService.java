@@ -1,6 +1,8 @@
 package ArticleWebService.service;
 
 import ArticleWebService.entities.Article;
+import ArticleWebService.entities.ArticleDto;
+import ArticleWebService.entities.FileResponseClient;
 import com.jayway.jsonpath.Option;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -10,14 +12,10 @@ import java.util.Optional;
 
 public interface ArticleService {
 
+    Page<Article> findAllArticles(int page, int size );
+    Optional<Article> findArticleById(Long id);
 
-    Page<Article> getAllArticlePageable(int page, int size );
-    Optional<Article> getArticleById(Long id);
-
-    Option PostArticle();
-    Option PuttArticle();
-
-    Option saveArticle(Article article);
-    Option deleteArticle(Article article);
+    boolean saveArticle(ArticleDto article);
+    Option deleteArticle(ArticleDto article);
 
 }

@@ -2,22 +2,27 @@ package ArticleWebService.web;
 
 import ArticleWebService.Exception.ArticleNotFoundException;
 import ArticleWebService.entities.Article;
-import ArticleWebService.repository.ArticleRepository;
-import ArticleWebService.entities.DTOArticle;
 
+import ArticleWebService.entities.ArticleDto;
+import ArticleWebService.entities.ArticleModel;
 import ArticleWebService.service.ArticleService;
 import lombok.extern.slf4j.Slf4j;
+import org.modelmapper.ModelMapper;
+import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
+
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
+import javax.validation.Valid;
+import java.util.Date;
+
 
 @RestController
 @CrossOrigin(origins = "*")
@@ -27,9 +32,16 @@ public class ControllerArticle {
     @Autowired
     private ArticleService articleService;
 
-    @GetMapping("/getPaginationArticle")
-    public ResponseEntity<Page<Article>> listArticle(@RequestParam(defaultValue  = "0", name = "page") int page,
-                                                     @RequestParam(defaultValue  = "0", name = "size") int size) {
+    /**
+     * Allow getting pagination of Articles
+     *
+     * @param page to primitive type int, number of page
+     * @param size to primitive type int, number of article
+     * @return An Object JsonPath of Articles
+     */
+    @GetMapping("/getAllArticles")
+    public ResponseEntity<Page<Article>> listArticle(@RequestParam(defaultValue = "0", name = "page") int page,
+                                                     @RequestParam(defaultValue = "0", name = "size") int size) {
 
         if ((page < 0 || size <= 0)) {
             throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Your parameter in correcte ");
@@ -37,47 +49,69 @@ public class ControllerArticle {
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(this.articleService.getAllArticlePageable(page, size));
+                .body(this.articleService.findAllArticles(page, size));
     }
 
-    @GetMapping("/getArticle")
-    public Article getArticle(@RequestParam(required = false, value = "idArticle") Long articleId) {
+    /**
+     * Allow getting an article by id
+     *
+     * @param id to Object type Long, id of Article
+     * @return An Object JsonPath of Article
+     */
+    @GetMapping("/getArticle/{id}")
+    public Article getArticle(@PathVariable Long id) {
 
-        if (articleId == null || articleId <= 0) {
+        if (id == null || id <= 0) {
             throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Error to id article");
         }
 
         return this.articleService
-                .getArticleById(articleId)
-                .orElseThrow(() -> new ArticleNotFoundException(articleId));
+                .findArticleById(id)
+                .orElseThrow(() -> new ArticleNotFoundException(id));
+
+    }
+
+    @PostMapping(value = "/test")
+    public ResponseEntity<String> savetest(@RequestParam("formulaire") MultipartFile[] formulaire) {
+
+
+        return ResponseEntity.ok("Success Formulaire :" + formulaire );
 
 
     }
 
-/*
+    //@RequestParam("image") MultipartFile file
     @PostMapping("/saveArticle")
-    public Article saveArticle(@RequestBody DTOArticle DTOArticle) {
+    //@PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ArticleModel> saveArticle(@Valid
+                                                    @RequestBody ArticleModel articleModel,
+                                                    @RequestParam("image") MultipartFile file) {
 
-        log.info("save articles");
+        log.info("Article model : " + articleModel);
+        log.info("Multipart file : " + file);
 
-        // faire le mapping de l'objet article et RegisterArticle
-        // TODO object Mapper
-        // TODO Creation du service avec @Transactional
-        Article article = new Article();
-        article.setUserId(DTOArticle.getUserId());
-        article.setTitre(DTOArticle.getTitre());
-        article.setPath(DTOArticle.getPath());
-
-        // Get article pour la modification du path de l'image
-        Article articleDb = articleRepository.save(article);
-
-        // modification du nom de l'image par Id de l'article
-        articleDb.setPath(articleDb.getArticleId().toString());
+        ModelMapper modelMapper = new ModelMapper();
+        modelMapper.getConfiguration()
+                .setMatchingStrategy(MatchingStrategies.STRICT);
 
 
-        return articleDb;
+        // mapping to input data
+        ArticleDto articleDto = modelMapper.map(articleModel, ArticleDto.class);
+        articleDto.setFileImage(file);
+
+        if (this.articleService.saveArticle(articleDto)) {
+
+            log.info("Response Ok ");
+            return ResponseEntity
+                    .status(HttpStatus.OK).body(articleModel);
+        } else {
+
+            log.error("Response " + HttpStatus.BAD_REQUEST);
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST).body(articleModel);
+        }
+
     }
-*/
 
 
 }

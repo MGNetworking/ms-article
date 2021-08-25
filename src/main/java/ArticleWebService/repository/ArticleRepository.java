@@ -12,8 +12,4 @@ import org.springframework.data.jpa.repository.Query;
 @Repository
 @CrossOrigin(origins = "*")
 public interface ArticleRepository extends PagingAndSortingRepository<Article, Long> {
-
-/*    @Query(value = "SELECT u from Article u ORDER BY article_id")
-    Option findAllArticleWithPagination(Pageable pageable);*/
-
 }

@@ -9,27 +9,31 @@ import javax.persistence.*;
 import java.util.Date;
 
 @Entity
-@Data @NoArgsConstructor @AllArgsConstructor @ToString
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString
 @Table(name = "article")
 public class Article {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "article_id")
     private Long articleId;
 
-    @Column(name = "user_id",nullable = false)
+    @Column(name = "user_id", nullable = false)
     private String userId;
 
-    @Column(name = "titre",nullable = false)
+    @Column(name = "titre", nullable = false)
     private String titre;
 
-    @Column(name = "texte",nullable = false)
+    @Column(name = "texte", nullable = false)
     private String texte;
 
-    @Column(name = "date_creation",nullable = false)
+    @Column(name = "date_creation", nullable = false)
     private Date date;
 
-    @Column(name = "path_image",nullable = false)
+    @Column(name = "path_image", nullable = false)
     private String path;
 
 }

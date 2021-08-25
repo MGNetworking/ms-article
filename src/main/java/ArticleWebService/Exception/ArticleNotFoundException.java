@@ -2,6 +2,8 @@ package ArticleWebService.Exception;
 
 public class ArticleNotFoundException extends RuntimeException {
 
+    private static final long serialVersionUID = -2028778202108312111L;
+
     public ArticleNotFoundException(Long id) {
         super(String.format("Article with id %d not found", id));
     }

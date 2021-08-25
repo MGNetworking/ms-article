@@ -17,6 +17,7 @@ public class KeycloakApaterConfi {
      */
     @Bean
     public KeycloakSpringBootConfigResolver configResolver() {
+
         return new KeycloakSpringBootConfigResolver();
     }
 }
