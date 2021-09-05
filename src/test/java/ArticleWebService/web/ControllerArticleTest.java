@@ -29,7 +29,7 @@ public class ControllerArticleTest {
     public void testGetArticle() throws Exception {
 
         mockMvc.perform(MockMvcRequestBuilders
-                        .get("/getArticle/16"))
+                        .get("/article/getArticle/16"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.titre", containsString("L'IA")));
     }
@@ -39,7 +39,7 @@ public class ControllerArticleTest {
     public void testGetAllArticles() throws Exception {
 
         mockMvc.perform(MockMvcRequestBuilders
-                        .get("/getAllArticles?page=0&size=6"))
+                        .get("/article/getAllArticles?page=0&size=6"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].articleId", is(10)))
                 .andExpect(jsonPath("$.content[0].titre", containsString("Fini la formation")));
