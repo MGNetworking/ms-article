@@ -18,6 +18,7 @@ import org.springframework.security.web.access.channel.ChannelProcessingFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.session.RegisterSessionAuthenticationStrategy;
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
+import org.springframework.security.web.header.writers.StaticHeadersWriter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -29,6 +30,7 @@ import java.util.Arrays;
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 @Slf4j
 public class KeycloakSecurityService extends KeycloakWebSecurityConfigurerAdapter {
+
 
     /**
      * charge le SimpleAuthorityMapper de s'assurer que les rôles ne sont pas préfixés par ROLE_
@@ -76,19 +78,21 @@ public class KeycloakSecurityService extends KeycloakWebSecurityConfigurerAdapte
     protected void configure(HttpSecurity http) throws Exception {
 
         super.configure(http); // garde la conf par defaut
+
+        // Doit etre disable si response 403
         http.csrf().disable();
 
+
         /**
+         Les request Cros (Cross Origin) Est gérer par la Gateway au niveua du WebFilter
          http.cors();
          http.headers().frameOptions().disable();
-
+         http.headers().frameOptions().sameOrigin();
          */
 
-        //http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         http.authorizeRequests()
-                .antMatchers("/getArticle/*", "/getAllArticles", "/test").permitAll()
+                .antMatchers("/getArticle/*", "/getAllArticles", "/test", "/saveArticle").permitAll()
                 .antMatchers("/saveArticle").authenticated();
-
     }
 
 

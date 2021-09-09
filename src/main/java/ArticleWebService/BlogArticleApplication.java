@@ -25,4 +25,6 @@ public class BlogArticleApplication {
         SpringApplication.run(BlogArticleApplication.class, args);
     }
 
+
+
 }
