@@ -4,19 +4,19 @@ pipeline {
     tools{
         maven "3.8.1"
     }
-
+/**
     stages {
 
-/**
+
         stage('Stop ms-article-service '){
 
             steps{
                 // arrête du service
                 sh """echo max | sudo -S systemctl stop ms-article-service"""
             }
-*/
-        }
 
+        }
+*/
         stage('build ...'){
 
             steps{
