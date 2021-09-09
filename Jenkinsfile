@@ -7,13 +7,14 @@ pipeline {
 
     stages {
 
+/**
         stage('Stop ms-article-service '){
 
             steps{
                 // arrête du service
                 sh """echo max | sudo -S systemctl stop ms-article-service"""
             }
-
+*/
         }
 
         stage('build ...'){
