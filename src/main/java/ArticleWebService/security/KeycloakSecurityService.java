@@ -84,7 +84,7 @@ public class KeycloakSecurityService extends KeycloakWebSecurityConfigurerAdapte
 
 
         /**
-         Les request Cros (Cross Origin) Est gérer par la Gateway au niveua du WebFilter
+         Les request Cros (Cross Origin) Est gérer par la Gateway au niveau du WebFilter
          http.cors();
          http.headers().frameOptions().disable();
          http.headers().frameOptions().sameOrigin();
