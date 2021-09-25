@@ -11,7 +11,7 @@ public class KeycloakApaterConfi {
     /**
      * Permet la gestion de configuration base sur spring boot
      * et donc va recherche sa configuration dans le fichier
-     * application.properties et non keycloak.json
+     * bootstrap.yml et non keycloak.json
      *
      * @return
      */
