@@ -1,7 +1,6 @@
 package ArticleWebService.web;
 
 import ArticleWebService.component.ConfigurationArticle;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.web.bind.annotation.GetMapping;
