@@ -21,7 +21,7 @@ pipeline {
 
             steps{
             sh """mvn -version"""
-            sh """mvn clean install -P prod"""
+            sh """mvn clean install -Dspring-boot.run.jvmArguments=-Dspring.profiles.active=prod"""
             }
         }
 
