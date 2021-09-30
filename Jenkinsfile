@@ -8,12 +8,7 @@ pipeline {
     stages {
 
 
-        stage('Stop service msarticle '){
 
-            steps{
-                // arrête du service
-                sh """echo max | sudo -S systemctl stop msarticle"""
-            }
 
         }
 
