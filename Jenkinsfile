@@ -8,16 +8,16 @@ pipeline {
     stages {
 
 
-        stage('Stop ms-article-service '){
+        stage('Stop service msarticle '){
 
             steps{
                 // arrête du service
-                sh """echo max | sudo -S systemctl stop ms-article-service"""
+                sh """echo max | sudo -S systemctl stop msarticle"""
             }
 
         }
 
-        stage('build ...'){
+        stage('build service msarticle...'){
 
             steps{
             sh """mvn -version"""
@@ -25,7 +25,7 @@ pipeline {
             }
         }
 
-        stage('Start ms-article-service '){
+        stage('Start service msarticle '){
 
             steps{
 
@@ -33,7 +33,7 @@ pipeline {
                   sh """echo max | sudo -S systemctl daemon-reload"""
 
                 // lancement du service
-                sh """echo max | sudo -S systemctl start ms-article-service"""
+                sh """echo max | sudo -S systemctl start msarticle"""
             }
 
         }
