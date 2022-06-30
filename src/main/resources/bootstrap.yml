@@ -8,7 +8,7 @@
 # Ce qui donnera pour ce micro service avec le profile dev  http://localhost:8088/ms_article/dev
 spring:
   application:
-    name: MSARTICLE
+    name: msarticle
   cloud:
     config:
       uri: http://192.168.1.99:8089
