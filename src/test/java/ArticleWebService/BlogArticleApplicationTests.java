@@ -10,8 +10,11 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @SpringBootTest
 class BlogArticleApplicationTests {
 
+	/**
+
 	@Test
 	void contextLoads() {
 	}
-
+	 *
+	 */
 }
