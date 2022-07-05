@@ -11,6 +11,7 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.Date;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -24,7 +25,6 @@ public class ArticleModel {
     @NotEmpty(message = "The user id must be present")
     private String userId;
 
-
     @NotNull(message = "The Title must not be null")
     @NotEmpty(message = "The Title can not be empty")
     @Size(min = 3, max = 50, message = "The title must be equal or grater than 3 and 50 characters ")
@@ -35,12 +35,12 @@ public class ArticleModel {
     @Size(min = 20, max = 10000, message = "The article must be equal or grater than 3 and 50 characters ")
     private String texte;
 
-/*    @NotNull(message = "The file image must not be null")
-    @NotEmpty(message = "The file must contain the image of article")*/
-    private MultipartFile fileImage;
+    @NotNull(message = "The file image must not be null")
+    @NotEmpty(message = "The file must contain the image of article")
+    private List<MultipartFile> listImages;
 
-/*    @NotNull(message = "A date for article must not be null")
-    @NotEmpty(message = "A date for article is obligatory")*/
+    @NotNull(message = "A date for article must not be null")
+    @NotEmpty(message = "A date for article is obligatory")
     private Date date;
 
 }

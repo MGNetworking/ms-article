@@ -2,17 +2,27 @@ package ArticleWebService.web;
 
 import ArticleWebService.Exception.ArticleNotFoundException;
 import ArticleWebService.entities.Article;
+import ArticleWebService.entities.ArticleModel;
 import ArticleWebService.service.ArticleService;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.tomcat.jni.File;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+
+import javax.validation.Valid;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
 
 //@CrossOrigin(origins = "*")
 @RestController
@@ -63,26 +73,48 @@ public class ControllerArticle {
 
     }
 
-    @PostMapping(value = "/test")
-    public ResponseEntity<String> savetest(@RequestParam("formulaire") MultipartFile[] formulaire) {
-
-        log.info("Success Formulaire :" + formulaire);
-
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(formulaire.toString());
-
-    }
-
     @ApiOperation(value = "Creates an article", response = Article.class)
-    @PostMapping(value = "/saveArticle")
+    @PostMapping(value = "/saveArticle",
+            consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_JSON_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE})
     //@PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> saveArticle(@RequestParam( name = "article", required = false) String article
-                                              //@RequestParam("image") MultipartFile image
-                                              ) throws Exception {
+    public ResponseEntity<String> saveArticle(@RequestPart("images") List<MultipartFile> images,
+                                              @RequestPart("formulaire") String article
+    ) throws Exception {
 
-        log.info("Article name : " + article);
-        //log.info("Multipart file : " + image.getOriginalFilename());
+
+        log.info("-----------------------------");
+        log.info("Le formulaire : " + article.toString());
+
+
+
+        for (MultipartFile multipartFile : images) {
+            log.info("name : " + multipartFile.getName());
+            log.info("Resource : " + multipartFile.getResource());
+            log.info("Size : " + multipartFile.getSize());
+            log.info("InputStream : " + multipartFile.getInputStream());
+            log.info("nom du fichier  : " + multipartFile.getOriginalFilename());
+            log.info("Bytes  : " + multipartFile.getBytes());
+
+
+            String root = "/home/maxime/Developpement/ghoverblog/uploads/articles/images";
+            Path path = Paths.get(root);
+
+            try{
+
+                this.articleService.saveArticle(article, images);
+
+                Files.copy(multipartFile.getInputStream(),
+                        path.resolve(multipartFile.getOriginalFilename()));
+            }catch (Exception ex){
+                log.error("Erreur upload " + multipartFile.getOriginalFilename());
+            }
+
+
+        }
+
+        log.info("-----------------------------");
+
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
