@@ -91,7 +91,7 @@ public class KeycloakSecurityService extends KeycloakWebSecurityConfigurerAdapte
          */
 
         http.authorizeRequests()
-                .antMatchers("/getArticle/*", "/getAllArticles", "/test", "/saveArticle").permitAll()
+                .antMatchers("/getArticle/*", "/getAllArticles", "/test","/saveImages", "/saveArticle").permitAll()
                 .antMatchers("/saveArticle").authenticated();
     }
 

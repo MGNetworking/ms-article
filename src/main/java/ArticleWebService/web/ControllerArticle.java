@@ -18,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.validation.Valid;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -53,6 +54,42 @@ public class ControllerArticle {
                 .status(HttpStatus.OK)
                 .body(this.articleService.findAllArticles(page, size));
     }
+
+    @PostMapping("/saveImages")
+    public ResponseEntity<String> saveImage(@RequestParam(value = "images", required = false) MultipartFile images) throws IOException {
+
+
+        if (images != null){
+            log.info("images objet :" + images);
+            log.info("Originiale Filem name : " + images.getOriginalFilename());
+            log.info("Size : " + images.getSize());
+            log.info("Content Type  :" + images.getContentType());
+            log.info(String.valueOf(images.getResource()));
+        }
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(images.getOriginalFilename());
+
+    }
+
+    @DeleteMapping ("/removeImages")
+    public ResponseEntity<String> removeImages(@RequestParam("images") MultipartFile images) throws IOException {
+
+        log.info("images objet :" + images);
+
+        log.info(images.getOriginalFilename());
+        log.info("Content Type  :" + images.getContentType());
+        log.info(String.valueOf(images.getResource()));
+
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(images.getOriginalFilename());
+
+    }
+
+
 
     /**
      * Allow getting an article by id
