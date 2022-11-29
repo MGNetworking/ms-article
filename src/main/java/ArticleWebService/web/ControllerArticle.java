@@ -55,7 +55,7 @@ public class ControllerArticle {
                 .body(this.articleService.findAllArticles(page, size));
     }
 
-    @PostMapping("/saveImages")
+    @PostMapping(path = "/saveImages")
     public ResponseEntity<String> saveImage(@RequestParam(value = "images", required = false) MultipartFile images) throws IOException {
 
 
@@ -69,7 +69,7 @@ public class ControllerArticle {
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(images.getOriginalFilename());
+                .body("https://ghoverblog.ovh/images/101.jpg");
 
     }
 
