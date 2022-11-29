@@ -98,9 +98,6 @@ public class ControllerArticleTest {
                             String.valueOf(MediaType.IMAGE_JPEG),      // le type de ficher
                             imageByte);                                // le byte code de l'image
 
-            log.info(mockMultipartFile.getContentType());
-            log.info(String.valueOf(mockMultipartFile.getInputStream()));
-
             // appel du point de terminaison
             mockMvc.perform(multipart("/article/saveImages").file(mockMultipartFile))
                     .andExpect(status().isCreated());
