@@ -21,9 +21,11 @@ public class ConfigurationArticle {
 
         Map<String, String> param = new HashMap<>();
 
+        //
         param.put("name", environment.getProperty("spring.application.name"));
         param.put("profile", environment.getProperty("info.profile"));
         param.put("server port", environment.getProperty("server.port"));
+        param.put("storage article location", environment.getProperty("storage-article.location"));
 
         // logging
         param.put("path logging file", environment.getProperty("logging.file.path"));
@@ -37,6 +39,7 @@ public class ConfigurationArticle {
         // data jpa
         param.put("datasource url", environment.getProperty("spring.datasource.url"));
         param.put("datasource username", environment.getProperty("spring.datasource.username"));
+
         if (!environment.getProperty("info.profile").equals("prod")){
             param.put("datasource password", environment.getProperty("spring.datasource.password"));
         }

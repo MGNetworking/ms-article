@@ -7,6 +7,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -37,7 +38,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Slf4j
-@Tag("All End point of microservice Article")
 public class ControllerArticleTest {
 
     @Autowired
@@ -50,6 +50,9 @@ public class ControllerArticleTest {
 
     @Autowired
     private FileSystemStorageServiceImplementation fsssi;
+
+    @Value("${file.domain-dir}")
+    private String ipLocation;
 
 
     @Test
@@ -76,7 +79,7 @@ public class ControllerArticleTest {
 
     @Test
     @DisplayName("Post images to store procedure ")
-    public void endPointStore() throws Exception {
+    public void endPointSaveImage() throws Exception {
 
         ClassLoader cl = getClass().getClassLoader();
 
@@ -85,7 +88,7 @@ public class ControllerArticleTest {
 
         if (filesImg.exists()) {
 
-            log.info("l'images existe ");
+            log.info("l'images existe : " + filesImg.getName());
 
             // Lecture du fichier bytes a byte
             byte[] imageByte = Files.readAllBytes(filesImg.toPath());
@@ -93,7 +96,7 @@ public class ControllerArticleTest {
             // création de l'objet multipartFile
             MockMultipartFile mockMultipartFile =
                     new MockMultipartFile(
-                            "images",                            // le nom du fichier
+                            "images",                        // le nom du fichier
                             filesImg.getName(),                        // le nom original du fichier
                             String.valueOf(MediaType.IMAGE_JPEG),      // le type de ficher
                             imageByte);                                // le byte code de l'image
@@ -101,6 +104,7 @@ public class ControllerArticleTest {
             // appel du point de terminaison
             mockMvc.perform(multipart("/article/saveImages").file(mockMultipartFile))
                     .andExpect(status().isCreated());
+
         }
 
 

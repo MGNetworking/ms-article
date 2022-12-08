@@ -43,8 +43,9 @@ public class ControllerArticle {
      */
     @GetMapping("/getAllArticles")
     @ApiOperation(value = "Get articles list with pagable ")
-    public ResponseEntity<Page<Article>> listArticle(@RequestParam(defaultValue = "0", name = "page") int page,
-                                                     @RequestParam(defaultValue = "0", name = "size") int size) {
+    public ResponseEntity<Page<Article>> listArticle(
+            @RequestParam(defaultValue = "0", name = "page") int page,
+            @RequestParam(defaultValue = "0", name = "size") int size) {
 
         if ((page < 0 || size <= 0)) {
             throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Your parameter in correcte ");
@@ -56,24 +57,48 @@ public class ControllerArticle {
     }
 
     @PostMapping(path = "/saveImages")
-    public ResponseEntity<String> saveImage(@RequestParam(value = "images", required = false) MultipartFile images) throws IOException {
+    public ResponseEntity<String> saveImage(@RequestParam(value = "images", required = false)
+                                                MultipartFile fileImages)
+            throws ArticleNotFoundException {
 
+        String erreurMessage = "L'image n'a pas pu être enregistrer ";
 
-        if (images != null){
-            log.info("images objet :" + images);
-            log.info("Originiale Filem name : " + images.getOriginalFilename());
-            log.info("Size : " + images.getSize());
-            log.info("Content Type  :" + images.getContentType());
-            log.info(String.valueOf(images.getResource()));
+        if (fileImages != null) {
+
+            try {
+
+                log.info("images objet :" + fileImages.getName() );
+
+                String newIpImages = articleService.saveImage(fileImages);
+
+                log.info("IP images : " + newIpImages);
+
+                return ResponseEntity
+                        .status(HttpStatus.CREATED)
+                        .body(newIpImages);
+
+            } catch (Exception ex) {
+
+                log.error("l'images n'a pas etait enregistrer " + fileImages.getName() + "\n"
+                        + "Erreur message : " + ex.getMessage());
+
+                //throw new ArticleNotFoundException(erreurMessage);
+
+                return ResponseEntity
+                        .status(HttpStatus.NOT_FOUND)
+                        .body(erreurMessage);
+
+            }
+        } else {
+            return ResponseEntity
+                    .badRequest()
+                    .body("Votre object est null");
         }
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body("https://ghoverblog.ovh/images/101.jpg");
 
     }
 
-    @DeleteMapping ("/removeImages")
+    @DeleteMapping("/removeImages")
     public ResponseEntity<String> removeImages(@RequestParam("images") MultipartFile images) throws IOException {
 
         log.info("images objet :" + images);
@@ -88,7 +113,6 @@ public class ControllerArticle {
                 .body(images.getOriginalFilename());
 
     }
-
 
 
     /**
@@ -124,7 +148,6 @@ public class ControllerArticle {
         log.info("Le formulaire : " + article.toString());
 
 
-
         for (MultipartFile multipartFile : images) {
             log.info("name : " + multipartFile.getName());
             log.info("Resource : " + multipartFile.getResource());
@@ -137,13 +160,13 @@ public class ControllerArticle {
             String root = "/home/maxime/Developpement/ghoverblog/uploads/articles/images";
             Path path = Paths.get(root);
 
-            try{
+            try {
 
                 this.articleService.saveArticle(article, images);
 
                 Files.copy(multipartFile.getInputStream(),
                         path.resolve(multipartFile.getOriginalFilename()));
-            }catch (Exception ex){
+            } catch (Exception ex) {
                 log.error("Erreur upload " + multipartFile.getOriginalFilename());
             }
 

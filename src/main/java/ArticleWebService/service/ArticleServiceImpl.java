@@ -2,11 +2,9 @@ package ArticleWebService.service;
 
 import ArticleWebService.entities.Article;
 import ArticleWebService.entities.ArticleModel;
-import ArticleWebService.entities.FileResponseClient;
 import ArticleWebService.feign.StorageRestClient;
 import ArticleWebService.repository.ArticleRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.Option;
 import lombok.extern.slf4j.Slf4j;
@@ -14,19 +12,14 @@ import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.json.JsonParser;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 
-import java.io.IOException;
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -36,14 +29,17 @@ public class ArticleServiceImpl implements ArticleService {
 
     private ArticleRepository articleRepository;
     private StorageRestClient storageRestClient;
+    private FileSystemStorageServiceImplementation fileSyStorSServiceImp;
 
-    @Value("${storage-article.location}")
+    @Value("${file.upload-dir}")
     private String uriStore;
 
     @Autowired
-    public ArticleServiceImpl(ArticleRepository articleRepository, StorageRestClient storageRestClient) {
+    public ArticleServiceImpl(ArticleRepository articleRepository, StorageRestClient storageRestClient,
+                              FileSystemStorageServiceImplementation fileSyStorSServiceImp) {
         this.articleRepository = articleRepository;
         this.storageRestClient = storageRestClient;
+        this.fileSyStorSServiceImp = fileSyStorSServiceImp;
     }
 
     @Override
@@ -70,34 +66,14 @@ public class ArticleServiceImpl implements ArticleService {
 
 
         try {
-            Article art =  objectMapper.readValue(article, Article.class);
+            Article art = objectMapper.readValue(article, Article.class);
 
             log.info("Mon article mapper =>  " + art.getTitre());
         } catch (JsonProcessingException e) {
             log.error("Erreur Mapping article : " + e.getMessage());
+
+            // TODO throw new Execption
         }
-
-
-        // Mapping dto Article
-        //Article article = modelMapper.map(articleModel, Article.class);
-
-        log.info("URI :" + this.uriStore);
-
-        // TODO exception if image not found
-        // add element of article (uri image and date)
-        //article.setPath(this.uriStore + "/" + articleModel.getFileImage().getName());
-        //article.setDate(new Date());
-
-        // save article with transaction
-        //this.articleRepository.save(article);
-
-        // uploade image to micro service storage
-        //FileResponseClient response = this.storageRestClient
-        //        .uploadingImage(articleDto.getFileImage());
-
-        //log.info("Response uploading :" + response.toString());
-
-       // return response.getStatus().equals(HttpStatus.OK) ? true : false;
 
         return true;
 
@@ -107,5 +83,20 @@ public class ArticleServiceImpl implements ArticleService {
     public Option deleteArticle(ArticleModel article) {
 
         return null;
+    }
+
+    public String saveImage(MultipartFile file) throws Exception {
+
+        try {
+            return this.fileSyStorSServiceImp.storeImage(file);
+
+            // TODO sauvegarde adresse IP dans data Base
+
+        } catch (Exception ex) {
+            log.error("Erreur message: " + ex.getMessage());
+            log.error("Erreur cause : " + ex.getCause());
+            throw new Exception(ex.getCause() + ex.getMessage());
+        }
+
     }
 }
