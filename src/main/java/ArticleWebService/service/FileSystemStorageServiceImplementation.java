@@ -47,12 +47,13 @@ public class FileSystemStorageServiceImplementation implements FileSystemStorage
             }
 
             log.info("verification par son nom de l'existance du fichier");
-            Path path = Paths.get(environment.getProperty("file.upload-dir") + file.getName());
+            String pathlocal = environment.getProperty("file.upload-dir") ;
+            Path path = Paths.get(pathlocal + "/" + file.getOriginalFilename());
 
             if (!Files.exists(path)) {
-
-                path = Paths.get(environment.getProperty("file.upload-dir"));
-                log.info("le fichier " + file.getName() + "n'existe pas dans le repetoire : " + path);
+                log.info("le fichier " + file.getOriginalFilename() + " n'existe pas dans le repetoire : " + pathlocal);
+            }else {
+                log.info("le fichier " + file.getOriginalFilename() + " existe dans le repetoire : " + pathlocal + "Est sera remplacer");
             }
 
             log.info("création du flux de lecture");
