@@ -26,34 +26,27 @@ public class FileSystemStorageServiceImplementation implements FileSystemStorage
     private String ipLocation;
 
     /**
-     * Permet l'enregistrement d'un fichier de type images sur le serveur local
+     * Allow to upload file picture in server local
      *
-     * @param file
-     * @return
+     * @param file MultipartFile picture
+     * @return String l'IP adresse to file picture
      * @throws Exception
      */
     @Override
     public String storeImage(MultipartFile file) throws Exception {
 
         try {
-            if (file == null) {
-                log.error("File is null");
-                throw new Exception("File is null");
-            }
-
-            if (file.isEmpty()) {
-                log.error("File is empty");
-                throw new Exception("File is empty ");
-            }
 
             log.info("verification par son nom de l'existance du fichier");
-            String pathlocal = environment.getProperty("file.upload-dir") ;
+            String pathlocal = environment.getProperty("file.upload-dir");
             Path path = Paths.get(pathlocal + "/" + file.getOriginalFilename());
 
             if (!Files.exists(path)) {
-                log.info("le fichier " + file.getOriginalFilename() + " n'existe pas dans le repetoire : " + pathlocal);
-            }else {
-                log.info("le fichier " + file.getOriginalFilename() + " existe dans le repetoire : " + pathlocal + "Est sera remplacer");
+                log.info("le fichier " + file.getOriginalFilename() + " n'existe pas dans le repetoire : "
+                        + pathlocal);
+            } else {
+                log.info("le fichier " + file.getOriginalFilename() + " existe dans le repetoire : " + pathlocal
+                        + "et sera remplacé");
             }
 
             log.info("création du flux de lecture");
@@ -62,7 +55,6 @@ public class FileSystemStorageServiceImplementation implements FileSystemStorage
             log.info("Copie du fichier vers le serveur local");
             Files.copy(inputStream, path, StandardCopyOption.REPLACE_EXISTING);
 
-            // retour de l'adress ip de l'images
             return this.ipLocation + file.getOriginalFilename();
 
         } catch (FileAlreadyExistsException e) {
@@ -79,7 +71,21 @@ public class FileSystemStorageServiceImplementation implements FileSystemStorage
     }
 
     @Override
-    public boolean delete(String fileName) {
-        return false;
+    public boolean deleteImages(String fileName) throws Exception {
+
+        log.info("verification par son nom de l'existance du fichier");
+        String pathlocal = environment.getProperty("file.upload-dir");
+        Path path = Paths.get(pathlocal + "/" + fileName);
+
+
+        try {
+            Files.delete(path);
+            return true;
+
+        } catch (IOException ioe) {
+
+            throw new Exception(ioe);
+        }
+
     }
 }

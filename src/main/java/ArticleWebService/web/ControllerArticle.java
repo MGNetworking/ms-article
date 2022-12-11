@@ -56,65 +56,6 @@ public class ControllerArticle {
                 .body(this.articleService.findAllArticles(page, size));
     }
 
-    @PostMapping(path = "/saveImages")
-    public ResponseEntity<String> saveImage(@RequestParam(value = "images", required = false)
-                                                MultipartFile fileImages)
-            throws ArticleNotFoundException {
-
-        String erreurMessage = "L'image n'a pas pu être enregistrer ";
-
-        if (fileImages != null) {
-
-            try {
-
-                log.info("images objet :" + fileImages.getName() );
-
-                String newIpImages = articleService.saveImage(fileImages);
-
-                log.info("IP images : " + newIpImages);
-
-                return ResponseEntity
-                        .status(HttpStatus.CREATED)
-                        .body(newIpImages);
-
-            } catch (Exception ex) {
-
-                log.error("l'images n'a pas etait enregistrer " + fileImages.getName() + "\n"
-                        + "Erreur message : " + ex.getMessage());
-
-                //throw new ArticleNotFoundException(erreurMessage);
-
-                return ResponseEntity
-                        .status(HttpStatus.NOT_FOUND)
-                        .body(erreurMessage);
-
-            }
-        } else {
-            return ResponseEntity
-                    .badRequest()
-                    .body("Votre object est null");
-        }
-
-
-    }
-
-    @DeleteMapping("/removeImages")
-    public ResponseEntity<String> removeImages(@RequestParam("images") MultipartFile images) throws IOException {
-
-        log.info("images objet :" + images);
-
-        log.info(images.getOriginalFilename());
-        log.info("Content Type  :" + images.getContentType());
-        log.info(String.valueOf(images.getResource()));
-
-
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(images.getOriginalFilename());
-
-    }
-
-
     /**
      * Allow getting an article by id
      *
@@ -206,5 +147,89 @@ public class ControllerArticle {
 
     }
 
+
+    /**
+     *
+     * @param fileImages
+     * @return
+     * @throws ArticleNotFoundException
+     */
+    @PostMapping(path = "/saveImages")
+    public ResponseEntity<String> saveImage(@RequestParam(value = "images", required = false)
+                                            MultipartFile fileImages)
+            throws ArticleNotFoundException {
+
+        String erreurMessage = "L'image n'a pas pu être enregistrer ";
+
+        if (fileImages != null && !fileImages.isEmpty()) {
+
+            try {
+
+                log.info("images objet :" + fileImages.getName());
+
+                String newIpImages = articleService.saveImage(fileImages);
+
+                log.info("IP images : " + newIpImages);
+
+                return ResponseEntity
+                        .status(HttpStatus.CREATED)
+                        .body(newIpImages);
+
+            } catch (Exception ex) {
+
+                log.error("l'images n'a pas etait enregistrer " + fileImages.getName() + "\n"
+                        + "Erreur message : " + ex.getMessage());
+
+                throw new ArticleNotFoundException(erreurMessage);
+
+            }
+        } else {
+            return ResponseEntity
+                    .badRequest()
+                    .body("Votre object est null");
+        }
+
+
+    }
+
+    /**
+     *
+     * @param nameImages
+     * @return
+     * @throws IOException
+     */
+    @DeleteMapping("/removeImages")
+    public ResponseEntity<String> removeImages(@RequestParam("nameImages") String nameImages) throws IOException {
+
+        log.info("Name images to be delete : " + nameImages);
+
+        try {
+            if (nameImages == null) {
+                log.error("String is null");
+                throw new Exception("String is null");
+            }
+
+            if (nameImages.isEmpty()) {
+                log.error("String is Empty");
+                throw new Exception("String is Empty");
+            }
+
+            this.articleService.deleteImages(nameImages);
+
+        } catch (Exception ex) {
+
+            log.error("Exception message : " + ex.getMessage());
+            log.error("Exception cause :" + ex.getCause());
+
+            throw new ArticleNotFoundException(ex.getMessage(), ex.getCause());
+        }
+
+        // Http status 204
+        log.info("The suppresion action has been enacted with succesfully and no further information is to be supplied");
+        return ResponseEntity
+                .status(HttpStatus.NO_CONTENT)
+                .body(nameImages);
+
+    }
 
 }

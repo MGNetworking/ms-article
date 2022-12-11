@@ -11,7 +11,8 @@ import java.util.Optional;
 
 public interface ArticleService {
 
-    Page<Article> findAllArticles(int page, int size );
+    Page<Article> findAllArticles(int page, int size);
+
     Optional<Article> findArticleById(Long id);
 
     boolean saveArticle(String article, List<MultipartFile> images);
@@ -19,5 +20,7 @@ public interface ArticleService {
     Option deleteArticle(ArticleModel article);
 
     String saveImage(MultipartFile file) throws Exception;
+
+    boolean deleteImages(String ipImages) throws Exception;
 
 }

@@ -29,7 +29,7 @@ public class ArticleServiceImpl implements ArticleService {
 
     private ArticleRepository articleRepository;
     private StorageRestClient storageRestClient;
-    private FileSystemStorageServiceImplementation fileSyStorSServiceImp;
+    private FileSystemStorageServiceImplementation fsssI;
 
     @Value("${file.upload-dir}")
     private String uriStore;
@@ -39,7 +39,7 @@ public class ArticleServiceImpl implements ArticleService {
                               FileSystemStorageServiceImplementation fileSyStorSServiceImp) {
         this.articleRepository = articleRepository;
         this.storageRestClient = storageRestClient;
-        this.fileSyStorSServiceImp = fileSyStorSServiceImp;
+        this.fsssI = fileSyStorSServiceImp;
     }
 
     @Override
@@ -85,18 +85,38 @@ public class ArticleServiceImpl implements ArticleService {
         return null;
     }
 
+    /**
+     * Allows to save picture in local server
+     *
+     * @param file MultipartFile Picutre
+     * @return String Ip adresse fo picture
+     * @throws Exception
+     */
     public String saveImage(MultipartFile file) throws Exception {
 
         try {
-            return this.fileSyStorSServiceImp.storeImage(file);
 
-            // TODO sauvegarde adresse IP dans data Base
+            return this.fsssI.storeImage(file);
 
         } catch (Exception ex) {
-            log.error("Erreur message: " + ex.getMessage());
-            log.error("Erreur cause : " + ex.getCause());
+            log.error("Exception message: " + ex.getMessage());
+            log.error("Exception cause : " + ex.getCause());
             throw new Exception(ex.getCause() + ex.getMessage());
         }
 
     }
+
+    /**
+     * Allows to delete a picutre in local server
+     *
+     * @param imagesName String name of pisutre
+     * @return boolean to status of the transaction
+     * @throws Exception
+     */
+    @Override
+    public boolean deleteImages(String imagesName) throws Exception {
+            return this.fsssI.deleteImages(imagesName);
+    }
+
+
 }

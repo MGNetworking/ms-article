@@ -7,6 +7,6 @@ public interface FileSystemStorageService {
 
     String storeImage(MultipartFile file) throws Exception;
 
-    boolean delete(String fileName);
+    boolean deleteImages(String fileName)throws Exception;
 
 }
