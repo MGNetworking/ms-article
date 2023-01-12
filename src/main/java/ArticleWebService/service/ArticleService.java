@@ -19,8 +19,4 @@ public interface ArticleService {
 
     Option deleteArticle(ArticleModel article);
 
-    String saveImage(MultipartFile file) throws Exception;
-
-    boolean deleteImages(String ipImages) throws Exception;
-
 }

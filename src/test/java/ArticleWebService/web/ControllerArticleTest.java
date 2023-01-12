@@ -125,7 +125,7 @@ public class ControllerArticleTest {
 
             mockMvc.perform(MockMvcRequestBuilders.delete("/article/removeImages")
                             .param("nameImages", "1.jpg"))
-                    .andExpect(status().isNoContent());
+                    .andExpect(status().isOk());
 
 
         } else {
