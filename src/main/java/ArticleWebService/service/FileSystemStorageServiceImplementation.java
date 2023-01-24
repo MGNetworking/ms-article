@@ -18,7 +18,9 @@ import java.net.URL;
 import java.nio.file.*;
 import java.util.Date;
 
-
+/**
+ * Cette classe permet l'enregistrement de fichier de type images sur le serveur locale
+ */
 @Service
 @Slf4j
 public class FileSystemStorageServiceImplementation implements FileSystemStorageService {
@@ -127,6 +129,11 @@ public class FileSystemStorageServiceImplementation implements FileSystemStorage
             if (indexContentType != -1) {
                 formatContentType = formatContentType.substring(indexContentType + 1);
                 log.info("Type image : " + formatContentType);
+
+                if (formatContentType.contains("svg+xml")){
+                    formatContentType = "image/svg";
+                    log.info("Type image refrech : " + formatContentType);
+                }
             }
 
             // écriture de l'images sur le serveur
