@@ -12,13 +12,13 @@ import java.util.Map;
 public class ResponseHandler {
 
     /**
-     * Alows to generate an obejct type ResponseEntity whitch contain :
+     * Allows to generate an objet type ResponseEntity which contain :
      * a String message, a http status and Object type response.
      *
      * @param message
      * @param status
      * @param responseObject
-     * @return an responseEntity with message , status and respoonse object.
+     * @return an responseEntity with message , status and response object.
      */
     public static ResponseEntity<Object> generateResponse(String message, HttpStatus status, Object responseObject) {
 
@@ -26,7 +26,21 @@ public class ResponseHandler {
         Map<String, Object> map = new HashMap<>();
         map.put("Message", message);
         map.put("Status", status.value());
-        map.put("data", responseObject);
+        map.put("data", (String) responseObject.toString());
+        log.info(map.toString());
+
+        return new ResponseEntity<Object>(map, status);
+    }
+
+    public static ResponseEntity<Object> generateResponse(String message, HttpStatus status, Object[] responseObject) {
+
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("Message", message);
+        map.put("Status", status.value());
+
+        map.put("data", (String) responseObject[0].toString());
+        map.put("value", (String) responseObject[1].toString());
 
         log.info(map.toString());
 

@@ -85,67 +85,21 @@ public class ControllerArticle {
                                               @RequestPart("formulaire") String article
     ) throws Exception {
 
+        try {
 
-        log.info("-----------------------------");
-        log.info("Le formulaire : " + article.toString());
+            this.articleService.saveArticle(article, images);
 
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body(article);
 
-        for (MultipartFile multipartFile : images) {
-            log.info("name : " + multipartFile.getName());
-            log.info("Resource : " + multipartFile.getResource());
-            log.info("Size : " + multipartFile.getSize());
-            log.info("InputStream : " + multipartFile.getInputStream());
-            log.info("nom du fichier  : " + multipartFile.getOriginalFilename());
-            log.info("Bytes  : " + multipartFile.getBytes());
-
-
-            String root = "/home/maxime/Developpement/ghoverblog/uploads/articles/images";
-            Path path = Paths.get(root);
-
-            try {
-
-                this.articleService.saveArticle(article, images);
-
-                Files.copy(multipartFile.getInputStream(),
-                        path.resolve(multipartFile.getOriginalFilename()));
-            } catch (Exception ex) {
-                log.error("Erreur upload " + multipartFile.getOriginalFilename());
-            }
-
+        } catch (Exception ex) {
 
         }
 
-        log.info("-----------------------------");
-
-
         return ResponseEntity
-                .status(HttpStatus.CREATED)
+                .status(HttpStatus.NOT_FOUND)
                 .body(article);
-
-        // TODO Validation article with articleModel object
-/*
-        // create object for mapping
-        ModelMapper modelMapper = new ModelMapper();
-        modelMapper.getConfiguration()
-                .setMatchingStrategy(MatchingStrategies.STRICT);
-
-
-        // mapping to input data
-        ArticleDto articleDto = modelMapper.map(articleModel, ArticleDto.class);
-        //articleDto.setFileImage(file);
-
-        if (this.articleService.saveArticle(articleDto)) {
-
-            log.info("Response Ok ");
-            return ResponseEntity
-                    .status(HttpStatus.OK).body(articleModel);
-        } else {
-
-            log.error("Response " + HttpStatus.BAD_REQUEST);
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST).body(articleModel);
-        }*/
-
     }
 
 
@@ -165,10 +119,12 @@ public class ControllerArticle {
             try {
 
                 log.info("images objet :" + fileImages.getOriginalFilename());
-                String newIpImages = this.fsssI.storeImage(fileImages);
-                log.info("IP images : " + newIpImages);
+                String[] newIpImages = this.fsssI.storeImage(fileImages);
 
-                message = "l'enregistrement de l'image " + fileImages.getOriginalFilename() + " a été réalisé avec succès";
+                log.info("IP images : " + newIpImages[0]);
+                log.info("name image : " + newIpImages[1]);
+
+                message = "L'image " + newIpImages[1] + " a été réalisé avec succès";
                 return ResponseHandler.generateResponse(message, HttpStatus.CREATED, newIpImages);
 
             } catch (Exception ex) {
@@ -188,55 +144,6 @@ public class ControllerArticle {
 
     }
 
-
-    @PostMapping(path = "/saveImagesUrl")
-    public ResponseEntity<Object> saveImageUrl(@RequestParam(value = "url", required = false)
-                                               String urlImages) {
-
-        String message;
-
-        try {
-
-            if (urlImages == null) {
-                log.error("String is null");
-                throw new Exception("String is null");
-            }
-
-            if (urlImages.isEmpty()) {
-                log.error("String is Empty");
-                throw new Exception("String is Empty");
-            }
-
-            // sauvegarde l'images de l'adresse IP
-            String newIpImages = this.fsssI.storeImageWithURL(urlImages);
-            log.info("IP images : " + newIpImages);
-
-            return ResponseHandler.generateResponse(
-                    "l'enregistrement de l'image via IP  a été réalisé avec succès ",
-                    HttpStatus.CREATED,
-                    newIpImages);
-
-
-        } catch (IOException ioe) {
-
-            message = "Une problème est survenu pendant l'enregistrement du fichier.";
-            return ResponseHandler.generateResponse(message, HttpStatus.NOT_FOUND, urlImages);
-
-        } catch (Exception ex) {
-
-            // TODO message plus générale
-            message = "L'adresse IP et manquante ";
-            log.error(message + "url : " + urlImages);
-            log.error(ex.getMessage());
-            log.error(ex.getCause().toString());
-
-            return ResponseHandler.generateResponse(message, HttpStatus.NOT_FOUND, urlImages);
-        }
-
-
-    }
-
-
     /**
      * @param nameImages
      * @return
@@ -246,7 +153,6 @@ public class ControllerArticle {
     public ResponseEntity<Object> removeImages(@RequestParam("nameImages") String nameImages) throws IOException {
 
         log.info("Name images to be delete : " + nameImages);
-
         String message = "la suppression de l'image " + nameImages + " a échouer";
 
         try {
@@ -261,20 +167,19 @@ public class ControllerArticle {
             }
 
             this.fsssI.deleteImages(nameImages);
+
             return ResponseHandler.generateResponse(
-                    "L'action de suppression a été mise en œuvre avec succès et aucune autre information ne sera fournie"
+                    "La suppression de l'images : " + nameImages + " a été réaliser avec succès "
                     , HttpStatus.OK
-                    , null);
+                    , nameImages);
+
 
         } catch (Exception ex) {
 
             log.error("Exception message : " + ex.getMessage());
             log.error("Exception cause :" + ex.getCause());
-            return ResponseHandler.generateResponse(message, HttpStatus.NOT_FOUND, null);
+            return ResponseHandler.generateResponse(message, HttpStatus.NOT_FOUND, nameImages);
 
         }
-
-
     }
-
 }

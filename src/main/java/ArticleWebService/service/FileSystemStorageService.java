@@ -7,9 +7,7 @@ import java.io.IOException;
 
 public interface FileSystemStorageService {
 
-    String storeImage(MultipartFile file) throws Exception;
-
-    String storeImageWithURL(String urlImages) throws Exception;
+    String []  storeImage(MultipartFile file) throws Exception;
 
     boolean deleteImages(String fileName)throws Exception;
 

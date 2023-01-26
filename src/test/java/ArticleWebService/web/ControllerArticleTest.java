@@ -18,6 +18,8 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.io.File;
 import java.nio.file.Files;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
@@ -48,30 +50,31 @@ public class ControllerArticleTest {
     @Value("${file.domain-dir}")
     private String ipLocation;
 
-/**
-    @Test
-    @DisplayName("Get Article by Id ")
-    public void endPointGetArticle() throws Exception {
+    @Value("${file.upload-dir}")
+    private String directory;
 
-        mockMvc.perform(MockMvcRequestBuilders
-                        .get("/article/getArticle/16"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.titre", containsString("L'IA")));
-    }
-
-    @Test
-    @DisplayName("Get All Article with Pagination")
-    public void endPointGetAllArticles() throws Exception {
-
-        mockMvc.perform(MockMvcRequestBuilders
-                        .get("/article/getAllArticles?page=0&size=6"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].articleId", is(10)))
-                .andExpect(jsonPath("$.content[0].titre", containsString("Fini la formation")));
-
-    }
-
- **/
+    /**
+     * @Test
+     * @DisplayName("Get Article by Id ")
+     * public void endPointGetArticle() throws Exception {
+     * <p>
+     * mockMvc.perform(MockMvcRequestBuilders
+     * .get("/article/getArticle/16"))
+     * .andExpect(status().isOk())
+     * .andExpect(jsonPath("$.titre", containsString("L'IA")));
+     * }
+     * @Test
+     * @DisplayName("Get All Article with Pagination")
+     * public void endPointGetAllArticles() throws Exception {
+     * <p>
+     * mockMvc.perform(MockMvcRequestBuilders
+     * .get("/article/getAllArticles?page=0&size=6"))
+     * .andExpect(status().isOk())
+     * .andExpect(jsonPath("$.content[0].articleId", is(10)))
+     * .andExpect(jsonPath("$.content[0].titre", containsString("Fini la formation")));
+     * <p>
+     * }
+     **/
 
     @Test
     @DisplayName("End point Post : upload images in server")
@@ -117,16 +120,30 @@ public class ControllerArticleTest {
     @DisplayName("End point Delete : remove image in server")
     public void endPointdeleteImages() throws Exception {
 
-        ClassLoader cl = getClass().getClassLoader();
-        // prendre une images dans les asset
-        File filesImg = new File(cl.getResource("static/images-MockMVC/1.jpg").getFile());
+        File[] files = new File(this.directory).listFiles();
+        log.info("nombre de fichier : " + files.length);
 
-        if (filesImg.exists()) {
+        String nameFile = null;
+        for(File f: files){
+
+            log.info("nom du fichier : " + files.getClass().getName());
+            Matcher matcher = Pattern.compile("([\\w]+\\.jpg)").matcher(f.getName());
+
+            if (matcher.find()) {
+                nameFile = f.getName();
+                log.info("File name find : " + nameFile);
+                break;
+            }
+        }
+
+        // prendre une images dans les asset
+        //File filesImg = new File(getClass().getClassLoader().getResource("static/images-MockMVC/1.jpg").getFile());
+
+        if (nameFile != null) {
 
             mockMvc.perform(MockMvcRequestBuilders.delete("/article/removeImages")
-                            .param("nameImages", "1.jpg"))
+                            .param("nameImages", nameFile))
                     .andExpect(status().isOk());
-
 
         } else {
             String message = "L'images de test n'est pas présent dans les asset";

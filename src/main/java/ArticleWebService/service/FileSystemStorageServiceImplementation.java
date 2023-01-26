@@ -3,6 +3,7 @@ package ArticleWebService.service;
 import ArticleWebService.component.ConfigurationArticle;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.utility.RandomString;
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
@@ -16,6 +17,7 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.*;
+import java.util.Arrays;
 import java.util.Date;
 
 /**
@@ -40,45 +42,35 @@ public class FileSystemStorageServiceImplementation implements FileSystemStorage
      * @throws Exception
      */
     @Override
-    public String storeImage(MultipartFile file) throws Exception {
+    public String [] storeImage(MultipartFile file) throws Exception {
 
         try {
 
-            log.info("verification par son nom de l'existance du fichier");
+            String extention = FilenameUtils.getExtension(file.getOriginalFilename());
+            String nameFile = FilenameUtils.getBaseName(file.getOriginalFilename());
+
+            nameFile =  RandomString.make() + new Date().getTime() + "." + extention;
+            log.info("remplacment de l'ancien nom de fichier par le nouveau");
+            String  name = file.getOriginalFilename().replace(file.getOriginalFilename(),nameFile );
+
             String pathlocal = environment.getProperty("file.upload-dir");
-            Path path = Paths.get(pathlocal + "/" + file.getOriginalFilename());
+            Path path = Paths.get(pathlocal + "/" + name);
 
-            if (!Files.exists(path)) {
-                log.info("le fichier " + file.getOriginalFilename() + " n'existe pas dans le repetoire : "
-                        + pathlocal);
-            } else {
-                log.info("le fichier " + file.getOriginalFilename() + " existe dans le repetoire : " + pathlocal
-                        + "et sera remplacé");
+            // recherche du dossier de reception
+            if (!Files.exists(path.getParent())) {
+
+                log.info("Le dossier n'existe pas et doit être créer ");
+                File newDossier = new File(path.getParent().toString());
+
+                if (newDossier.mkdir()){
+                    log.info("dossier " + path.getFileName() + " a etait créer");
+                }
             }
-
-            // recuperation du type de contenu
-            String formatContentType = file.getContentType();
-            log.info("URL formatContentType : " + formatContentType);
-
-            // soustraction du type de contenu
-            int indexContentType = formatContentType.lastIndexOf("/");
-            // -1 si pas de symbole trouver
-            if (indexContentType != -1) {
-                formatContentType = formatContentType.substring(indexContentType + 1);
-                log.info("ContentType image : " + formatContentType);
-            }
-
-            // creation du nouveau nom du fichier
-
-            log.info("création du flux de lecture");
-            InputStream inputStream = file.getInputStream();
-
-            log.info("Content type : " + file.getContentType());
 
             log.info("Copie du fichier vers le serveur local");
-            Files.copy(inputStream, path, StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
 
-            return this.ipLocation + file.getOriginalFilename();
+            return new String[]{this.ipLocation + name, name };
 
         } catch (FileAlreadyExistsException e) {
 
@@ -89,89 +81,22 @@ public class FileSystemStorageServiceImplementation implements FileSystemStorage
 
             log.error("Erreur File name : " + file.getOriginalFilename());
             throw new IOException(ioe);
+
+        } catch (SecurityException se){
+
+            log.error("Problème de creation de dossier : " + file.getOriginalFilename());
+            throw new IOException(se);
         }
 
     }
-
-    /**
-     * Permet la sauvegarde d'une images via une adresse IP.
-     * telechargement de l'images et transforme en fichier de type multipartFile
-     * dans le but de sa sauvegarde
-     *
-     * @param file
-     * @return l'adresse générer
-     * @throws Exception
-     */
-    @Override
-    public String storeImageWithURL(String urlImages) throws IOException, Exception {
-
-        // TODO Certainne ne fonction pas GIF
-        URI uri = URI.create(urlImages);
-        HttpURLConnection urlConnection = (HttpURLConnection) uri.toURL().openConnection();
-        urlConnection.addRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/109.0");
-        urlConnection.setReadTimeout(5000);
-        urlConnection.setConnectTimeout(5000);
-
-        log.info("getRequestProperties" + urlConnection.getRequestProperties().toString());
-        log.info("Autority is : " + uri.getRawAuthority());
-        log.info("URI : " + uri.parseServerAuthority());
-
-        try ( InputStream input = uri.toURL().openStream()) {
-
-            // recupération du type concernant l'images
-            URL url = new URL(urlImages);
-            String formatContentType = url.openConnection().getContentType();
-            log.info("ContentType : " + formatContentType);
-
-            int indexContentType = formatContentType.lastIndexOf("/");
-
-            // -1 si pas de symbole trouver
-            if (indexContentType != -1) {
-                formatContentType = formatContentType.substring(indexContentType + 1);
-                log.info("Type image : " + formatContentType);
-
-                if (formatContentType.contains("svg+xml")){
-                    formatContentType = "image/svg";
-                    log.info("Type image refrech : " + formatContentType);
-                }
-            }
-
-            // écriture de l'images sur le serveur
-            String fileName = RandomString.make() + new Date().getTime() + "." + formatContentType;
-            log.info("Nom du fichier : " + fileName);
-
-            Path path = Paths.get(environment.getProperty("file.upload-dir") + "/" + fileName);
-
-            log.info("Copie du fichier vers dans : " + path);
-            Files.copy(input, path, StandardCopyOption.REPLACE_EXISTING);
-
-            return this.ipLocation + fileName ;
-
-        } catch (IOException | IllegalArgumentException | IndexOutOfBoundsException ioe) {
-
-            log.error(ioe.getMessage());
-            log.error(ioe.getStackTrace().toString());
-
-            throw new IOException(ioe);
-
-        } catch (Exception ex) {
-
-            log.error(ex.getMessage());
-            throw new Exception(ex);
-        }
-
-    }
-
 
     @Override
     public boolean deleteImages(String fileName) throws Exception {
 
-        log.info("verification par son nom de l'existance du fichier");
-        String pathlocal = environment.getProperty("file.upload-dir");
-        Path path = Paths.get(pathlocal + "/" + fileName);
 
-
+        Path path = Paths.get(environment.getProperty("file.upload-dir") + "/" + fileName);
         try {
+            log.info("Suppression de l'images : " + fileName);
             Files.delete(path);
             return true;
         } catch (IOException ioe) {
