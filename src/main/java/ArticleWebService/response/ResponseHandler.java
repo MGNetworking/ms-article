@@ -1,6 +1,8 @@
 package ArticleWebService.response;
 
+import ArticleWebService.entities.Article;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
@@ -31,6 +33,21 @@ public class ResponseHandler {
 
         return new ResponseEntity<Object>(map, status);
     }
+
+
+    public static ResponseEntity<Page<Article>> generateResponse(String message, HttpStatus status, Page<Article> responseObject) {
+
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("Message", message);
+        map.put("Status", status.value());
+        map.put("page",  responseObject );
+        log.info(map.toString());
+
+        return new ResponseEntity <Page<Article>>((Page<Article>) map, status);
+    }
+    
+    
 
     public static ResponseEntity<Object> generateResponse(String message, HttpStatus status, Object[] responseObject) {
 

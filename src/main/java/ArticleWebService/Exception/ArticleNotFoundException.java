@@ -5,7 +5,7 @@ public class ArticleNotFoundException extends RuntimeException {
     private static final long serialVersionUID = -2028778202108312111L;
 
     public ArticleNotFoundException(Long id) {
-        super(String.format("Article with id %d not found", id));
+        super(String.format("L'identifiant %d  de l'article n'a pas était trouver", id));
     }
 
     public ArticleNotFoundException(String message) {

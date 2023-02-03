@@ -1,14 +1,21 @@
 package ArticleWebService.web;
 
 import ArticleWebService.Exception.ArticleNotFoundException;
+import ArticleWebService.dto.ArticleDto;
 import ArticleWebService.entities.Article;
+import ArticleWebService.entities.ArticleForm;
 import ArticleWebService.response.ResponseHandler;
 import ArticleWebService.service.ArticleService;
 import ArticleWebService.service.FileSystemStorageServiceImplementation;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.modelmapper.ModelMapper;
+import org.modelmapper.PropertyMap;
+import org.modelmapper.TypeMap;
+import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -17,11 +24,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.validation.Valid;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
 
 //@CrossOrigin(origins = "*")
 @RestController
@@ -31,9 +35,79 @@ public class ControllerArticle {
 
     @Autowired
     private ArticleService articleService;
-
     @Autowired
     private FileSystemStorageServiceImplementation fsssI;
+    private ArticleDto articleDtoDate;
+    private ControllerArticle() {
+
+        // TODO init articleDtoDate with getListe
+
+    }
+
+    @PostMapping(path = "/saveArticle",
+            consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
+    @ApiOperation(value = "save articles in data base", response = ArticleDto.class)
+    public ResponseEntity<ArticleDto> saveArticle(@Valid @RequestBody ArticleForm articleForm) {
+
+        // Mapping model to DTO
+        ModelMapper modelMapper = new ModelMapper();
+        modelMapper.getConfiguration().setAmbiguityIgnored(true);
+        ArticleDto articleDto = modelMapper.map(articleForm, ArticleDto.class);
+
+        try {
+
+            articleDto = this.articleService.saveArticle(articleDto);
+
+            // TODO Add articleDto in store local if not existe
+            return new ResponseEntity<ArticleDto>(articleDto, HttpStatus.CREATED);
+
+        } catch (ConcurrencyFailureException cfe) {
+            log.error("une erreur de type ConcurrencyFailureException est survenu");
+            log.error(cfe.getMessage());
+            log.error(cfe.getCause().toString());
+            return new ResponseEntity<ArticleDto>(articleDto, HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (Exception e) {
+            log.error("une erreur de type Exception est survenu");
+            log.error(e.getMessage());
+            log.error(e.getCause().toString());
+            return new ResponseEntity<ArticleDto>(articleDto, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @DeleteMapping(path = "/deleteArticle")
+    public ResponseEntity deteleArticle(@PathVariable Long id) {
+
+        if (id <= 0) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "L'identifiant suivant : " + id + " n'existe pas.");
+
+        } else {
+
+            try {
+                this.articleService.deleteArticleById(id);
+                return ResponseHandler.generateResponse(
+                        "La suppression de l'article a été réaliser avec succès "
+                        , HttpStatus.OK
+                        , id);
+
+                // TODO delete article in ArticleDtoData (update)
+
+            } catch (IllegalArgumentException ex) {
+
+                log.error(ex.getMessage());
+                log.error(ex.getCause().toString());
+
+                throw new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "impossible de trouver l'ellement correspondant a l'identifiant : " + id);
+            }
+
+        }
+
+    }
 
     /**
      * Allow getting pagination of Articles
@@ -42,19 +116,32 @@ public class ControllerArticle {
      * @param size to primitive type int, number of article
      * @return An Object JsonPath of Articles
      */
-    @GetMapping("/getAllArticles")
+    @GetMapping(path = "/getAllArticles")
     @ApiOperation(value = "Get articles list with pagable ")
-    public ResponseEntity<Page<Article>> listArticle(
+    public ResponseEntity<Page<Article>> getlistArticlePagination(
             @RequestParam(defaultValue = "0", name = "page") int page,
             @RequestParam(defaultValue = "0", name = "size") int size) {
 
         if ((page < 0 || size <= 0)) {
-            throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Your parameter in correcte ");
+
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_ACCEPTABLE,
+                    "Les paramétre de page : " + page + " et/ou nombre de pages" + size + " sont incorrect ");
+        } else {
+
+            Page<Article> articlePage = this.articleService.findAllArticles(page, size);
+
+            return ResponseHandler.generateResponse(
+                    "",
+                    HttpStatus.OK,
+                    articlePage);
+
+/*            return ResponseEntity
+                    .status(HttpStatus.OK)
+                    .body(this.articleService.findAllArticles(page, size));*/
         }
 
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(this.articleService.findAllArticles(page, size));
+
     }
 
     /**
@@ -63,43 +150,13 @@ public class ControllerArticle {
      * @param id to Object type Long, id of Article
      * @return An Object JsonPath of Article
      */
-    @GetMapping("/getArticle/{id}")
+    @GetMapping(path = "/getArticle/{id}")
     public Article getArticle(@PathVariable Long id) {
-
-        if (id == null || id <= 0) {
-            throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Error to id article");
-        }
 
         return this.articleService
                 .findArticleById(id)
                 .orElseThrow(() -> new ArticleNotFoundException(id));
 
-    }
-
-    @ApiOperation(value = "Creates an article", response = Article.class)
-    @PostMapping(value = "/saveArticle",
-            consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_JSON_VALUE},
-            produces = {MediaType.APPLICATION_JSON_VALUE})
-    //@PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> saveArticle(@RequestPart("images") List<MultipartFile> images,
-                                              @RequestPart("formulaire") String article
-    ) throws Exception {
-
-        try {
-
-            this.articleService.saveArticle(article, images);
-
-            return ResponseEntity
-                    .status(HttpStatus.CREATED)
-                    .body(article);
-
-        } catch (Exception ex) {
-
-        }
-
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(article);
     }
 
 
@@ -112,7 +169,6 @@ public class ControllerArticle {
     public ResponseEntity<Object> saveImage(@RequestParam(value = "images", required = false)
                                             MultipartFile fileImages) {
 
-        String message = "l'enregistrement de l'images " + fileImages.getName() + " a échouer";
 
         if (fileImages != null && !fileImages.isEmpty()) {
 
@@ -121,24 +177,34 @@ public class ControllerArticle {
                 log.info("images objet :" + fileImages.getOriginalFilename());
                 String[] newIpImages = this.fsssI.storeImage(fileImages);
 
-                log.info("IP images : " + newIpImages[0]);
+                log.info("Ip images : " + newIpImages[0]);
                 log.info("name image : " + newIpImages[1]);
 
-                message = "L'image " + newIpImages[1] + " a été réalisé avec succès";
-                return ResponseHandler.generateResponse(message, HttpStatus.CREATED, newIpImages);
+                return ResponseHandler.generateResponse(
+                        "L'image " + newIpImages[0] + " a été réalisé avec succès a l'adresse suivant : "
+                                + newIpImages[0],
+                        HttpStatus.CREATED,
+                        newIpImages);
 
             } catch (Exception ex) {
 
-                log.error(message + ex.getMessage());
-                log.error("Cause :" + ex.getCause());
-                return ResponseHandler.generateResponse(message, HttpStatus.NOT_FOUND, null);
+                log.error(ex.getMessage());
+                log.error(ex.getCause().toString());
 
+                throw new ResponseStatusException(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Un problème technique est survenu ");
             }
         } else {
-            message = "Votre object est null ou vide ";
-            return ResponseHandler.generateResponse(message, HttpStatus.BAD_REQUEST, null);
 
-            //return ResponseEntity.badRequest().body("Votre object est null");
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Votre object est null ou vide ");
+
+/*            return ResponseHandler.generateResponse(
+                    "Votre object est null ou vide ",
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    null);*/
         }
 
 
@@ -149,11 +215,10 @@ public class ControllerArticle {
      * @return
      * @throws IOException
      */
-    @DeleteMapping("/removeImages")
-    public ResponseEntity<Object> removeImages(@RequestParam("nameImages") String nameImages) throws IOException {
+    @DeleteMapping("/deleteImages")
+    public ResponseEntity<Object> deleteImages(@RequestParam("nameImages") String nameImages) throws IOException {
 
-        log.info("Name images to be delete : " + nameImages);
-        String message = "la suppression de l'image " + nameImages + " a échouer";
+        log.info("Images a supprimer : " + nameImages);
 
         try {
             if (nameImages == null) {
@@ -176,9 +241,13 @@ public class ControllerArticle {
 
         } catch (Exception ex) {
 
-            log.error("Exception message : " + ex.getMessage());
-            log.error("Exception cause :" + ex.getCause());
-            return ResponseHandler.generateResponse(message, HttpStatus.NOT_FOUND, nameImages);
+            log.error(ex.getMessage());
+            log.error(ex.getCause().toString());
+
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "la suppression de l'image " + nameImages + " a échouer");
+
 
         }
     }

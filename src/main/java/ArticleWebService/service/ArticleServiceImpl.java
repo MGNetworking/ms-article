@@ -1,12 +1,10 @@
 package ArticleWebService.service;
 
+import ArticleWebService.dto.ArticleDto;
 import ArticleWebService.entities.Article;
-import ArticleWebService.entities.ArticleModel;
+import ArticleWebService.entities.Section;
 import ArticleWebService.feign.StorageRestClient;
 import ArticleWebService.repository.ArticleRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jayway.jsonpath.Option;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
@@ -16,10 +14,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -35,7 +31,8 @@ public class ArticleServiceImpl implements ArticleService {
     private String uriStore;
 
     @Autowired
-    public ArticleServiceImpl(ArticleRepository articleRepository, StorageRestClient storageRestClient,
+    public ArticleServiceImpl(ArticleRepository articleRepository,
+                              StorageRestClient storageRestClient,
                               FileSystemStorageServiceImplementation fileSyStorSServiceImp) {
         this.articleRepository = articleRepository;
         this.storageRestClient = storageRestClient;
@@ -49,40 +46,34 @@ public class ArticleServiceImpl implements ArticleService {
 
     @Override
     public Optional<Article> findArticleById(Long id) {
-
         return this.articleRepository.findById(id);
     }
 
 
     @Override
-    public boolean saveArticle(String article, List<MultipartFile> images) {
+    public ArticleDto saveArticle(ArticleDto articleDto) {
 
-        // Mapping model to DTO
         ModelMapper modelMapper = new ModelMapper();
         modelMapper.getConfiguration()
                 .setMatchingStrategy(MatchingStrategies.STRICT);
 
-        ObjectMapper objectMapper = new ObjectMapper();
+        // mapping
+        Article article = modelMapper.map(articleDto, Article.class);
+        article.getSection().setIdSection(articleDto.getIdSection());
 
+        log.info("Sauvegarde de l'objet en base et retour du DTO ");
 
-        try {
-            Article art = objectMapper.readValue(article, Article.class);
-
-            log.info("Mon article mapper =>  " + art.getTitre());
-        } catch (JsonProcessingException e) {
-            log.error("Erreur Mapping article : " + e.getMessage());
-
-            // TODO throw new Execption
-        }
-
-        return true;
+        return modelMapper.map(
+                this.articleRepository.save(article),
+                ArticleDto.class);
 
     }
 
     @Override
-    public Option deleteArticle(ArticleModel article) {
+    public boolean deleteArticleById(Long idArticle) {
 
-        return null;
+        this.articleRepository.deleteById(idArticle);
+        return true;
     }
 
 }

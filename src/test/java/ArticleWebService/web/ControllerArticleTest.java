@@ -1,19 +1,25 @@
 package ArticleWebService.web;
 
 import ArticleWebService.configuration.WebConfiguration;
+import ArticleWebService.entities.ArticleForm;
 import ArticleWebService.service.FileSystemStorageServiceImplementation;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.web.JsonPath;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.io.File;
@@ -25,6 +31,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -46,6 +53,8 @@ public class ControllerArticleTest {
 
     @Autowired
     private FileSystemStorageServiceImplementation fsssi;
+
+    private static ObjectMapper mapper = new ObjectMapper();
 
     @Value("${file.domain-dir}")
     private String ipLocation;
@@ -77,6 +86,29 @@ public class ControllerArticleTest {
      **/
 
     @Test
+    @DisplayName("End point Post : save article in dataBase ")
+    public void endSaveArticle() throws Exception {
+
+        ArticleForm articleForm = new ArticleForm();
+        articleForm.setIdUser(Long.valueOf(1));
+        articleForm.setIdSection(Long.valueOf(1));
+        articleForm.setTitre("Titre de testing");
+        articleForm.setArticle("Contenu de l'article");
+        articleForm.setVisibiliter(false);
+
+        // mapping de l'objet au format Json
+        String paylaod = mapper.writeValueAsString(articleForm);
+
+        mockMvc.perform(post("/article/saveArticle")
+                        .content(paylaod)
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .accept(MediaType.APPLICATION_JSON_VALUE))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.idUser").value(1l));
+    }
+
+    @Test
     @DisplayName("End point Post : upload images in server")
     public void endPointSaveImage() throws Exception {
 
@@ -105,9 +137,8 @@ public class ControllerArticleTest {
                     .andExpect(status().isCreated());
 
         } else {
-            String message = "L'images de test n'est pas présent dans les asset";
-            log.error(message);
-            throw new Exception(message);
+
+            throw new Exception("L'images de test n'est pas présent dans les asset");
         }
 
 
@@ -124,7 +155,7 @@ public class ControllerArticleTest {
         log.info("nombre de fichier : " + files.length);
 
         String nameFile = null;
-        for(File f: files){
+        for (File f : files) {
 
             log.info("nom du fichier : " + files.getClass().getName());
             Matcher matcher = Pattern.compile("([\\w]+\\.jpg)").matcher(f.getName());
@@ -141,7 +172,7 @@ public class ControllerArticleTest {
 
         if (nameFile != null) {
 
-            mockMvc.perform(MockMvcRequestBuilders.delete("/article/removeImages")
+            mockMvc.perform(MockMvcRequestBuilders.delete("/article/deleteImages")
                             .param("nameImages", nameFile))
                     .andExpect(status().isOk());
 

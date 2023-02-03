@@ -1,12 +1,9 @@
 package ArticleWebService.service;
 
+import ArticleWebService.dto.ArticleDto;
 import ArticleWebService.entities.Article;
-import ArticleWebService.entities.ArticleModel;
-import com.jayway.jsonpath.Option;
 import org.springframework.data.domain.Page;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
 import java.util.Optional;
 
 public interface ArticleService {
@@ -15,8 +12,8 @@ public interface ArticleService {
 
     Optional<Article> findArticleById(Long id);
 
-    boolean saveArticle(String article, List<MultipartFile> images);
+    ArticleDto saveArticle(ArticleDto articleDto );
 
-    Option deleteArticle(ArticleModel article);
+    boolean deleteArticleById(Long idArticle);
 
 }
