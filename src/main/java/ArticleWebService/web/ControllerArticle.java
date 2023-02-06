@@ -22,6 +22,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
 import java.io.IOException;
 
 //@CrossOrigin(origins = "*")
@@ -69,36 +71,26 @@ public class ControllerArticle {
         }
     }
 
-    @DeleteMapping(path = "/deleteArticle")
-    public ResponseEntity deteleArticle(@PathVariable Integer id) {
+    @DeleteMapping(path = "/deleteArticle/{id}")
+    public ResponseEntity deteleArticle(@PathVariable @NotNull @Min(1) Integer id) {
 
-        if (id <= 0) {
+
+        try {
+            this.articleService.deleteArticleById(id);
+            return ResponseHandler.generateResponse(
+                    "La suppression de l'article a été réaliser avec succès "
+                    , HttpStatus.OK
+                    , id);
+
+        } catch (IllegalArgumentException ex) {
+
+            log.error(ex.getMessage());
+            log.error(ex.getCause().toString());
 
             throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
-                    "L'identifiant suivant : " + id + " n'existe pas.");
-
-        } else {
-
-            try {
-                this.articleService.deleteArticleById(id);
-                return ResponseHandler.generateResponse(
-                        "La suppression de l'article a été réaliser avec succès "
-                        , HttpStatus.OK
-                        , id);
-
-            } catch (IllegalArgumentException ex) {
-
-                log.error(ex.getMessage());
-                log.error(ex.getCause().toString());
-
-                throw new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "impossible de trouver l'élément correspondant a l'identifiant : " + id);
-            }
-
+                    "impossible de trouver l'élément correspondant a l'identifiant : " + id);
         }
-
     }
 
     /**
@@ -112,22 +104,11 @@ public class ControllerArticle {
     @ApiOperation(value = "Get articles list with pagable ")
     public ResponseEntity<Page<Article>> getlistArticlePagination(
             @RequestParam(defaultValue = "0", name = "page", required = true) int page,
-            @RequestParam(defaultValue = "0", name = "size", required = true) int size) {
+            @RequestParam(name = "size", required = true) @NotNull @Min(value = 1) int size) {
 
-        if (size <= 0) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_ACCEPTABLE,
-                    "Le nombre de pages demander : " + size + " est incorrect ");
-        } else {
-
-            return ResponseEntity
-                    .status(HttpStatus.OK)
-                    .body(this.articleService.findArticlesWithPages(page, size));
-
-        }
-
-
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(this.articleService.findArticlesWithPages(page, size));
     }
 
     @GetMapping(path = "/getAllArticlesSection")
@@ -137,16 +118,11 @@ public class ControllerArticle {
             @RequestParam(defaultValue = "0", name = "size", required = true) int size,
             @RequestParam(defaultValue = "0", name = "sectionId") Integer section) {
 
-        Page<Article> articles = this.articleService
-                .findArticlesPagesWithSection(page, size, section);
-
-        articles.forEach(article -> {
-            log.info(" Description de la section : " + article.getSection().getDescription());
-        });
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(articles);
+                .body(this.articleService
+                        .findArticlesPagesWithSection(page, size, section));
     }
 
 
@@ -155,9 +131,10 @@ public class ControllerArticle {
      *
      * @param id to Object type Long, id of Article
      * @return An Object JsonPath of Article
+     * @throws ArticleNotFoundException
      */
     @GetMapping(path = "/getArticle/{id}")
-    public Article getArticle(@PathVariable Integer id) {
+    public Article getArticle(@PathVariable @NotNull Integer id) {
 
         return this.articleService
                 .findArticleById(id)
@@ -169,14 +146,13 @@ public class ControllerArticle {
     /**
      * @param fileImages
      * @return
-     * @throws ArticleNotFoundException
      */
     @PostMapping(path = "/saveImages")
-    public ResponseEntity<Object> saveImage(@RequestParam(value = "images", required = false)
-                                            MultipartFile fileImages) {
+    public ResponseEntity<Object> saveImage(@RequestParam(value = "images", required = true)
+                                            @NotNull MultipartFile fileImages) {
 
 
-        if (fileImages != null && !fileImages.isEmpty()) {
+        if ( !fileImages.isEmpty()) {
 
             try {
 
