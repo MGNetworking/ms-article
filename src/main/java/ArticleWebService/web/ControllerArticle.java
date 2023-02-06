@@ -37,9 +37,6 @@ public class ControllerArticle {
     private ArticleDto articleDtoDate;
 
     private ControllerArticle() {
-
-        // TODO init articleDtoDate with getListe
-
     }
 
     @PostMapping(path = "/saveArticle",
@@ -57,7 +54,6 @@ public class ControllerArticle {
 
             articleDto = this.articleService.saveArticle(articleDto);
 
-            // TODO Add articleDto in store local if not existe
             return new ResponseEntity<ArticleDto>(articleDto, HttpStatus.CREATED);
 
         } catch (ConcurrencyFailureException cfe) {
@@ -90,8 +86,6 @@ public class ControllerArticle {
                         "La suppression de l'article a été réaliser avec succès "
                         , HttpStatus.OK
                         , id);
-
-                // TODO delete article in ArticleDtoData (update)
 
             } catch (IllegalArgumentException ex) {
 
@@ -136,12 +130,12 @@ public class ControllerArticle {
 
     }
 
-    @GetMapping( path = "/getAllArticlesSection")
+    @GetMapping(path = "/getAllArticlesSection")
     @ApiOperation(value = "Get articles list with section in pagable ")
     public ResponseEntity<Page<Article>> getlistArticleWithPagination(
             @RequestParam(defaultValue = "0", name = "page", required = true) int page,
             @RequestParam(defaultValue = "0", name = "size", required = true) int size,
-            @RequestParam(defaultValue = "0", name = "sectionId") Integer section){
+            @RequestParam(defaultValue = "0", name = "sectionId") Integer section) {
 
         Page<Article> articles = this.articleService
                 .findArticlesPagesWithSection(page, size, section);

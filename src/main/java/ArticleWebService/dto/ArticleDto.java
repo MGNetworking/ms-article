@@ -19,6 +19,7 @@ public class ArticleDto {
     private Integer idNote;
     private String titre;
     private String article;
+    private String description;
 
     /**
      * permet la serialisation de l'ojet date au format demander

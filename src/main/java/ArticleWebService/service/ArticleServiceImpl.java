@@ -27,7 +27,6 @@ public class ArticleServiceImpl implements ArticleService {
     private ArticleRepository articleRepository;
     private StorageRestClient storageRestClient;
     private FileSystemStorageServiceImplementation fsssI;
-
     private ModelMapper modelMapper;
 
     @Value("${file.upload-dir}")
@@ -46,15 +45,12 @@ public class ArticleServiceImpl implements ArticleService {
 
     @Override
     public Page<Article> findArticlesWithPages(int page, int size) {
-
-        log.info("find Articles WithPages: ");
         return this.articleRepository
                 .findAll(PageRequest.of(page, size));
     }
 
     @Override
     public Page<Article> findArticlesPagesWithSection(int page, int size, Integer sectionId) {
-
         return this.articleRepository
                 .findAllArticlesBySection(PageRequest.of(page, size), sectionId);
     }

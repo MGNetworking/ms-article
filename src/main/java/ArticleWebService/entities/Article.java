@@ -1,6 +1,8 @@
 package ArticleWebService.entities;
 
+import ArticleWebService.dto.DateSerialisation;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -53,10 +55,17 @@ public class Article implements Serializable {
     @Column(name = "article", nullable = false)
     private String article;
 
+    @Lob
+    @Type(type = "org.hibernate.type.TextType")
+    @Column(name = "description_art", nullable = false)
+    private String description;
+
+    @JsonSerialize(using = DateSerialisation.class)
     @Column(name = "date_creation", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @CreationTimestamp
     private Timestamp dateCreation;
 
+    @JsonSerialize(using = DateSerialisation.class)
     @Column(name = "date_maj", nullable = true)
     private Timestamp dateMaj;
 

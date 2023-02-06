@@ -32,6 +32,10 @@ public class ArticleForm {
     @NotEmpty(message = "Vous n'avais pas créer de contenu d'article")
     private String article;
 
+    @NotNull(message = "La description ne doit pas être null")
+    @NotEmpty(message = "Une description de l'article doit être fournis")
+    private String description;
+
     @NotNull(message = "La visibilité de l'article ne doit pas être null")
     private boolean visibiliter;
 

@@ -94,6 +94,7 @@ public class ControllerArticleTest {
         articleForm.setIdSection(1);
         articleForm.setTitre("Titre de testing");
         articleForm.setArticle("Contenu de l'article");
+        articleForm.setDescription("description de l'article");
         articleForm.setVisibiliter(false);
 
         // mapping de l'objet au format Json
