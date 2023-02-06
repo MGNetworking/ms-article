@@ -15,9 +15,9 @@ import java.util.Date;
 @AllArgsConstructor
 public class ArticleForm {
 
-    private Long idUser;
+    private Integer idUser;
 
-    private Long idSection;
+    private Integer idSection;
 
     // TODO la source doit être référencer ou être gérer pendant l'insertion
     // TODO dans ce une liste doit être reçut

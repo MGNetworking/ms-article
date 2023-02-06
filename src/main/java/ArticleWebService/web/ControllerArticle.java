@@ -10,9 +10,6 @@ import ArticleWebService.service.FileSystemStorageServiceImplementation;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
-import org.modelmapper.PropertyMap;
-import org.modelmapper.TypeMap;
-import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.dao.ConcurrencyFailureException;
@@ -38,6 +35,7 @@ public class ControllerArticle {
     @Autowired
     private FileSystemStorageServiceImplementation fsssI;
     private ArticleDto articleDtoDate;
+
     private ControllerArticle() {
 
         // TODO init articleDtoDate with getListe
@@ -76,7 +74,7 @@ public class ControllerArticle {
     }
 
     @DeleteMapping(path = "/deleteArticle")
-    public ResponseEntity deteleArticle(@PathVariable Long id) {
+    public ResponseEntity deteleArticle(@PathVariable Integer id) {
 
         if (id <= 0) {
 
@@ -102,7 +100,7 @@ public class ControllerArticle {
 
                 throw new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
-                        "impossible de trouver l'ellement correspondant a l'identifiant : " + id);
+                        "impossible de trouver l'élément correspondant a l'identifiant : " + id);
             }
 
         }
@@ -119,30 +117,44 @@ public class ControllerArticle {
     @GetMapping(path = "/getAllArticles")
     @ApiOperation(value = "Get articles list with pagable ")
     public ResponseEntity<Page<Article>> getlistArticlePagination(
-            @RequestParam(defaultValue = "0", name = "page") int page,
-            @RequestParam(defaultValue = "0", name = "size") int size) {
+            @RequestParam(defaultValue = "0", name = "page", required = true) int page,
+            @RequestParam(defaultValue = "0", name = "size", required = true) int size) {
 
-        if ((page < 0 || size <= 0)) {
+        if (size <= 0) {
 
             throw new ResponseStatusException(
                     HttpStatus.NOT_ACCEPTABLE,
-                    "Les paramétre de page : " + page + " et/ou nombre de pages" + size + " sont incorrect ");
+                    "Le nombre de pages demander : " + size + " est incorrect ");
         } else {
 
-            Page<Article> articlePage = this.articleService.findAllArticles(page, size);
-
-            return ResponseHandler.generateResponse(
-                    "",
-                    HttpStatus.OK,
-                    articlePage);
-
-/*            return ResponseEntity
+            return ResponseEntity
                     .status(HttpStatus.OK)
-                    .body(this.articleService.findAllArticles(page, size));*/
+                    .body(this.articleService.findArticlesWithPages(page, size));
+
         }
 
 
     }
+
+    @GetMapping( path = "/getAllArticlesSection")
+    @ApiOperation(value = "Get articles list with section in pagable ")
+    public ResponseEntity<Page<Article>> getlistArticleWithPagination(
+            @RequestParam(defaultValue = "0", name = "page", required = true) int page,
+            @RequestParam(defaultValue = "0", name = "size", required = true) int size,
+            @RequestParam(defaultValue = "0", name = "sectionId") Integer section){
+
+        Page<Article> articles = this.articleService
+                .findArticlesPagesWithSection(page, size, section);
+
+        articles.forEach(article -> {
+            log.info(" Description de la section : " + article.getSection().getDescription());
+        });
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(articles);
+    }
+
 
     /**
      * Allow getting an article by id
@@ -151,7 +163,7 @@ public class ControllerArticle {
      * @return An Object JsonPath of Article
      */
     @GetMapping(path = "/getArticle/{id}")
-    public Article getArticle(@PathVariable Long id) {
+    public Article getArticle(@PathVariable Integer id) {
 
         return this.articleService
                 .findArticleById(id)

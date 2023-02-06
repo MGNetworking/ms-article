@@ -90,8 +90,8 @@ public class ControllerArticleTest {
     public void endSaveArticle() throws Exception {
 
         ArticleForm articleForm = new ArticleForm();
-        articleForm.setIdUser(Long.valueOf(1));
-        articleForm.setIdSection(Long.valueOf(1));
+        articleForm.setIdUser(1);
+        articleForm.setIdSection(1);
         articleForm.setTitre("Titre de testing");
         articleForm.setArticle("Contenu de l'article");
         articleForm.setVisibiliter(false);

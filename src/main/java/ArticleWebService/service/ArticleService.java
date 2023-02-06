@@ -8,12 +8,14 @@ import java.util.Optional;
 
 public interface ArticleService {
 
-    Page<Article> findAllArticles(int page, int size);
+    Page<Article> findArticlesWithPages(int page, int size);
 
-    Optional<Article> findArticleById(Long id);
+    Page<Article> findArticlesPagesWithSection(int page, int size , Integer sectionId);
+
+    Optional<Article> findArticleById(Integer id);
 
     ArticleDto saveArticle(ArticleDto articleDto );
 
-    boolean deleteArticleById(Long idArticle);
+    boolean deleteArticleById(Integer idArticle);
 
 }

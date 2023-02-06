@@ -11,12 +11,12 @@ import java.util.Date;
 @AllArgsConstructor
 public class ArticleDto {
 
-    private Long idArticle;
-    private Long idUser;
-    private Long idSection;
-    private Long idCommentaire;
-    private Long idSource;
-    private Long idNote;
+    private Integer idArticle;
+    private Integer idUser;
+    private Integer idSection;
+    private Integer idCommentaire;
+    private Integer idSource;
+    private Integer idNote;
     private String titre;
     private String article;
 

@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -27,6 +28,8 @@ public class ArticleServiceImpl implements ArticleService {
     private StorageRestClient storageRestClient;
     private FileSystemStorageServiceImplementation fsssI;
 
+    private ModelMapper modelMapper;
+
     @Value("${file.upload-dir}")
     private String uriStore;
 
@@ -34,18 +37,30 @@ public class ArticleServiceImpl implements ArticleService {
     public ArticleServiceImpl(ArticleRepository articleRepository,
                               StorageRestClient storageRestClient,
                               FileSystemStorageServiceImplementation fileSyStorSServiceImp) {
+
         this.articleRepository = articleRepository;
         this.storageRestClient = storageRestClient;
         this.fsssI = fileSyStorSServiceImp;
+        this.modelMapper = new ModelMapper();
     }
 
     @Override
-    public Page<Article> findAllArticles(int page, int size) {
-        return this.articleRepository.findAll(PageRequest.of(page, size));
+    public Page<Article> findArticlesWithPages(int page, int size) {
+
+        log.info("find Articles WithPages: ");
+        return this.articleRepository
+                .findAll(PageRequest.of(page, size));
     }
 
     @Override
-    public Optional<Article> findArticleById(Long id) {
+    public Page<Article> findArticlesPagesWithSection(int page, int size, Integer sectionId) {
+
+        return this.articleRepository
+                .findAllArticlesBySection(PageRequest.of(page, size), sectionId);
+    }
+
+    @Override
+    public Optional<Article> findArticleById(Integer id) {
         return this.articleRepository.findById(id);
     }
 
@@ -53,7 +68,6 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     public ArticleDto saveArticle(ArticleDto articleDto) {
 
-        ModelMapper modelMapper = new ModelMapper();
         modelMapper.getConfiguration()
                 .setMatchingStrategy(MatchingStrategies.STRICT);
 
@@ -70,7 +84,7 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    public boolean deleteArticleById(Long idArticle) {
+    public boolean deleteArticleById(Integer idArticle) {
 
         this.articleRepository.deleteById(idArticle);
         return true;

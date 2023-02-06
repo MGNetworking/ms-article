@@ -6,5 +6,5 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface DomainRepository extends CrudRepository<Domain, Long> {
+public interface DomainRepository extends CrudRepository<Domain, Integer> {
 }
