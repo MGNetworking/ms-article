@@ -80,10 +80,10 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    public boolean deleteArticleById(Integer idArticle) {
+    public void deleteArticleById(Integer idArticle) {
 
         this.articleRepository.deleteById(idArticle);
-        return true;
+
     }
 
 }

@@ -1,6 +1,6 @@
 package ArticleWebService.web;
 
-import ArticleWebService.Exception.ArticleNotFoundException;
+import ArticleWebService.Exception.ArticleException;
 import ArticleWebService.dto.ArticleDto;
 import ArticleWebService.entities.Article;
 import ArticleWebService.entities.ArticleForm;
@@ -41,6 +41,12 @@ public class ControllerArticle {
     private ControllerArticle() {
     }
 
+    /**
+     * Permet d'enregister un article et utilise un gestionnaire de validation.
+     *
+     * @param articleForm classe de gestion du formulaire.
+     * @return ResponseEntity<ArticleDto> l'article
+     */
     @PostMapping(path = "/saveArticle",
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
@@ -71,53 +77,72 @@ public class ControllerArticle {
         }
     }
 
+    /**
+     * Permet de supprimer un article par sont ID
+     *
+     * @param id
+     * @return
+     */
     @DeleteMapping(path = "/deleteArticle/{id}")
     public ResponseEntity deteleArticle(@PathVariable @NotNull @Min(1) Integer id) {
 
-
         try {
+
             this.articleService.deleteArticleById(id);
             return ResponseHandler.generateResponse(
                     "La suppression de l'article a été réaliser avec succès "
                     , HttpStatus.OK
                     , id);
 
-        } catch (IllegalArgumentException ex) {
+        } catch (Exception ex) {
 
             log.error(ex.getMessage());
-            log.error(ex.getCause().toString());
+            return ResponseHandler.generateResponse(
+                    "impossible de trouver l'élément correspondant "
+                    , HttpStatus.NOT_FOUND
+                    , id);
 
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
-                    "impossible de trouver l'élément correspondant a l'identifiant : " + id);
         }
     }
 
     /**
-     * Allow getting pagination of Articles
+     * Permet d'obtenir la pagination des articles
      *
-     * @param page to primitive type int, number of page
-     * @param size to primitive type int, number of article
-     * @return An Object JsonPath of Articles
+     * @param page le numéro de la page
+     * @param size le nombre d'article par pages
+     * @return ResponseEntity<Page < Article> pagination des articles
      */
     @GetMapping(path = "/getAllArticles")
     @ApiOperation(value = "Get articles list with pagable ")
     public ResponseEntity<Page<Article>> getlistArticlePagination(
-            @RequestParam(defaultValue = "0", name = "page", required = true) int page,
-            @RequestParam(name = "size", required = true) @NotNull @Min(value = 1) int size) {
+            @RequestParam(defaultValue = "0", name = "page", required = true) Integer page,
+            @RequestParam(defaultValue = "10", name = "size", required = true) Integer size) {
+
+        page = page <= 0 ? 0 : page;
+        size = size <= 0 ? 10 : size;
 
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(this.articleService.findArticlesWithPages(page, size));
     }
 
+    /**
+     * Permet d'obtenir une pagination d'articles
+     *
+     * @param page    le numéro de la page
+     * @param size    le nombre d'article par pages
+     * @param section la section et le type d'article
+     * @return ResponseEntity<Page < Article> pagination des articles par la section
+     */
     @GetMapping(path = "/getAllArticlesSection")
     @ApiOperation(value = "Get articles list with section in pagable ")
     public ResponseEntity<Page<Article>> getlistArticleWithPagination(
-            @RequestParam(defaultValue = "0", name = "page", required = true) int page,
-            @RequestParam(defaultValue = "0", name = "size", required = true) int size,
-            @RequestParam(defaultValue = "0", name = "sectionId") Integer section) {
+            @RequestParam(defaultValue = "0", name = "page", required = true) Integer page,
+            @RequestParam(defaultValue = "10", name = "size", required = true) Integer size,
+            @RequestParam(defaultValue = "1", name = "sectionId", required = true) Integer section) {
 
+        page = page < 0 ? 0 : page;
+        size = size < 1 ? 10 : size;
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -127,23 +152,24 @@ public class ControllerArticle {
 
 
     /**
-     * Allow getting an article by id
+     * Permet de récupérer un article par son ID
      *
-     * @param id to Object type Long, id of Article
-     * @return An Object JsonPath of Article
-     * @throws ArticleNotFoundException
+     * @param id
+     * @return
      */
     @GetMapping(path = "/getArticle/{id}")
     public Article getArticle(@PathVariable @NotNull Integer id) {
 
         return this.articleService
                 .findArticleById(id)
-                .orElseThrow(() -> new ArticleNotFoundException(id));
+                .orElseThrow(() -> new ArticleException("L'article n'a pas était trouver"));
 
     }
 
 
     /**
+     * Permet de enregistrer un fichier de type images
+     *
      * @param fileImages
      * @return
      */
@@ -152,85 +178,74 @@ public class ControllerArticle {
                                             @NotNull MultipartFile fileImages) {
 
 
-        if ( !fileImages.isEmpty()) {
-
-            try {
-
-                log.info("images objet :" + fileImages.getOriginalFilename());
-                String[] newIpImages = this.fsssI.storeImage(fileImages);
-
-                log.info("Ip images : " + newIpImages[0]);
-                log.info("name image : " + newIpImages[1]);
-
-                return ResponseHandler.generateResponse(
-                        "L'image " + newIpImages[0] + " a été réalisé avec succès a l'adresse suivant : "
-                                + newIpImages[0],
-                        HttpStatus.CREATED,
-                        newIpImages);
-
-            } catch (Exception ex) {
-
-                log.error(ex.getMessage());
-                log.error(ex.getCause().toString());
-
-                throw new ResponseStatusException(
-                        HttpStatus.INTERNAL_SERVER_ERROR,
-                        "Un problème technique est survenu ");
-            }
-        } else {
-
-            throw new ResponseStatusException(
-                    HttpStatus.INTERNAL_SERVER_ERROR,
-                    "Votre object est null ou vide ");
-
-/*            return ResponseHandler.generateResponse(
-                    "Votre object est null ou vide ",
-                    HttpStatus.INTERNAL_SERVER_ERROR,
-                    null);*/
-        }
-
-
-    }
-
-    /**
-     * @param nameImages
-     * @return
-     * @throws IOException
-     */
-    @DeleteMapping("/deleteImages")
-    public ResponseEntity<Object> deleteImages(@RequestParam("nameImages") String nameImages) throws IOException {
-
-        log.info("Images a supprimer : " + nameImages);
-
-        try {
-            if (nameImages == null) {
-                log.error("String is null");
-                throw new Exception("String is null");
-            }
-
-            if (nameImages.isEmpty()) {
-                log.error("String is Empty");
-                throw new Exception("String is Empty");
-            }
-
-            this.fsssI.deleteImages(nameImages);
+        if (fileImages.isEmpty()) {
 
             return ResponseHandler.generateResponse(
-                    "La suppression de l'images : " + nameImages + " a été réaliser avec succès "
-                    , HttpStatus.OK
-                    , nameImages);
+                    "Fichier non présent",
+                    HttpStatus.NOT_FOUND,
+                    fileImages);
+        }
 
+        try {
+
+            log.info("Images recptionnée :" + fileImages.getOriginalFilename());
+            String[] newIpImages = this.fsssI.storeImage(fileImages);
+            log.info("Ip images : " + newIpImages[0]);
+            log.info("name image : " + newIpImages[1]);
+
+            String message = "L'image " + newIpImages[1] + " a été enregitre avec succès.";
+            return ResponseHandler.generateResponse(
+                    message,
+                    HttpStatus.CREATED,
+                    newIpImages);
 
         } catch (Exception ex) {
 
             log.error(ex.getMessage());
             log.error(ex.getCause().toString());
 
-            throw new ResponseStatusException(
+            return ResponseHandler.generateResponse(
+                    "Un problème technique est survenu ",
                     HttpStatus.INTERNAL_SERVER_ERROR,
-                    "la suppression de l'image " + nameImages + " a échouer");
-
+                    fileImages);
 
         }
+
+
+    }
+
+    /**
+     * Permet de supprimer une images par son noms
+     *
+     * @param nameImages
+     * @return
+     * @throws Exception
+     */
+    @DeleteMapping("/deleteImages")
+    public ResponseEntity<Object> deleteImages(@RequestParam("nameImages") String nameImages) throws Exception {
+
+        if (nameImages == null || nameImages.isEmpty()) {
+            return ResponseHandler.generateResponse(
+                    "Images non presente ",
+                    HttpStatus.NOT_FOUND,
+                    nameImages);
+        }
+
+        try {
+            log.info("Images en cours de suppression : " + nameImages);
+            this.fsssI.deleteImages(nameImages);
+            String message = "La suppression de l'images : " + nameImages + " a été réaliser avec succès ";
+            return ResponseHandler.generateResponse(message, HttpStatus.OK, nameImages);
+
+        } catch (Exception ae) {
+
+            return ResponseHandler.generateResponse(
+                    "L'image n'a pas pu être supprimer ",
+                    HttpStatus.NOT_FOUND,
+                    nameImages);
+
+        }
+
+
     }
 }

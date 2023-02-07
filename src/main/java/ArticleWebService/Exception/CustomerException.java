@@ -12,12 +12,12 @@ public class CustomerException {
 
     public CustomerException(HttpStatus status, String error, String message, String path) {
 
-        Map<String, Object> detail = new LinkedHashMap<>();
-        detail.put("timestamp", LocalDateTime.now());
-        detail.put("status", status.value());
-        detail.put("error", error);
-        detail.put("message", message);
-        detail.put("path", path);
+        detailMessage = new LinkedHashMap<>();
+        detailMessage.put("Timestamp", LocalDateTime.now().toString());
+        detailMessage.put("Status", status.value());
+        detailMessage.put("Type error", error);
+        detailMessage.put("Message", message);
+        detailMessage.put("Path", path);
     }
 
     public Map<String, Object> getDetailMessage(){

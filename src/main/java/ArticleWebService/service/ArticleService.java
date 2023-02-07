@@ -16,6 +16,6 @@ public interface ArticleService {
 
     ArticleDto saveArticle(ArticleDto articleDto );
 
-    boolean deleteArticleById(Integer idArticle);
+    void deleteArticleById(Integer idArticle) ;
 
 }

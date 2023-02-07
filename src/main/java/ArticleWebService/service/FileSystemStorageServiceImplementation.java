@@ -93,13 +93,12 @@ public class FileSystemStorageServiceImplementation implements FileSystemStorage
     @Override
     public boolean deleteImages(String fileName) throws Exception {
 
-
-        Path path = Paths.get(environment.getProperty("file.upload-dir") + "/" + fileName);
         try {
             log.info("Suppression de l'images : " + fileName);
-            Files.delete(path);
+            Files.delete(Paths.get(environment.getProperty("file.upload-dir") + "/" + fileName));
             return true;
         } catch (IOException ioe) {
+            log.error("Erreur delete images : " + ioe.getMessage());
             throw new Exception(ioe);
         }
 
