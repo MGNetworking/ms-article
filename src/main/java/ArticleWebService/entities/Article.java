@@ -20,7 +20,6 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-@Embeddable
 @Table(name = "article", schema = "ms_article")
 public class Article implements Serializable {
 
@@ -41,7 +40,6 @@ public class Article implements Serializable {
     @Column(name = "id_note", nullable = true)
     private Integer idNote;
 
-    @Embedded
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_section", referencedColumnName = "id_section")
     @JsonBackReference

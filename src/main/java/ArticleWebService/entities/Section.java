@@ -1,6 +1,9 @@
 package ArticleWebService.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,7 +21,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-@Embeddable
 @Table(name = "section", schema = "ms_article")
 public class Section implements Serializable {
 
@@ -30,13 +32,13 @@ public class Section implements Serializable {
     @Column(name = "description", nullable = false)
     private String description;
 
-    @Embedded
     @OneToMany(mappedBy = "section", fetch = FetchType.LAZY)
-    @JsonIgnoreProperties("section")
-    public Collection<Article> articles = new ArrayList<>();
+    @JsonIgnore
+    private Collection<Article> articles = new ArrayList<>();
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_domain", referencedColumnName = "id_domain")
-    public Domain domain;
+    @JsonIgnore
+    private Domain domain;
 
 }

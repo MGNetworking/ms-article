@@ -1,5 +1,7 @@
 package ArticleWebService.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,6 +12,7 @@ import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Data
@@ -22,11 +25,11 @@ public class Domain implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_domain")
-    public Integer idDomain;
+    private Integer idDomain;
 
     @Column(name = "description")
-    public String description;
+    private String description;
 
     @OneToMany(mappedBy = "domain", fetch = FetchType.EAGER)
-    public Collection<Section> sections;
+    private Collection<Section> sections;
 }

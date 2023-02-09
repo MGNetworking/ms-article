@@ -2,9 +2,11 @@ package ArticleWebService.service;
 
 import ArticleWebService.dto.ArticleDto;
 import ArticleWebService.entities.Article;
+import ArticleWebService.entities.Domain;
 import ArticleWebService.entities.Section;
 import ArticleWebService.feign.StorageRestClient;
 import ArticleWebService.repository.ArticleRepository;
+import ArticleWebService.repository.DomainRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
@@ -16,8 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -26,6 +28,7 @@ public class ArticleServiceImpl implements ArticleService {
 
     private ArticleRepository articleRepository;
     private StorageRestClient storageRestClient;
+    private DomainRepository domainRepository;
     private FileSystemStorageServiceImplementation fsssI;
     private ModelMapper modelMapper;
 
@@ -35,10 +38,12 @@ public class ArticleServiceImpl implements ArticleService {
     @Autowired
     public ArticleServiceImpl(ArticleRepository articleRepository,
                               StorageRestClient storageRestClient,
-                              FileSystemStorageServiceImplementation fileSyStorSServiceImp) {
+                              FileSystemStorageServiceImplementation fileSyStorSServiceImp ,
+                              DomainRepository domainRepository) {
 
         this.articleRepository = articleRepository;
         this.storageRestClient = storageRestClient;
+        this.domainRepository = domainRepository;
         this.fsssI = fileSyStorSServiceImp;
         this.modelMapper = new ModelMapper();
     }
@@ -84,6 +89,15 @@ public class ArticleServiceImpl implements ArticleService {
 
         this.articleRepository.deleteById(idArticle);
 
+    }
+
+    @Override
+    public List<Domain> getlistDomainWithSection(){
+
+        List<Domain> domainList = this.domainRepository.findAllWithSections();
+        domainList = domainList.stream().distinct().collect(Collectors.toList());
+
+        return domainList;
     }
 
 }

@@ -4,6 +4,7 @@ import ArticleWebService.Exception.ArticleException;
 import ArticleWebService.dto.ArticleDto;
 import ArticleWebService.entities.Article;
 import ArticleWebService.entities.ArticleForm;
+import ArticleWebService.entities.Domain;
 import ArticleWebService.response.ResponseHandler;
 import ArticleWebService.service.ArticleService;
 import ArticleWebService.service.FileSystemStorageServiceImplementation;
@@ -25,6 +26,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
+import java.util.List;
 
 //@CrossOrigin(origins = "*")
 @RestController
@@ -243,9 +245,12 @@ public class ControllerArticle {
                     "L'image n'a pas pu être supprimer ",
                     HttpStatus.NOT_FOUND,
                     nameImages);
-
         }
 
+    }
 
+    @GetMapping(path = "/getDomainList")
+    public List<Domain> getDomainList() {
+        return this.articleService.getlistDomainWithSection();
     }
 }
