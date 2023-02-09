@@ -15,6 +15,9 @@ import java.util.Date;
 @AllArgsConstructor
 public class ArticleForm {
 
+
+    private Integer idArticle;
+
     private Integer idUser;
 
     private Integer idSection;
