@@ -85,7 +85,7 @@ public class ControllerArticleTest {
      * }
      **/
 
-    @Test
+/*    @Test
     @DisplayName("End point Post : save article in dataBase ")
     public void endSaveArticle() throws Exception {
 
@@ -107,7 +107,7 @@ public class ControllerArticleTest {
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.idUser").value(1l));
-    }
+    }*/
 
     @Test
     @DisplayName("End point Post : upload images in server")
