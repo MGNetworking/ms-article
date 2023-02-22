@@ -6,7 +6,9 @@ import org.springframework.test.context.support.DefaultActiveProfilesResolver;
 
 import java.util.regex.Pattern;
 
-
+/**
+ * Permet la résolution du profile actif au lancement de l'application.
+ */
 @Slf4j
 public class SystemPropertiesActiveProfileResolver implements ActiveProfilesResolver {
 
@@ -21,13 +23,13 @@ public class SystemPropertiesActiveProfileResolver implements ActiveProfilesReso
         System.getProperties().values().forEach(
                 ele -> {
                     log.info(ele.toString());
-                    if (Pattern.matches("-Dspring.profiles.active=dev", ele.toString())){
+                    if (Pattern.matches("-Dspring.profiles.active=dev", ele.toString())) {
                         log.info("*****************************");
                         log.info("le profile dev a était trouver ");
                         log.info("*****************************");
                         springPropertieProfile[0] = "dev";
 
-                    }else if (Pattern.matches("-Dspring.profiles.active=pre-prod", ele.toString())){
+                    } else if (Pattern.matches("-Dspring.profiles.active=pre-prod", ele.toString())) {
 
                         log.info("*****************************");
                         log.info("le profile pre-prod a était trouver ");
@@ -35,7 +37,7 @@ public class SystemPropertiesActiveProfileResolver implements ActiveProfilesReso
 
                         springPropertieProfile[0] = "pre-prod";
 
-                    }else if (Pattern.matches("-Dspring.profiles.active=prod", ele.toString())){
+                    } else if (Pattern.matches("-Dspring.profiles.active=prod", ele.toString())) {
 
                         log.info("*****************************");
                         log.info("le profile prod a était trouver ");
@@ -47,18 +49,17 @@ public class SystemPropertiesActiveProfileResolver implements ActiveProfilesReso
                 }
         );
 
-        if (springPropertieProfile[0] == null){
+        if (springPropertieProfile[0] == null) {
 
-            log.info("*****************************");
-            log.info("le profile n'a pas était trouver dans les variables d'environnement ");
-            log.info("C'est donc le profile (dev) des present dans les tests d'intégration qui sera activé");
-            log.info("Aucun profile pour les testes d'intégrations n'est activé ");
-            log.info("*****************************");
+            log.error("*****************************");
+            log.error("Le profile n'a pas était trouver dans les variables d'environnement ");
+            log.error("C'est donc le profile (dev) présent dans les tests d'intégration qui sera activé");
+            log.error("*****************************");
 
             return this.defaultActiveProfilesResolver.resolve(testClass);
-        }else {
+        } else {
 
-            return  springPropertieProfile;
+            return springPropertieProfile;
         }
 
     }

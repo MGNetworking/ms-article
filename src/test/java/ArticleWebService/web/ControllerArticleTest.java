@@ -3,23 +3,30 @@ package ArticleWebService.web;
 import ArticleWebService.configuration.WebConfiguration;
 import ArticleWebService.entities.ArticleForm;
 import ArticleWebService.service.FileSystemStorageServiceImplementation;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.web.JsonPath;
-import org.springframework.http.MediaType;
+import org.springframework.http.*;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ActiveProfilesResolver;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.io.File;
@@ -47,20 +54,74 @@ public class ControllerArticleTest {
 
     @Autowired
     private MockMvc mockMvc;
-
     @Autowired
     private WebApplicationContext webApplicationContext;
-
     @Autowired
     private FileSystemStorageServiceImplementation fsssi;
 
-    private static ObjectMapper mapper = new ObjectMapper();
-
     @Value("${file.domain-dir}")
     private String ipLocation;
-
     @Value("${file.upload-dir}")
     private String directory;
+    @Value("${keycloak.auth-server-url}")
+    private static String urlKeycloak;
+    @Value("${keycloak.realm}")
+    private static String realmKeycloak;
+    @Value("${keycloak.resource}")
+    private static String clientKeycloak;
+    @Value("${keycloak.userTeste}")
+    private static String userKeycloak;
+    @Value("${keycloak.password}")
+    private static String passwordKeycloak;
+
+    private static String protocol = "/protocol/openid-connect/token";
+    private static String accesToken;
+    private static ObjectMapper mapper = new ObjectMapper();
+
+
+
+    @BeforeAll
+    public static void setUp() throws Exception {
+        accesToken = getAccesToken();
+    }
+
+    /**
+     * Permet de créer un token avant les testes d'intégration.
+     *
+     * @return
+     * @throws Exception
+     */
+    private static String getAccesToken() throws Exception {
+        // url vers keycloak
+        String tokenUrl = "http://192.168.38.128:8888/auth" + "/realms/" + "ghoverblog" + protocol;
+        // créationd e l'entéte du type application/x-www-form-urlencoded
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        // création d'une map de données pour l'accès a keycloak
+        MultiValueMap<String, String> mapToAcces = new LinkedMultiValueMap<>();
+        mapToAcces.add("client_id","overblog_angular");
+        mapToAcces.add("username", "max");
+        mapToAcces.add("password", "aAA5MbezUxN5V3BHVLH4");
+        mapToAcces.add("grant_type", "password");
+
+        // création de la request
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(mapToAcces, headers);
+
+        // envoi vers keycloak
+        ResponseEntity<String> response = new RestTemplate()
+                .postForEntity(tokenUrl, request, String.class);
+
+        // vérification du status
+        if (response.getStatusCode() != HttpStatus.OK) {
+            throw new RuntimeException("Echec de l'obtention du token ");
+        }
+
+        String responseBody = response.getBody();
+        JsonNode jsonNode = mapper.readTree(responseBody);
+        return jsonNode.get("access_token").asText();
+
+    }
 
     /**
      * @Test
@@ -85,7 +146,7 @@ public class ControllerArticleTest {
      * }
      **/
 
-/*    @Test
+    @Test
     @DisplayName("End point Post : save article in dataBase ")
     public void endSaveArticle() throws Exception {
 
@@ -101,13 +162,14 @@ public class ControllerArticleTest {
         String paylaod = mapper.writeValueAsString(articleForm);
 
         mockMvc.perform(post("/article/saveArticle")
+                        .header("Authorization", "bearer " + this.accesToken)
                         .content(paylaod)
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .accept(MediaType.APPLICATION_JSON_VALUE))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.idUser").value(1l));
-    }*/
+    }
 
     @Test
     @DisplayName("End point Post : upload images in server")

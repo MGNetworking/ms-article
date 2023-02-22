@@ -156,6 +156,24 @@
             <version>3.0.2</version>
         </dependency>
 
+        <!-- permet la création d'un client utilisateur avec keycloak utilisé dans les testes unitaire -->
+        <!-- https://mvnrepository.com/artifact/org.keycloak/keycloak-admin-client -->
+        <dependency>
+            <groupId>org.keycloak</groupId>
+            <artifactId>keycloak-admin-client</artifactId>
+            <version>20.0.5</version>
+        </dependency>
+
+        <!-- Fourni des utilitaires pour test les focntionnalité de spring security-->
+        <!-- https://mvnrepository.com/artifact/org.springframework.security/spring-security-test -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <version>6.0.1</version>
+            <scope>test</scope>
+        </dependency>
+
+
         <!-- https://mvnrepository.com/artifact/org.modelmapper/modelmapper -->
         <dependency>
             <groupId>org.modelmapper</groupId>
