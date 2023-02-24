@@ -38,7 +38,7 @@ public class ArticleServiceImpl implements ArticleService {
     @Autowired
     public ArticleServiceImpl(ArticleRepository articleRepository,
                               StorageRestClient storageRestClient,
-                              FileSystemStorageServiceImplementation fileSyStorSServiceImp ,
+                              FileSystemStorageServiceImplementation fileSyStorSServiceImp,
                               DomainRepository domainRepository) {
 
         this.articleRepository = articleRepository;
@@ -92,12 +92,13 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    public List<Domain> getlistDomainWithSection(){
+    public List<Domain> getArticleWithSection() {
 
         List<Domain> domainList = this.domainRepository.findAllWithSections();
-        domainList = domainList.stream().distinct().collect(Collectors.toList());
-
-        return domainList;
+        return domainList
+                .stream()
+                .distinct()
+                .collect(Collectors.toList());
     }
 
 }

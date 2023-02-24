@@ -20,6 +20,6 @@ public interface ArticleService {
 
     void deleteArticleById(Integer idArticle) ;
 
-    List<Domain> getlistDomainWithSection();
+    List<Domain> getArticleWithSection();
 
 }

@@ -145,6 +145,7 @@ public class ControllerArticle {
             @RequestParam(defaultValue = "10", name = "size", required = true) Integer size,
             @RequestParam(defaultValue = "1", name = "sectionId", required = true) Integer section) {
 
+        // ternaire d'initialisation
         page = page < 0 ? 0 : page;
         size = size < 1 ? 10 : size;
 
@@ -181,7 +182,6 @@ public class ControllerArticle {
     public ResponseEntity<Object> saveImage(@RequestParam(value = "images", required = true)
                                             @NotNull MultipartFile fileImages) {
 
-
         if (fileImages.isEmpty()) {
 
             return ResponseHandler.generateResponse(
@@ -214,8 +214,6 @@ public class ControllerArticle {
                     fileImages);
 
         }
-
-
     }
 
     /**
@@ -251,8 +249,8 @@ public class ControllerArticle {
 
     }
 
-    @GetMapping(path = "/getDomainList")
-    public List<Domain> getDomainList() {
-        return this.articleService.getlistDomainWithSection();
+    @GetMapping(path = "/getArticleSection")
+    public List<Domain> getListArticleWithSection() {
+        return this.articleService.getArticleWithSection();
     }
 }
