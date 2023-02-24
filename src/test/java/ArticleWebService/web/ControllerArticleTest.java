@@ -7,10 +7,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.Matchers;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -63,54 +60,58 @@ public class ControllerArticleTest {
     private String ipLocation;
     @Value("${file.upload-dir}")
     private String directory;
-    @Value("${keycloak.auth-server-url}")
-    private static String urlKeycloak;
-    @Value("${keycloak.realm}")
-    private static String realmKeycloak;
+
+    @Value("${urlToken.keycloak}")
+    private String urlTokenKeycloak;
     @Value("${keycloak.resource}")
-    private static String clientKeycloak;
-    @Value("${keycloak.userTeste}")
-    private static String userKeycloak;
-    @Value("${keycloak.password}")
-    private static String passwordKeycloak;
+    private String clientKeycloak;
+    @Value("${user.keycloak}")
+    private String userKeycloak;
+    @Value("${password-user.keycloak}")
+    private String passwordKeycloak;
 
-    private static String protocol = "/protocol/openid-connect/token";
-    private static String accesToken;
-    private static ObjectMapper mapper = new ObjectMapper();
+    private String accesToken;
+    private ObjectMapper mapper = new ObjectMapper();
 
+    @BeforeEach
+    public void setUp() throws Exception {
 
+        // vérification de l'initialisation des varibales d'environement
+        if (this.urlTokenKeycloak == null) {
+            throw new Exception("les variables avec l'annotation @Value ne sont pas initialier ");
+        }
 
-    @BeforeAll
-    public static void setUp() throws Exception {
-        accesToken = getAccesToken();
+        // get acces token user
+        if (accesToken == null) {
+            accesToken = getAccesToken();
+        }
+
     }
 
     /**
-     * Permet de créer un token avant les testes d'intégration.
+     * Permet d'initialiser un token pour les testes
      *
-     * @return
-     * @throws Exception
+     * @return String access_token
+     * @throws Exception Dans le cas d'un status != 200
      */
-    private static String getAccesToken() throws Exception {
-        // url vers keycloak
-        String tokenUrl = "http://192.168.38.128:8888/auth" + "/realms/" + "ghoverblog" + protocol;
-        // créationd e l'entéte du type application/x-www-form-urlencoded
+    private String getAccesToken() throws Exception {
+
+        // création de l'entéte du type application/x-www-form-urlencoded
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
         // création d'une map de données pour l'accès a keycloak
         MultiValueMap<String, String> mapToAcces = new LinkedMultiValueMap<>();
-        mapToAcces.add("client_id","overblog_angular");
-        mapToAcces.add("username", "max");
-        mapToAcces.add("password", "aAA5MbezUxN5V3BHVLH4");
+        mapToAcces.add("client_id", this.clientKeycloak);
+        mapToAcces.add("username", this.userKeycloak);
+        mapToAcces.add("password", this.passwordKeycloak);
         mapToAcces.add("grant_type", "password");
-
-        // création de la request
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(mapToAcces, headers);
 
         // envoi vers keycloak
         ResponseEntity<String> response = new RestTemplate()
-                .postForEntity(tokenUrl, request, String.class);
+                .postForEntity(this.urlTokenKeycloak,
+                        new HttpEntity<>(mapToAcces, headers),
+                        String.class);
 
         // vérification du status
         if (response.getStatusCode() != HttpStatus.OK) {
@@ -123,28 +124,29 @@ public class ControllerArticleTest {
 
     }
 
-    /**
-     * @Test
-     * @DisplayName("Get Article by Id ")
-     * public void endPointGetArticle() throws Exception {
-     * <p>
-     * mockMvc.perform(MockMvcRequestBuilders
-     * .get("/article/getArticle/16"))
-     * .andExpect(status().isOk())
-     * .andExpect(jsonPath("$.titre", containsString("L'IA")));
-     * }
-     * @Test
-     * @DisplayName("Get All Article with Pagination")
-     * public void endPointGetAllArticles() throws Exception {
-     * <p>
-     * mockMvc.perform(MockMvcRequestBuilders
-     * .get("/article/getAllArticles?page=0&size=6"))
-     * .andExpect(status().isOk())
-     * .andExpect(jsonPath("$.content[0].articleId", is(10)))
-     * .andExpect(jsonPath("$.content[0].titre", containsString("Fini la formation")));
-     * <p>
-     * }
-     **/
+
+    @Test
+    @DisplayName("Get Article by Id ")
+    public void endPointGetArticle() throws Exception {
+
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/article/getArticle/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.titre", containsString("Titre de testing")));
+    }
+
+    @Test
+    @DisplayName("Get All Article with Pagination")
+    public void endPointGetAllArticles() throws Exception {
+
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/article/getAllArticles?page=0&size=6"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].articleId", is(1)))
+                .andExpect(jsonPath("$.content[0].titre", containsString("Titre de testing")));
+
+    }
+
 
     @Test
     @DisplayName("End point Post : save article in dataBase ")
@@ -208,8 +210,11 @@ public class ControllerArticleTest {
     }
 
 
-    // TODO test end point removeImages
-
+    /**
+     * Permet testé la suppression d'un images sur le serveur.
+     *
+     * @throws Exception
+     */
     @Test
     @DisplayName("End point Delete : remove image in server")
     public void endPointdeleteImages() throws Exception {
@@ -230,19 +235,12 @@ public class ControllerArticleTest {
             }
         }
 
-        // prendre une images dans les asset
-        //File filesImg = new File(getClass().getClassLoader().getResource("static/images-MockMVC/1.jpg").getFile());
-
         if (nameFile != null) {
 
             mockMvc.perform(MockMvcRequestBuilders.delete("/article/deleteImages")
                             .param("nameImages", nameFile))
                     .andExpect(status().isOk());
 
-        } else {
-            String message = "L'images de test n'est pas présent dans les asset";
-            log.error(message);
-            throw new Exception(message);
         }
 
     }
