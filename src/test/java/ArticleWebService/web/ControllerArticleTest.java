@@ -76,12 +76,14 @@ public class ControllerArticleTest {
     @BeforeEach
     public void setUp() throws Exception {
 
-        // vérification de l'initialisation des varibales d'environement
-        if (this.urlTokenKeycloak == null) {
-            throw new Exception("les variables avec l'annotation @Value ne sont pas initialier ");
-        }
+        // Certifie que les variables d'environement
+        // keycloak sont initialisées avant l'initialisation du token d'accès
+        Assertions.assertNotNull(this.urlTokenKeycloak);
+        Assertions.assertNotNull(this.clientKeycloak);
+        Assertions.assertNotNull(this.userKeycloak);
+        Assertions.assertNotNull(this.passwordKeycloak);
 
-        // get acces token user
+        // Pour une initialisation
         if (accesToken == null) {
             accesToken = getAccesToken();
         }
@@ -89,7 +91,7 @@ public class ControllerArticleTest {
     }
 
     /**
-     * Permet d'initialiser un token pour les testes
+     * Permet d'initialiser un token pour les testes d'accès
      *
      * @return String access_token
      * @throws Exception Dans le cas d'un status != 200
@@ -114,12 +116,10 @@ public class ControllerArticleTest {
                         String.class);
 
         // vérification du status
-        if (response.getStatusCode() != HttpStatus.OK) {
-            throw new RuntimeException("Echec de l'obtention du token ");
-        }
+        Assertions.assertEquals(response.getStatusCode(), HttpStatus.OK);
 
-        String responseBody = response.getBody();
-        JsonNode jsonNode = mapper.readTree(responseBody);
+        // mapping du token
+        JsonNode jsonNode = mapper.readTree(response.getBody());
         return jsonNode.get("access_token").asText();
 
     }
@@ -142,7 +142,7 @@ public class ControllerArticleTest {
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/article/getAllArticles?page=0&size=6"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].articleId", is(1)))
+                .andExpect(jsonPath("$.content[0].idArticle", is(1)))
                 .andExpect(jsonPath("$.content[0].titre", containsString("Titre de testing")));
 
     }
@@ -182,29 +182,29 @@ public class ControllerArticleTest {
         // prendre une images dans les asset
         File filesImg = new File(cl.getResource("static/images-MockMVC/1.jpg").getFile());
 
-        if (filesImg.exists()) {
+        File filesImg2 = new File(cl.getResource("2.jpg").getFile());
 
-            log.info("l'images existe : " + filesImg.getName());
+        // verifie l'existance de l'images dans les assets
+        Assertions.assertTrue(filesImg.exists());
 
-            // Lecture du fichier bytes a byte
-            byte[] imageByte = Files.readAllBytes(filesImg.toPath());
+        Assertions.assertNotNull(filesImg2);
 
-            // création de l'objet multipartFile
-            MockMultipartFile mockMultipartFile =
-                    new MockMultipartFile(
-                            "images",                            // le nom du fichier
-                            filesImg.getName(),                        // le nom original du fichier
-                            String.valueOf(MediaType.IMAGE_JPEG),      // le type de ficher
-                            imageByte);                                // le byte code de l'image
+        log.info("l'images : " + filesImg.getName() + " est présente");
 
-            // appel du point de terminaison
-            mockMvc.perform(multipart("/article/saveImages").file(mockMultipartFile))
-                    .andExpect(status().isCreated());
+        // Lecture du fichier bytes a bytes
+        byte[] imageByte = Files.readAllBytes(filesImg.toPath());
 
-        } else {
+        // création de l'objet multipartFile
+        MockMultipartFile mockMultipartFile =
+                new MockMultipartFile(
+                        "images",                            // le nom du fichier
+                        filesImg.getName(),                        // le nom original du fichier
+                        String.valueOf(MediaType.IMAGE_JPEG),      // le type de ficher
+                        imageByte);                                // le byte code de l'image
 
-            throw new Exception("L'images de test n'est pas présent dans les asset");
-        }
+        // appel du point de terminaison
+        mockMvc.perform(multipart("/article/saveImages").file(mockMultipartFile))
+                .andExpect(status().isCreated());
 
 
     }
@@ -235,14 +235,12 @@ public class ControllerArticleTest {
             }
         }
 
-        if (nameFile != null) {
+        // certifie que l'images est présent sur le serveur
+        Assertions.assertNotNull(nameFile);
 
-            mockMvc.perform(MockMvcRequestBuilders.delete("/article/deleteImages")
-                            .param("nameImages", nameFile))
-                    .andExpect(status().isOk());
-
-        }
-
+        mockMvc.perform(MockMvcRequestBuilders.delete("/article/deleteImages")
+                        .param("nameImages", nameFile))
+                .andExpect(status().isOk());
     }
 
 
