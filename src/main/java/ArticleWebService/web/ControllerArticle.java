@@ -1,6 +1,6 @@
 package ArticleWebService.web;
 
-import ArticleWebService.Exception.ArticleException;
+import ArticleWebService.Exception.ArticleNotFoundException;
 import ArticleWebService.dto.ArticleDto;
 import ArticleWebService.entities.Article;
 import ArticleWebService.entities.ArticleForm;
@@ -10,23 +10,20 @@ import ArticleWebService.service.ArticleService;
 import ArticleWebService.service.FileSystemStorageServiceImplementation;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
-import java.io.IOException;
 import java.util.List;
 
 //@CrossOrigin(origins = "*")
@@ -39,13 +36,81 @@ public class ControllerArticle {
     private ArticleService articleService;
     @Autowired
     private FileSystemStorageServiceImplementation fsssI;
-    private ArticleDto articleDtoDate;
 
     private ControllerArticle() {
     }
 
+
     /**
-     * Permet d'enregister un article et utilise un gestionnaire de validation.
+     * Permet de récupérer un article par son ID
+     *
+     * @param id
+     * @return
+     */
+    @GetMapping(path = "/getArticle/{id}")
+    public Article getArticle(@PathVariable @NotNull Integer id) {
+
+        return this.articleService
+                .findArticleById(id)
+                .orElseThrow(() -> new ArticleNotFoundException(
+                        String.format("L'identifiant de l'article : %d  n'a pas était trouver", id)
+                ));
+
+    }
+
+
+    /**
+     * Permet d'obtenir la pagination des articles
+     *
+     * @param page le numéro de la page
+     * @param size le nombre d'article par pages
+     * @return ResponseEntity<Page < Article> pagination des articles
+     */
+    @GetMapping(path = "/getAllArticles")
+    @ApiOperation(value = "Get articles list with pagable ")
+    public ResponseEntity<Page<ArticleDto>> getlistArticlePagination(
+            @RequestParam(defaultValue = "0", name = "page", required = true) Integer page,
+            @RequestParam(defaultValue = "10", name = "size", required = true) Integer size)
+            throws Exception {
+
+/*        page = page <= 0 ? 0 : page;
+        size = size <= 0 ? 10 : size;*/
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(this.articleService.findArticlesPagination(page, size));
+    }
+
+    /**
+     * Permet d'obtenir une pagination d'articles.
+     * En cas de demande de pages inexistante, une pagination vide sera renvoyer.
+     *
+     * @param page    le numéro de la page
+     * @param size    le nombre d'article par pages
+     * @param section la section et le type d'article
+     * @return ResponseEntity<Page < Article> pagination des articles par la section
+     */
+    @GetMapping(path = "/getAllArticlesSection")
+    @ApiOperation(value = "Get articles list with section in pagable ")
+    public ResponseEntity<Page<ArticleDto>> getlistArticleWithPagination(
+            @RequestParam(defaultValue = "0", name = "page", required = true) Integer page,
+            @RequestParam(defaultValue = "10", name = "size", required = true) Integer size,
+            @RequestParam(defaultValue = "1", name = "sectionId", required = true) Integer section)
+            throws Exception {
+
+        // ternaire d'initialisation
+        page = page < 0 ? 0 : page;
+        size = size < 1 ? 10 : size;
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(this.articleService
+                        .findArticlesPaginationSection(page, size, section));
+    }
+
+
+    /**
+     * Permet la sauvegarde ou la mise à jour d'un article.
      *
      * @param articleForm classe de gestion du formulaire.
      * @return ResponseEntity<ArticleDto> l'article
@@ -54,31 +119,15 @@ public class ControllerArticle {
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     //@PreAuthorize("hasAuthority('admin')")
-    @ApiOperation(value = "save articles in data base", response = ArticleDto.class)
-    public ResponseEntity<ArticleDto> saveArticle(@Valid @RequestBody ArticleForm articleForm) {
+    @ApiOperation(value = "Sauvegarde ou met a jour les données d'un article", response = ArticleDto.class)
+    //@PreAuthorize("#articleForm.idUser == #authentication.principal.id")
+    public ResponseEntity<ArticleForm> saveArticle(@Valid @RequestBody ArticleForm articleForm)
+            throws Exception {
 
-        // Mapping model to DTO
-        ModelMapper modelMapper = new ModelMapper();
-        modelMapper.getConfiguration().setAmbiguityIgnored(true);
-        ArticleDto articleDto = modelMapper.map(articleForm, ArticleDto.class);
+        return new ResponseEntity<ArticleForm>(
+                this.articleService.saveArticle(articleForm)
+                , HttpStatus.CREATED);
 
-        try {
-
-            articleDto = this.articleService.saveArticle(articleDto);
-
-            return new ResponseEntity<ArticleDto>(articleDto, HttpStatus.CREATED);
-
-        } catch (ConcurrencyFailureException cfe) {
-            log.error("une erreur de type ConcurrencyFailureException est survenu");
-            log.error(cfe.getMessage());
-            log.error(cfe.getCause().toString());
-            return new ResponseEntity<ArticleDto>(articleDto, HttpStatus.INTERNAL_SERVER_ERROR);
-        } catch (Exception e) {
-            log.error("une erreur de type Exception est survenu");
-            log.error(e.getMessage());
-            log.error(e.getCause().toString());
-            return new ResponseEntity<ArticleDto>(articleDto, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
     }
 
     /**
@@ -109,68 +158,6 @@ public class ControllerArticle {
         }
     }
 
-    /**
-     * Permet d'obtenir la pagination des articles
-     *
-     * @param page le numéro de la page
-     * @param size le nombre d'article par pages
-     * @return ResponseEntity<Page < Article> pagination des articles
-     */
-    @GetMapping(path = "/getAllArticles")
-    @ApiOperation(value = "Get articles list with pagable ")
-    public ResponseEntity<Page<Article>> getlistArticlePagination(
-            @RequestParam(defaultValue = "0", name = "page", required = true) Integer page,
-            @RequestParam(defaultValue = "10", name = "size", required = true) Integer size) {
-
-        page = page <= 0 ? 0 : page;
-        size = size <= 0 ? 10 : size;
-
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(this.articleService.findArticlesWithPages(page, size));
-    }
-
-    /**
-     * Permet d'obtenir une pagination d'articles
-     *
-     * @param page    le numéro de la page
-     * @param size    le nombre d'article par pages
-     * @param section la section et le type d'article
-     * @return ResponseEntity<Page < Article> pagination des articles par la section
-     */
-    @GetMapping(path = "/getAllArticlesSection")
-    @ApiOperation(value = "Get articles list with section in pagable ")
-    public ResponseEntity<Page<Article>> getlistArticleWithPagination(
-            @RequestParam(defaultValue = "0", name = "page", required = true) Integer page,
-            @RequestParam(defaultValue = "10", name = "size", required = true) Integer size,
-            @RequestParam(defaultValue = "1", name = "sectionId", required = true) Integer section) {
-
-        // ternaire d'initialisation
-        page = page < 0 ? 0 : page;
-        size = size < 1 ? 10 : size;
-
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(this.articleService
-                        .findArticlesPagesWithSection(page, size, section));
-    }
-
-
-    /**
-     * Permet de récupérer un article par son ID
-     *
-     * @param id
-     * @return
-     */
-    @GetMapping(path = "/getArticle/{id}")
-    public Article getArticle(@PathVariable @NotNull Integer id) {
-
-        return this.articleService
-                .findArticleById(id)
-                .orElseThrow(() -> new ArticleException("L'article n'a pas était trouver"));
-
-    }
-
 
     /**
      * Permet de enregistrer un fichier de type images
@@ -179,8 +166,8 @@ public class ControllerArticle {
      * @return
      */
     @PostMapping(path = "/saveImages")
-    public ResponseEntity<Object> saveImage(@RequestParam(value = "images", required = true)
-                                            @NotNull MultipartFile fileImages) {
+    public ResponseEntity saveImage(@RequestParam(value = "images", required = true)
+                                    @NotNull MultipartFile fileImages) {
 
         if (fileImages.isEmpty()) {
 
@@ -224,7 +211,7 @@ public class ControllerArticle {
      * @throws Exception
      */
     @DeleteMapping("/deleteImages")
-    public ResponseEntity<Object> deleteImages(@RequestParam("nameImages") String nameImages) throws Exception {
+    public ResponseEntity deleteImages(@RequestParam("nameImages") String nameImages) throws Exception {
 
         if (nameImages == null || nameImages.isEmpty()) {
             return ResponseHandler.generateResponse(
@@ -253,4 +240,12 @@ public class ControllerArticle {
     public List<Domain> getListArticleWithSection() {
         return this.articleService.getArticleWithSection();
     }
+
+    // TODO get liste de commentaire
+
+    // TODO get List de sources
+
+    // TODO get note article
+
+
 }

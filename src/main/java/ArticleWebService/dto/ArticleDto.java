@@ -1,11 +1,15 @@
 package ArticleWebService.dto;
 
+import ArticleWebService.entities.Section;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.*;
 
 import java.sql.Timestamp;
 import java.util.Date;
 
+/**
+ * Cette Classe permet de limité les objet de type Article.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -13,22 +17,17 @@ public class ArticleDto {
 
     private Integer idArticle;
     private Integer idUser;
-    private Integer idSection;
-    private Integer idCommentaire;
-    private Integer idSource;
-    private Integer idNote;
+    private Section section ;
     private String titre;
-    private String article;
+    private String imgDescription;
     private String description;
+    private boolean visibiliter;
 
-    /**
-     * permet la serialisation de l'ojet date au format demander
-     */
+    // Serialisation de l'ojet date au format => yyyy-MM-dd HH:mm:ss
     @JsonSerialize(using = DateSerialisation.class)
     private Timestamp dateCreation;
-
     @JsonSerialize(using = DateSerialisation.class)
     private Timestamp dateMaj;
-    private int vue;
-    private boolean visibiliter;
+
+
 }

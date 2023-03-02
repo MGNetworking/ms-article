@@ -1,7 +1,9 @@
 package ArticleWebService.entities;
 
+import ArticleWebService.dto.DateDeserializer;
 import ArticleWebService.dto.DateSerialisation;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -42,8 +44,8 @@ public class Article implements Serializable {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_section", referencedColumnName = "id_section")
-    @JsonBackReference
-    private Section section = new Section();
+    //@JsonBackReference
+    private Section section;
 
     @Column(name = "titre", nullable = false)
     private String titre;
@@ -59,11 +61,13 @@ public class Article implements Serializable {
     private String description;
 
     @JsonSerialize(using = DateSerialisation.class)
+    @JsonDeserialize(using = DateDeserializer.class)
     @Column(name = "date_creation", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @CreationTimestamp
     private Timestamp dateCreation;
 
     @JsonSerialize(using = DateSerialisation.class)
+    @JsonDeserialize(using = DateDeserializer.class)
     @Column(name = "date_maj", nullable = true)
     private Timestamp dateMaj;
 

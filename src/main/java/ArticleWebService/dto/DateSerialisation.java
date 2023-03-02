@@ -16,15 +16,31 @@ import java.text.SimpleDateFormat;
 @Slf4j
 public class DateSerialisation extends JsonSerializer {
 
-    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-    @Override
-    public void serialize(Object objet, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
+    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-        if (objet instanceof Timestamp){
-            log.info("Serialisation de l'objet : " + objet.toString());
-            String formatDate = dateFormat.format(objet);
-            jsonGenerator.writeString(formatDate);
+    @Override
+    public void serialize(Object objet,
+                          JsonGenerator jsonGenerator,
+                          SerializerProvider serializerProvider) throws IOException {
+
+        if (objet instanceof Timestamp) {
+
+            try {
+
+                log.info("Serialisation de l'objet : " + objet.toString());
+                String formatDate = dateFormat.format(objet);
+                jsonGenerator.writeString(formatDate);
+
+            } catch (IllegalArgumentException e) {
+
+                log.error("impossible d'analyser la date : " + e.getLocalizedMessage());
+                throw new IOException("impossible d'analyser la date ", e);
+
+            }
+
         }
 
     }
+
+
 }

@@ -1,7 +1,9 @@
 package ArticleWebService.service;
 
+import ArticleWebService.Exception.ArticleNotFoundException;
 import ArticleWebService.dto.ArticleDto;
 import ArticleWebService.entities.Article;
+import ArticleWebService.entities.ArticleForm;
 import ArticleWebService.entities.Domain;
 import ArticleWebService.entities.Section;
 import ArticleWebService.feign.StorageRestClient;
@@ -49,46 +51,60 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    public Page<Article> findArticlesWithPages(int page, int size) {
-        return this.articleRepository
+    public Page<ArticleDto> findArticlesPagination(int page, int size) {
+
+        Page<Article> article = this.articleRepository
                 .findAll(PageRequest.of(page, size));
+
+        // Mapping de chaque article dans la page vers articleDTO
+        Page<ArticleDto> articleDtoPage = article.map(art -> this.modelMapper.map(art, ArticleDto.class));
+
+        return articleDtoPage;
+
     }
 
     @Override
-    public Page<Article> findArticlesPagesWithSection(int page, int size, Integer sectionId) {
-        return this.articleRepository
+    public Page<ArticleDto> findArticlesPaginationSection(int page, int size, Integer sectionId)  {
+
+        Page<Article> article = this.articleRepository
                 .findAllArticlesBySection(PageRequest.of(page, size), sectionId);
+
+        // Mapping de chaque article dans la page vers articleDTO
+        Page<ArticleDto> articleDtoPage = article.map(art -> this.modelMapper.map(art, ArticleDto.class));
+
+        return articleDtoPage;
     }
 
+    /**
+     * Recherche un article par son ID
+     *
+     * @param id type Integer
+     * @return Renvoi un objet article qui contient tout les références.
+     */
     @Override
     public Optional<Article> findArticleById(Integer id) {
+
         return this.articleRepository.findById(id);
     }
 
 
     @Override
-    public ArticleDto saveArticle(ArticleDto articleDto) {
+    public ArticleForm saveArticle(ArticleForm articleForm) throws IllegalArgumentException{
 
-        modelMapper.getConfiguration()
-                .setMatchingStrategy(MatchingStrategies.STRICT);
-
-        // mapping
-        Article article = modelMapper.map(articleDto, Article.class);
-        article.getSection().setIdSection(articleDto.getIdSection());
-
-        log.info("Sauvegarde de l'objet en base et retour du DTO ");
+        // Mapping model to DTO vers l'article
+        Article article = this.modelMapper.map(articleForm, Article.class);
+        log.info("Sauvegarde de l'article : " + articleForm.getTitre());
 
         return modelMapper.map(
                 this.articleRepository.save(article),
-                ArticleDto.class);
+                ArticleForm.class);
 
     }
 
+
     @Override
-    public void deleteArticleById(Integer idArticle) {
-
+    public void deleteArticleById(Integer idArticle) throws IllegalArgumentException  {
         this.articleRepository.deleteById(idArticle);
-
     }
 
     @Override

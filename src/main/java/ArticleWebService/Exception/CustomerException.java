@@ -6,11 +6,17 @@ import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class CustomerException {
+public class CustomerException{
 
     private Map<String, Object> detailMessage;
 
-    public CustomerException(HttpStatus status, String error, String message, String path) {
+    public CustomerException(){
+    }
+
+    public CustomerException(HttpStatus status, 
+                             String error, 
+                             String message, 
+                             String path) {
 
         detailMessage = new LinkedHashMap<>();
         detailMessage.put("Timestamp", LocalDateTime.now().toString());
