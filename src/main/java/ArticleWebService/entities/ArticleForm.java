@@ -23,7 +23,7 @@ public class ArticleForm {
     private Integer idArticle;
 
     @NotNull(message = "L'identifiant utilisateur doit être présent")
-    private Integer idUser;
+    private String idUser;
 
     @NotNull(message = "La section de l'article doit être présente")
     @Column(name = "id_section")

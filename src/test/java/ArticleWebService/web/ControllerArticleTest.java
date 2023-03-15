@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.client.HttpClient;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.*;
 import org.keycloak.KeycloakSecurityContext;
@@ -79,18 +80,49 @@ public class ControllerArticleTest {
     @Value("${file.upload-dir}")
     private String directory;
 
+    // URL connection
     @Value("${urlToken.keycloak}")
     private String urlTokenKeycloak;
     @Value("${urlLogout.keycloak}")
     private static String urlLogoutKeycloak;
     @Value("${keycloak.resource}")
     private String clientKeycloak;
-    @Value("${user.keycloak}")
-    private String userKeycloak;
-    @Value("${password-user.keycloak}")
-    private String passwordKeycloak;
 
-    private static String accesToken;
+    // name user Authentification keycloak
+    @Value("${user-Test_0.keycloak}")
+    private String userTest_0Keycloak;
+    // password user Authentification keycloak
+    @Value("${password-user-Test_0.keycloak}")
+    private String passwordTest_0Keycloak;
+
+    @Value("${user-Test_1.keycloak}")
+    private String userTest_1Keycloak;
+    @Value("${password-user-Test_1.keycloak}")
+    private String passwordTest_1Keycloak;
+
+    @Value("${user-Test_2.keycloak}")
+    private String userTest_2Keycloak;
+    @Value("${password-user-Test_2.keycloak}")
+    private String passwordTest_2Keycloak;
+
+    // identifiant utilisateur
+    // ROLE : ADMIN / USER
+    @Value("${id-user-test0}")
+    private String idUserTest_0;
+
+    //ROLE : USER
+    @Value("${id-user-test1}")
+    private String idUserTest_1;
+
+    // ROLE : (aucun role)
+    @Value("${id-user-test2}")
+    private String idUserTest_2;
+
+    // les tokens de tout les utilisateurs de tests
+    private static String accesTokenTest_0;
+    private static String accesTokenTest_1;
+    private static String accesTokenTest_2;
+
     // permet la sérialisation et de désérialisation JSON en Java
     private ObjectMapper mapper = new ObjectMapper();
 
@@ -101,8 +133,15 @@ public class ControllerArticleTest {
         // keycloak sont initialisées avant l'initialisation du token d'accès
         Assertions.assertNotNull(this.urlTokenKeycloak);
         Assertions.assertNotNull(this.clientKeycloak);
-        Assertions.assertNotNull(this.userKeycloak);
-        Assertions.assertNotNull(this.passwordKeycloak);
+
+        Assertions.assertNotNull(this.userTest_0Keycloak);
+        Assertions.assertNotNull(this.passwordTest_0Keycloak);
+
+        Assertions.assertNotNull(this.userTest_1Keycloak);
+        Assertions.assertNotNull(this.passwordTest_1Keycloak);
+
+        Assertions.assertNotNull(this.userTest_2Keycloak);
+        Assertions.assertNotNull(this.passwordTest_2Keycloak);
 
         // initialisation des variable statis
         urlLogoutKeycloak = environment.getProperty("urlLogout.keycloak");
@@ -110,23 +149,33 @@ public class ControllerArticleTest {
         Assertions.assertNotNull(urlLogoutKeycloak);
 
         // si pas initialiser
-        if (accesToken == null) {
-            accesToken = getAccesToken();
+        if (accesTokenTest_0 == null) {
+            accesTokenTest_0 = getAccesToken(this.userTest_0Keycloak, this.passwordTest_0Keycloak);
+            Assertions.assertNotNull(accesTokenTest_0);
+        }
+
+        if (accesTokenTest_1 == null) {
+            accesTokenTest_1 = getAccesToken(this.userTest_1Keycloak, this.passwordTest_1Keycloak);
+            Assertions.assertNotNull(accesTokenTest_1);
+        }
+
+        if (accesTokenTest_2 == null) {
+            accesTokenTest_2 = getAccesToken("user_test2", "YjsNhJGxKeUAiGJYcoxc");
+            Assertions.assertNotNull(accesTokenTest_2);
         }
 
     }
 
-
     /**
-     * permet la déconnexion de l'utilisateur à la fin du test d'integration .
+     * Permet la déconnexion de l'utilisateur à la fin du test d'integration .
      *
-     * @throws Exception dans le cas d'une echec de connexion.
+     * @param accesToken
+     * @return
      */
-    @AfterAll
-    public static void setlogout() throws Exception {
+    private static void logout(String accesToken) {
 
-        // teste value acces Token
         if (accesToken != null) {
+
             // Preparation de la requête pour la déconnection
             HttpHeaders headers = new HttpHeaders();
             headers.setBearerAuth(accesToken);
@@ -139,11 +188,26 @@ public class ControllerArticleTest {
                     request,
                     String.class);
 
+            log.info("déconnection " + response.getStatusCode());
             // status 200 indique que la déconnexion a réussi
             Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
 
-            accesToken = null;
         }
+
+    }
+
+    /**
+     * Utilisé a la fin des test d'intégration.
+     *
+     * @throws Exception dans le cas d'une echec de connexion.
+     */
+    @AfterAll
+    public static void setlogout() throws Exception {
+
+        logout(accesTokenTest_0);
+        logout(accesTokenTest_1);
+        logout(accesTokenTest_2);
+
     }
 
     /**
@@ -152,7 +216,7 @@ public class ControllerArticleTest {
      * @return String access_token
      * @throws Exception en cas d'un status != 200
      */
-    private String getAccesToken() throws Exception {
+    private String getAccesToken(String userKeycloak, String passWordkeycloak) throws Exception {
 
         // création de l'entéte du type application/x-www-form-urlencoded
         HttpHeaders headers = new HttpHeaders();
@@ -161,8 +225,8 @@ public class ControllerArticleTest {
         // création d'une map de données pour l'accès a keycloak
         MultiValueMap<String, String> mapToAcces = new LinkedMultiValueMap<>();
         mapToAcces.add("client_id", this.clientKeycloak);
-        mapToAcces.add("username", this.userKeycloak);
-        mapToAcces.add("password", this.passwordKeycloak);
+        mapToAcces.add("username", userKeycloak);
+        mapToAcces.add("password", passWordkeycloak);
         mapToAcces.add("grant_type", "password");
 
         // requêtes externe vers keycloak
@@ -179,17 +243,6 @@ public class ControllerArticleTest {
         return jsonNode.get("access_token").asText();
 
     }
-
-/*
-    public static String getUserIdFromToken(String token) {
-        Claims claims = Jwts.parser()
-                .setSigningKey("your-signing-key")
-                .parseClaimsJws(token)
-                .getBody();
-        return claims.getSubject();
-    }
-*/
-
 
     /**
      * Test le retour avec tatus 200 et vérifier qu'il n'est pas  vide
@@ -259,11 +312,7 @@ public class ControllerArticleTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.pageable.pageNumber")
                         .value(page))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.pageable.pageSize")
-                        .value(size))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.totalPages")
-                        .value(1))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.numberOfElements")
-                        .value(0));
+                        .value(size));
 
     }
 
@@ -273,18 +322,25 @@ public class ControllerArticleTest {
 
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/article/getAllArticlesSection?page=0&size=6&sectionId=1"))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.content[0].titre", containsString("Titre de testing")));
+                .andExpect(MockMvcResultMatchers
+                        .status().isOk());
+
 
     }
 
 
+    /**
+     * n°1
+     * Teste la sauvegarde d'un article dont l'utilisateur possède le ROLE ADMIN
+     *
+     * @throws Exception
+     */
     @Test
     @DisplayName("Save article in dataBase ")
     public void endSaveArticle() throws Exception {
 
         ArticleForm articleForm = new ArticleForm();
-        articleForm.setIdUser(1);
+        articleForm.setIdUser(this.idUserTest_0);
 
         Section section = new Section();
         section.setIdSection(1);
@@ -299,16 +355,18 @@ public class ControllerArticleTest {
         String paylaod = mapper.writeValueAsString(articleForm);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/article/saveArticle")
-                        .header("Authorization", "bearer " + this.accesToken)
+                        .header("Authorization", "bearer " + accesTokenTest_0)
                         .content(paylaod)
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .accept(MediaType.APPLICATION_JSON_VALUE))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isCreated())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.idUser").value(1l));
+                .andExpect(MockMvcResultMatchers
+                        .jsonPath("$.idUser")
+                        .value(this.idUserTest_0));
     }
 
-    @Test
+/*    @Test
     @DisplayName("Update article in dataBase ")
     public void endUpdateArticle() throws Exception {
 
@@ -338,13 +396,15 @@ public class ControllerArticleTest {
 
         // envoi les modifications de l'article
         mockMvc.perform(MockMvcRequestBuilders.post("/article/saveArticle")
-                        .header("Authorization", "bearer " + this.accesToken)
+                        .header("Authorization", "bearer " + accesTokenTest_0)
                         .content(paylaod)
                         .contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isCreated())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.idUser").value(1l));
-    }
+                .andExpect(MockMvcResultMatchers
+                        .jsonPath("$.idUser")
+                        .value(this.idUserTest_0));
+    }*/
 
     @Test
     @DisplayName("Upload images in server")

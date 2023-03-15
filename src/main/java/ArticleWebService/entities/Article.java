@@ -31,7 +31,7 @@ public class Article implements Serializable {
     private Integer idArticle;
 
     @Column(name = "id_user", nullable = false)
-    private Integer idUser;
+    private String idUser;
 
     @Column(name = "id_commentaire", nullable = true)
     private Integer idCommentaire;

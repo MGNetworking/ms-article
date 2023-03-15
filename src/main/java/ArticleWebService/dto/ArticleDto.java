@@ -16,7 +16,7 @@ import java.util.Date;
 public class ArticleDto {
 
     private Integer idArticle;
-    private Integer idUser;
+    private String idUser;
     private Section section ;
     private String titre;
     private String imgDescription;
