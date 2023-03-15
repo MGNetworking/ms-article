@@ -366,7 +366,7 @@ public class ControllerArticleTest {
                         .value(this.idUserTest_0));
     }
 
-/*    @Test
+    @Test
     @DisplayName("Update article in dataBase ")
     public void endUpdateArticle() throws Exception {
 
@@ -404,7 +404,7 @@ public class ControllerArticleTest {
                 .andExpect(MockMvcResultMatchers
                         .jsonPath("$.idUser")
                         .value(this.idUserTest_0));
-    }*/
+    }
 
     @Test
     @DisplayName("Upload images in server")
