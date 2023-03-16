@@ -1,34 +1,24 @@
 package ArticleWebService.web;
 
 import ArticleWebService.Exception.ArticleNotFoundException;
-import ArticleWebService.configuration.WebConfiguration;
-import ArticleWebService.dto.ArticleDto;
 import ArticleWebService.entities.Article;
 import ArticleWebService.entities.ArticleForm;
 import ArticleWebService.entities.Section;
 import ArticleWebService.service.FileSystemStorageServiceImplementation;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.core.type.TypeReference;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.http.client.HttpClient;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.*;
-import org.keycloak.KeycloakSecurityContext;
-import org.mockito.Mockito;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.env.Environment;
-import org.springframework.data.web.JsonPath;
 import org.springframework.http.*;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ActiveProfilesResolver;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -39,19 +29,11 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.WebApplicationContext;
 
-import javax.annotation.PostConstruct;
-import javax.ws.rs.PUT;
 import java.io.File;
-import java.io.InputStream;
 import java.nio.file.Files;
-import java.sql.Timestamp;
-import java.util.Date;
-import java.util.List;
-import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 
 /**
@@ -251,7 +233,7 @@ public class ControllerArticleTest {
      */
     @Test
     @DisplayName("Get Article by Id ")
-    public void endPointGetArticleById() throws Exception {
+    public void getArticleById() throws Exception {
 
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders
                         .get("/article/getArticle/{id}", 1))
@@ -273,7 +255,7 @@ public class ControllerArticleTest {
      */
     @Test
     @DisplayName("Get Article by Id not found")
-    public void endPointGetArticle_NotFound() throws Exception {
+    public void getArticle_NotFound() throws Exception {
 
         int id = 5000;
 
@@ -296,7 +278,7 @@ public class ControllerArticleTest {
      */
     @Test
     @DisplayName("Get All Article with Pagination IsEmpty")
-    public void endPointGetAllArticles_IsEmpty() throws Exception {
+    public void getAllArticles_IsEmpty() throws Exception {
 
         Integer page = 99;
         Integer size = 66;
@@ -318,7 +300,7 @@ public class ControllerArticleTest {
 
     @Test
     @DisplayName("Get All Article with section and Pagination")
-    public void endPointGetArticleSection() throws Exception {
+    public void getArticleSection() throws Exception {
 
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/article/getAllArticlesSection?page=0&size=6&sectionId=1"))
@@ -337,7 +319,7 @@ public class ControllerArticleTest {
      */
     @Test
     @DisplayName("Save article in dataBase ")
-    public void endSaveArticle() throws Exception {
+    public void saveArticle() throws Exception {
 
         ArticleForm articleForm = new ArticleForm();
         articleForm.setIdUser(this.idUserTest_0);
@@ -368,7 +350,7 @@ public class ControllerArticleTest {
 
     @Test
     @DisplayName("Update article in dataBase ")
-    public void endUpdateArticle() throws Exception {
+    public void updateArticle() throws Exception {
 
         // get article 1
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders
@@ -408,7 +390,7 @@ public class ControllerArticleTest {
 
     @Test
     @DisplayName("Upload images in server")
-    public void endPointSaveImage() throws Exception {
+    public void saveImage() throws Exception {
 
         ClassLoader cl = getClass().getClassLoader();
 
@@ -449,7 +431,7 @@ public class ControllerArticleTest {
      */
     @Test
     @DisplayName("Remove image in server")
-    public void endPointdeleteImages() throws Exception {
+    public void deleteImages() throws Exception {
 
         File[] files = new File(this.directory).listFiles();
         log.info("nombre de fichier : " + files.length);
