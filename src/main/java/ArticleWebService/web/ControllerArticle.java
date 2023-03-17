@@ -1,6 +1,6 @@
 package ArticleWebService.web;
 
-import ArticleWebService.Exception.ArticleNotFoundException;
+import ArticleWebService.Exception.ArticleException;
 import ArticleWebService.response.CustomerResponse;
 import ArticleWebService.dto.ArticleDto;
 import ArticleWebService.entities.Article;
@@ -57,8 +57,9 @@ public class ControllerArticle {
 
         return this.articleService
                 .findArticleById(id)
-                .orElseThrow(() -> new ArticleNotFoundException(
-                        String.format("L'identifiant de l'article : %d  n'a pas était trouver", id)
+                .orElseThrow(() -> new ArticleException(
+                        String.format("L'identifiant de l'article : %d  n'a pas était trouver", id),
+                        HttpStatus.NOT_FOUND
                 ));
 
     }
@@ -130,7 +131,7 @@ public class ControllerArticle {
             throws Exception {
 
         // update non permis
-        if (articleForm.getIdArticle() != null){
+        if (articleForm.getIdArticle() != null) {
 
             return ResponseHandler.generateResponse(new CustomerResponse(
                     HttpStatus.FORBIDDEN,
@@ -139,8 +140,7 @@ public class ControllerArticle {
                     "/article/saveArticle"));
 
 
-
-        }else{
+        } else {
             log.info("Endpoint saveArticle ok ");
 
 
@@ -150,11 +150,11 @@ public class ControllerArticle {
         }
 
 
-
     }
 
     /**
      * Permet la mise à jour d'un article.
+     *
      * @param articleForm
      * @return
      * @throws Exception
@@ -162,14 +162,24 @@ public class ControllerArticle {
     @PutMapping(path = "/updateArticle",
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    @ApiOperation(value = "Sauvegarde ou met a jour les données d'un article", response = ArticleDto.class)
+    @ApiOperation(value = "Sauvegarde ou met a jour les données d'un article", response = Article.class)
     public ResponseEntity<Object> updateArticle(@Valid @RequestBody ArticleForm articleForm)
             throws Exception {
 
+        Article article = this.articleService.saveArticle(articleForm)
+                .orElseThrow(() -> new ArticleException(
+                        String.format("L'article n° %d n'a pas était mise à jour ", articleForm.getIdArticle()),
+                        HttpStatus.BAD_REQUEST
+                ));
+
         log.info("Endpoint updateArticle ok ");
-        return new ResponseEntity<Object>(
-                this.articleService.saveArticle(articleForm)
-                , HttpStatus.CREATED);
+        return ResponseHandler.generateResponse(
+                "L'article numero a bien était générer ",
+                HttpStatus.CREATED,
+                article);
+
+        /*    return new ResponseEntity<Object>(
+                        article , HttpStatus.CREATED);*/
 
     }
 

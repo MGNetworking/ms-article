@@ -1,17 +1,14 @@
 package ArticleWebService.service;
 
-import ArticleWebService.Exception.ArticleNotFoundException;
 import ArticleWebService.dto.ArticleDto;
 import ArticleWebService.entities.Article;
 import ArticleWebService.entities.ArticleForm;
 import ArticleWebService.entities.Domain;
-import ArticleWebService.entities.Section;
 import ArticleWebService.feign.StorageRestClient;
 import ArticleWebService.repository.ArticleRepository;
 import ArticleWebService.repository.DomainRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
-import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -88,13 +85,14 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    public Article saveArticle(ArticleForm articleForm) throws IllegalArgumentException{
+    public Optional<Article> saveArticle(ArticleForm articleForm) throws IllegalArgumentException{
 
         log.info("Sauvegarde de l'article : " + articleForm.getTitre());
         log.info("Identifiant user : " + articleForm.getIdUser());
-        return this.articleRepository
-                .save(this.modelMapper
-                        .map(articleForm, Article.class));
+
+        Article article = this.modelMapper.map(articleForm, Article.class);
+
+        return Optional.of(this.articleRepository.save(article));
 
     }
 

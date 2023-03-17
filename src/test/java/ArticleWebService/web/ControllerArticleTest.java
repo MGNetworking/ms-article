@@ -1,16 +1,13 @@
 package ArticleWebService.web;
 
-import ArticleWebService.Exception.ArticleNotFoundException;
+import ArticleWebService.Exception.ArticleException;
 import ArticleWebService.entities.Article;
-import ArticleWebService.entities.ArticleForm;
-import ArticleWebService.entities.Section;
 import ArticleWebService.service.FileSystemStorageServiceImplementation;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -22,7 +19,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -31,8 +27,6 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.io.File;
 import java.nio.file.Files;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static org.hamcrest.CoreMatchers.is;
 
@@ -263,7 +257,7 @@ public class ControllerArticleTest {
                         .get("/article/getArticle/{id}", id))
                 .andExpect(MockMvcResultMatchers.status().isNotFound())
                 .andExpect(result -> Assertions.assertTrue(
-                        result.getResolvedException() instanceof ArticleNotFoundException));
+                        result.getResolvedException() instanceof ArticleException));
 
     }
 

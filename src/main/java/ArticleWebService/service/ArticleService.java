@@ -1,6 +1,5 @@
 package ArticleWebService.service;
 
-import ArticleWebService.Exception.ArticleNotFoundException;
 import ArticleWebService.dto.ArticleDto;
 import ArticleWebService.entities.Article;
 import ArticleWebService.entities.ArticleForm;
@@ -40,7 +39,7 @@ public interface ArticleService {
      * @return un objet Articl
      * @throws Exception dans le cas ou l'objet passé en paramétre et null.
      */
-    Article saveArticle(ArticleForm articleForm) throws Exception;
+    Optional<Article> saveArticle(ArticleForm articleForm) throws Exception;
 
     void deleteArticleById(Integer idArticle)  throws IllegalArgumentException ;
 

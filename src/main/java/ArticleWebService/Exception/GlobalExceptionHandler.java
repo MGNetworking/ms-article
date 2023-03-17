@@ -10,7 +10,6 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
@@ -27,26 +26,27 @@ import java.util.*;
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     /**
-     * Gestion de l'exception concernant la recherche par ID d'un articles
+     * Exception générique de gestion des articles
      *
      * @param ex
      * @param request
      * @return
      */
-    @ExceptionHandler(ArticleNotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ResponseEntity<Object> handleArticleException(ArticleNotFoundException ex,
+    @ExceptionHandler(ArticleException.class)
+    //@ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseEntity<Object> handleArticleException(ArticleException ex,
                                                          WebRequest request,
                                                          HttpServletRequest servletRequest,
                                                          HttpServletResponse httpServletResponse) {
 
         return ResponseHandler.generateResponse(new CustomerResponse(
-                HttpStatus.NOT_FOUND,
-                HttpStatus.NOT_FOUND.getReasonPhrase(),
+                ex.getStatus(),
+                ex.getStatus().getReasonPhrase(),
                 ex.getMessage(),
                 servletRequest.getRequestURI()));
 
     }
+
 
     /**
      * Centralise les exceptions lors du traitement de validation.
