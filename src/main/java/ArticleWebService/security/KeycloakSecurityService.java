@@ -2,28 +2,15 @@ package ArticleWebService.security;
 
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.adapters.springsecurity.KeycloakConfiguration;
-import org.keycloak.adapters.springsecurity.authentication.KeycloakAuthenticationProvider;
 import org.keycloak.adapters.springsecurity.config.KeycloakWebSecurityConfigurerAdapter;
+import org.keycloak.adapters.springsecurity.filter.KeycloakSecurityContextRequestFilter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.authority.mapping.SimpleAuthorityMapper;
 import org.springframework.security.core.session.SessionRegistryImpl;
-import org.springframework.security.web.access.channel.ChannelProcessingFilter;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.session.RegisterSessionAuthenticationStrategy;
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
-import org.springframework.security.web.header.writers.StaticHeadersWriter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import java.util.Arrays;
 
 //@EnableWebSecurity
 @KeycloakConfiguration
@@ -31,20 +18,8 @@ import java.util.Arrays;
 @Slf4j
 public class KeycloakSecurityService extends KeycloakWebSecurityConfigurerAdapter {
 
-
-    /**
-     * charge le SimpleAuthorityMapper de s'assurer que les rôles ne sont pas préfixés par ROLE_
-     *
-     * @param auth
-     * @throws Exception
-     */
-/*    @Autowired
-    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-
-        KeycloakAuthenticationProvider provider = keycloakAuthenticationProvider();
-        provider.setGrantedAuthoritiesMapper(new SimpleAuthorityMapper());
-        auth.authenticationProvider(provider);
-    }*/
+    @Autowired
+    private CustomAuthorizationFilter customAuthFilter;
 
     /**
      * Permet la stratégie de la gestion de session
@@ -69,7 +44,12 @@ public class KeycloakSecurityService extends KeycloakWebSecurityConfigurerAdapte
     }
 
     /**
-     * permet la gestion des droits d'accées
+     * Permet la gestion des droits d'accées.
+     * Les request Cros (Cross Origin) Est gérer par la Gateway au niveau du WebFilter
+     * Les variable suivant sont inutile :
+     * http.cors();
+     * http.headers().frameOptions().disable();
+     * http.headers().frameOptions().sameOrigin();
      *
      * @param http
      * @throws Exception
@@ -79,13 +59,6 @@ public class KeycloakSecurityService extends KeycloakWebSecurityConfigurerAdapte
 
         // garde la conf par defaut
         super.configure(http);
-
-        /**
-         Les request Cros (Cross Origin) Est gérer par la Gateway au niveau du WebFilter
-         http.cors();
-         http.headers().frameOptions().disable();
-         http.headers().frameOptions().sameOrigin();
-         */
 
         // Doit etre disable si response 403
         http.csrf().disable();
@@ -103,8 +76,10 @@ public class KeycloakSecurityService extends KeycloakWebSecurityConfigurerAdapte
                 .antMatchers("/article/saveArticle")
                 .hasAuthority("USER");
 
+        // filtre personnalilsé
+        http.addFilterAfter(this.customAuthFilter,
+                KeycloakSecurityContextRequestFilter.class);
     }
-
 
 
 }

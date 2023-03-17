@@ -132,13 +132,14 @@ public class ControllerArticle {
     public ResponseEntity<Object> saveArticle(@Valid @RequestBody ArticleForm articleForm)
             throws Exception {
 
-        if (!this.auth.userCreatorArticle(articleForm.getIdUser())){
+/*        if (!this.auth.userCreatorArticle(articleForm.getIdUser())){
             log.info("n'est authorisé ... ");
             return new ResponseEntity<>(
                     "problème d'identité de l'article ",
                     HttpStatus.FORBIDDEN);
-        }
+        }*/
 
+        log.info("Endpoint saveArticle ok ");
         return new ResponseEntity<Object>(
                 this.articleService.saveArticle(articleForm)
                 , HttpStatus.CREATED);
