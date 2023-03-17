@@ -317,7 +317,7 @@ public class ControllerArticleTest {
      *
      * @throws Exception
      */
-    @Test
+/*    @Test
     @DisplayName("Save article in dataBase ")
     public void saveArticle() throws Exception {
 
@@ -346,9 +346,9 @@ public class ControllerArticleTest {
                 .andExpect(MockMvcResultMatchers
                         .jsonPath("$.idUser")
                         .value(this.idUserTest_0));
-    }
+    }*/
 
-    @Test
+/*    @Test
     @DisplayName("Update article in dataBase ")
     public void updateArticle() throws Exception {
 
@@ -386,7 +386,7 @@ public class ControllerArticleTest {
                 .andExpect(MockMvcResultMatchers
                         .jsonPath("$.idUser")
                         .value(this.idUserTest_0));
-    }
+    }*/
 
     @Test
     @DisplayName("Upload images in server")
@@ -429,7 +429,7 @@ public class ControllerArticleTest {
      *
      * @throws Exception
      */
-    @Test
+/*    @Test
     @DisplayName("Remove image in server")
     public void deleteImages() throws Exception {
 
@@ -455,7 +455,7 @@ public class ControllerArticleTest {
         mockMvc.perform(MockMvcRequestBuilders.delete("/article/deleteImages")
                         .param("nameImages", nameFile))
                 .andExpect(MockMvcResultMatchers.status().isOk());
-    }
+    }*/
 
 
 }

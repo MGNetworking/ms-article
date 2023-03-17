@@ -11,13 +11,16 @@ import ArticleWebService.service.FileSystemStorageServiceImplementation;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.expression.SecurityExpressionOperations;
 
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
+import org.springframework.security.access.prepost.*;
 import org.springframework.security.access.prepost.PreAuthorize;
+
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,6 +28,9 @@ import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Objects;
+
+import ArticleWebService.tools.Authentification;
 
 //@CrossOrigin(origins = "*")
 @RestController
@@ -37,7 +43,10 @@ public class ControllerArticle {
     @Autowired
     private FileSystemStorageServiceImplementation fsssI;
 
-    private ControllerArticle() {
+    @Autowired
+    private Authentification auth;
+
+    public ControllerArticle() {
     }
 
 
@@ -118,13 +127,19 @@ public class ControllerArticle {
     @PostMapping(path = "/saveArticle",
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    //@PreAuthorize("hasAuthority('admin')")
     @ApiOperation(value = "Sauvegarde ou met a jour les données d'un article", response = ArticleDto.class)
-    //@PreAuthorize("#articleForm.idUser == #authentication.principal.id")
-    public ResponseEntity<ArticleForm> saveArticle(@Valid @RequestBody ArticleForm articleForm)
+    //@PreAuthorize("@auth.userCreatorArticle(#articleForm.idUser)")
+    public ResponseEntity<Object> saveArticle(@Valid @RequestBody ArticleForm articleForm)
             throws Exception {
 
-        return new ResponseEntity<ArticleForm>(
+        if (!this.auth.userCreatorArticle(articleForm.getIdUser())){
+            log.info("n'est authorisé ... ");
+            return new ResponseEntity<>(
+                    "problème d'identité de l'article ",
+                    HttpStatus.FORBIDDEN);
+        }
+
+        return new ResponseEntity<Object>(
                 this.articleService.saveArticle(articleForm)
                 , HttpStatus.CREATED);
 

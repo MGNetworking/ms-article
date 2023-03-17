@@ -34,13 +34,13 @@ public interface ArticleService {
     Optional<Article> findArticleById(Integer id) throws IllegalArgumentException ;
 
     /**
-     * Sauvegarde un article
+     * Sauvegarde d'un article
      *
      * @param articleForm
-     * @return un objet ArticleDTO
+     * @return un objet Articl
      * @throws Exception dans le cas ou l'objet passé en paramétre et null.
      */
-    ArticleForm saveArticle(ArticleForm articleForm) throws IllegalArgumentException;
+    Article saveArticle(ArticleForm articleForm) throws Exception;
 
     void deleteArticleById(Integer idArticle)  throws IllegalArgumentException ;
 

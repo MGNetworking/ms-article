@@ -87,17 +87,14 @@ public class ArticleServiceImpl implements ArticleService {
         return this.articleRepository.findById(id);
     }
 
-
     @Override
-    public ArticleForm saveArticle(ArticleForm articleForm) throws IllegalArgumentException{
+    public Article saveArticle(ArticleForm articleForm) throws IllegalArgumentException{
 
-        // Mapping model to DTO vers l'article
-        Article article = this.modelMapper.map(articleForm, Article.class);
         log.info("Sauvegarde de l'article : " + articleForm.getTitre());
-
-        return modelMapper.map(
-                this.articleRepository.save(article),
-                ArticleForm.class);
+        log.info("Identifiant user : " + articleForm.getIdUser());
+        return this.articleRepository
+                .save(this.modelMapper
+                        .map(articleForm, Article.class));
 
     }
 
