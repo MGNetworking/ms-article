@@ -1,11 +1,10 @@
 package ArticleWebService.security;
 
-import ArticleWebService.Exception.CustomerException;
+import ArticleWebService.response.CustomerResponse;
 import ArticleWebService.tools.Authentification;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -50,7 +49,7 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
 
                 if (!this.authentification.userCreatorArticle(headerUser)) {
                     log.info("n'est authorisé ... ");
-                    CustomerException exception = new CustomerException(
+                    CustomerResponse exception = new CustomerResponse(
                             HttpStatus.FORBIDDEN,
                             "Accès interdit",
                             "Vous n'êtes pas autorisé à accéder à cette ressource.",
@@ -63,7 +62,7 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
                     httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
                     PrintWriter writer = httpServletResponse.getWriter();
                     writer.write(jsonMessage);
-                    writer.flush();
+                    writer.flush(); //send request
                     return;
 
                 }

@@ -12,9 +12,7 @@ import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.web.authentication.session.RegisterSessionAuthenticationStrategy;
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
 
-//@EnableWebSecurity
 @KeycloakConfiguration
-@EnableGlobalMethodSecurity(prePostEnabled = true)
 @Slf4j
 public class KeycloakSecurityService extends KeycloakWebSecurityConfigurerAdapter {
 
@@ -51,6 +49,9 @@ public class KeycloakSecurityService extends KeycloakWebSecurityConfigurerAdapte
      * http.headers().frameOptions().disable();
      * http.headers().frameOptions().sameOrigin();
      *
+     * Doit être désactivé :
+     * http.csrf().disable();
+     *
      * @param http
      * @throws Exception
      */
@@ -60,7 +61,6 @@ public class KeycloakSecurityService extends KeycloakWebSecurityConfigurerAdapte
         // garde la conf par defaut
         super.configure(http);
 
-        // Doit etre disable si response 403
         http.csrf().disable();
 
         // gestion des accès au ressources

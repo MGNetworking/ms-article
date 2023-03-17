@@ -1,6 +1,7 @@
 package ArticleWebService.web;
 
 import ArticleWebService.Exception.ArticleNotFoundException;
+import ArticleWebService.response.CustomerResponse;
 import ArticleWebService.dto.ArticleDto;
 import ArticleWebService.entities.Article;
 import ArticleWebService.entities.ArticleForm;
@@ -11,15 +12,11 @@ import ArticleWebService.service.FileSystemStorageServiceImplementation;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.expression.SecurityExpressionOperations;
 
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-
-import org.springframework.security.access.prepost.*;
-import org.springframework.security.access.prepost.PreAuthorize;
 
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,7 +25,6 @@ import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.util.List;
-import java.util.Objects;
 
 import ArticleWebService.tools.Authentification;
 
@@ -119,7 +115,9 @@ public class ControllerArticle {
 
 
     /**
-     * Permet la sauvegarde ou la mise à jour d'un article.
+     * Permet la sauvegarde d'un article.
+     * Ne permet pas la mise a jour d'un article appartire
+     * de ce point de terminaison.
      *
      * @param articleForm classe de gestion du formulaire.
      * @return ResponseEntity<ArticleDto> l'article
@@ -127,19 +125,48 @@ public class ControllerArticle {
     @PostMapping(path = "/saveArticle",
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    @ApiOperation(value = "Sauvegarde ou met a jour les données d'un article", response = ArticleDto.class)
-    //@PreAuthorize("@auth.userCreatorArticle(#articleForm.idUser)")
+    @ApiOperation(value = "Sauvegarde ou met a jour les données d'un article", response = Article.class)
     public ResponseEntity<Object> saveArticle(@Valid @RequestBody ArticleForm articleForm)
             throws Exception {
 
-/*        if (!this.auth.userCreatorArticle(articleForm.getIdUser())){
-            log.info("n'est authorisé ... ");
-            return new ResponseEntity<>(
-                    "problème d'identité de l'article ",
-                    HttpStatus.FORBIDDEN);
-        }*/
+        // update non permis
+        if (articleForm.getIdArticle() != null){
 
-        log.info("Endpoint saveArticle ok ");
+            return ResponseHandler.generateResponse(new CustomerResponse(
+                    HttpStatus.FORBIDDEN,
+                    "Accès interdit",
+                    "Vous n'êtes pas autorisé à mettre a jour un article a parti de ce point de terminaison",
+                    "/article/saveArticle"));
+
+
+
+        }else{
+            log.info("Endpoint saveArticle ok ");
+
+
+            return new ResponseEntity<Object>(
+                    this.articleService.saveArticle(articleForm)
+                    , HttpStatus.CREATED);
+        }
+
+
+
+    }
+
+    /**
+     * Permet la mise à jour d'un article.
+     * @param articleForm
+     * @return
+     * @throws Exception
+     */
+    @PutMapping(path = "/updateArticle",
+            consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
+    @ApiOperation(value = "Sauvegarde ou met a jour les données d'un article", response = ArticleDto.class)
+    public ResponseEntity<Object> updateArticle(@Valid @RequestBody ArticleForm articleForm)
+            throws Exception {
+
+        log.info("Endpoint updateArticle ok ");
         return new ResponseEntity<Object>(
                 this.articleService.saveArticle(articleForm)
                 , HttpStatus.CREATED);

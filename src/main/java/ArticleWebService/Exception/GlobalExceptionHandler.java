@@ -1,5 +1,7 @@
 package ArticleWebService.Exception;
 
+import ArticleWebService.response.CustomerResponse;
+import ArticleWebService.response.ResponseHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -12,6 +14,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -31,16 +35,16 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
      */
     @ExceptionHandler(ArticleNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ResponseEntity<Object> handleArticleException(ArticleNotFoundException ex, WebRequest request) {
+    public ResponseEntity<Object> handleArticleException(ArticleNotFoundException ex,
+                                                         WebRequest request,
+                                                         HttpServletRequest servletRequest,
+                                                         HttpServletResponse httpServletResponse) {
 
-        CustomerException customerException = new CustomerException(
+        return ResponseHandler.generateResponse(new CustomerResponse(
                 HttpStatus.NOT_FOUND,
                 HttpStatus.NOT_FOUND.getReasonPhrase(),
                 ex.getMessage(),
-                "/getArticle/{id}");
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(customerException);
+                servletRequest.getRequestURI()));
 
     }
 

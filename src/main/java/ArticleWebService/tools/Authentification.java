@@ -27,8 +27,8 @@ public class Authentification {
 
         log.info("User id  : " + userId);
 
-        if (userId.equals(authentication.getPrincipal())){
-            log.info("ok ..." );
+        if (userId.equals(authentication.getPrincipal().toString())){
+            log.info("Autorisation ok ..." );
             identity = true;
         }
 
