@@ -68,7 +68,8 @@ public class KeycloakSecurityService extends KeycloakWebSecurityConfigurerAdapte
                 .antMatchers("/article/getArticle/*",
                         "/article/getAllArticles",
                         "/article/saveImages",
-                        "/article/getAllArticlesSection")
+                        "/article/getAllArticlesSection",
+                        "/article/updateArticle")
                 .permitAll();
 
 

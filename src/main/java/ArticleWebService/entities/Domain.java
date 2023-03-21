@@ -10,6 +10,7 @@ import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -30,6 +31,11 @@ public class Domain implements Serializable {
     @Column(name = "description")
     private String description;
 
-    @OneToMany(mappedBy = "domain", fetch = FetchType.EAGER)
-    private Collection<Section> sections;
+/*    @OneToMany(mappedBy = "domain", fetch = FetchType.EAGER)
+    @JsonBackReference
+    private Collection<Section> sections;*/
+
+    @OneToMany( fetch = FetchType.EAGER)
+    @JoinColumn(name="id_domain")
+    private Collection<Section> sections = new ArrayList<>();
 }

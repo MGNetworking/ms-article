@@ -1,8 +1,10 @@
 package ArticleWebService.service;
 
+import ArticleWebService.Exception.ArticleException;
 import ArticleWebService.dto.ArticleDto;
 import ArticleWebService.entities.Article;
-import ArticleWebService.entities.ArticleForm;
+import ArticleWebService.entities.ArticleSave;
+import ArticleWebService.entities.ArticleUpdate;
 import ArticleWebService.entities.Domain;
 import ArticleWebService.feign.StorageRestClient;
 import ArticleWebService.repository.ArticleRepository;
@@ -13,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,7 +64,7 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    public Page<ArticleDto> findArticlesPaginationSection(int page, int size, Integer sectionId)  {
+    public Page<ArticleDto> findArticlesPaginationSection(int page, int size, Integer sectionId) {
 
         Page<Article> article = this.articleRepository
                 .findAllArticlesBySection(PageRequest.of(page, size), sectionId);
@@ -85,24 +88,50 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    public Optional<Article> saveArticle(ArticleForm articleForm) throws IllegalArgumentException{
+    public Optional<Article> saveArticle(ArticleSave articleSave) throws Exception {
 
-        log.info("Sauvegarde de l'article : " + articleForm.getTitre());
-        log.info("Identifiant user : " + articleForm.getIdUser());
+        log.info("Sauvegarde de l'article : " + articleSave.getTitre());
+        log.info("Identifiant user : " + articleSave.getIdUser());
 
-        Article article = this.modelMapper.map(articleForm, Article.class);
+        Article article = this.modelMapper.map(articleSave, Article.class);
 
         return Optional.of(this.articleRepository.save(article));
 
     }
 
+    @Override
+    public Optional<Article> updateArticle(ArticleUpdate articleUpdate) throws Exception {
+
+        log.info("Titre de l'article : " + articleUpdate.getTitre());
+        log.info("Identifiant user : " + articleUpdate.getIdUser());
+
+        Article article = this.modelMapper.map(articleUpdate, Article.class);
+
+        // récupération de l'article a mettre à jours
+        Article articleData = this.articleRepository
+                .findById(articleUpdate.getIdArticle())
+                .get();
+
+        // modification des données
+        articleData.setDescription(article.getDescription());
+        articleData.setTitre(article.getTitre());
+        articleData.setImgDescription(article.getImgDescription());
+        articleData.setDescription(article.getDescription());
+        articleData.setVisibiliter(article.isVisibiliter());
+        articleData.setArticle(article.getArticle());
+
+
+        return Optional.of(this.articleRepository.save(articleData));
+
+    }
+
 
     @Override
-    public void deleteArticleById(Integer idArticle) throws IllegalArgumentException  {
+    public void deleteArticleById(Integer idArticle) throws IllegalArgumentException {
         this.articleRepository.deleteById(idArticle);
     }
 
-    @Override
+/*    @Override
     public List<Domain> getArticleWithSection() {
 
         List<Domain> domainList = this.domainRepository.findAllWithSections();
@@ -110,6 +139,6 @@ public class ArticleServiceImpl implements ArticleService {
                 .stream()
                 .distinct()
                 .collect(Collectors.toList());
-    }
+    }*/
 
 }

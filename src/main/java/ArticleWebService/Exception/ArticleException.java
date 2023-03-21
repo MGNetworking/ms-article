@@ -4,8 +4,12 @@ import org.springframework.http.HttpStatus;
 
 public class ArticleException extends RuntimeException {
 
-    private final String message;
-    private final HttpStatus status;
+    private String message;
+    private HttpStatus status;
+
+    public ArticleException(){
+
+    }
 
     public ArticleException(String message, HttpStatus status) {
         super(message);
@@ -18,5 +22,13 @@ public class ArticleException extends RuntimeException {
     }
     public HttpStatus getStatus(){
         return this.status;
+    }
+
+    public void setMessage(String message){
+        this.message = message;
+    }
+
+    public void setHttpStatus(HttpStatus httpStatus){
+        this.status = httpStatus;
     }
 }

@@ -1,10 +1,11 @@
 package ArticleWebService.web;
 
 import ArticleWebService.Exception.ArticleException;
+import ArticleWebService.entities.ArticleUpdate;
 import ArticleWebService.response.CustomerResponse;
 import ArticleWebService.dto.ArticleDto;
 import ArticleWebService.entities.Article;
-import ArticleWebService.entities.ArticleForm;
+import ArticleWebService.entities.ArticleSave;
 import ArticleWebService.entities.Domain;
 import ArticleWebService.response.ResponseHandler;
 import ArticleWebService.service.ArticleService;
@@ -120,32 +121,40 @@ public class ControllerArticle {
      * Ne permet pas la mise a jour d'un article appartire
      * de ce point de terminaison.
      *
-     * @param articleForm classe de gestion du formulaire.
+     * @param articleSave classe de gestion du formulaire.
      * @return ResponseEntity<ArticleDto> l'article
      */
     @PostMapping(path = "/saveArticle",
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     @ApiOperation(value = "Sauvegarde ou met a jour les données d'un article", response = Article.class)
-    public ResponseEntity<Object> saveArticle(@Valid @RequestBody ArticleForm articleForm)
+    public ResponseEntity<Object> saveArticle(@Valid @RequestBody ArticleSave articleSave)
             throws Exception {
 
-        // update non permis
-        if (articleForm.getIdArticle() != null) {
+        log.info("Sauvegarde d'un article ");
+        if (articleSave.getIdArticle() != null) {
 
+            log.info("la mise à jour d'un article ne doit pas être excuté appartir de ce endpoint");
             return ResponseHandler.generateResponse(new CustomerResponse(
                     HttpStatus.FORBIDDEN,
                     "Accès interdit",
-                    "Vous n'êtes pas autorisé à mettre a jour un article a parti de ce point de terminaison",
+                    "Vous n'êtes pas autorisé à mettre a jour un article " +
+                            "a parti de ce point de terminaison",
                     "/article/saveArticle"));
 
 
         } else {
-            log.info("Endpoint saveArticle ok ");
 
+            log.info("Un nouvelle article va être créer");
+            Article article = this.articleService.saveArticle(articleSave)
+                    .orElseThrow(() -> new ArticleException(
+                            String.format("L'article n° %d n'a pas était mise à jour ",
+                                    articleSave.getIdArticle()),
+                            HttpStatus.NOT_FOUND
+                    ));
 
             return new ResponseEntity<Object>(
-                    this.articleService.saveArticle(articleForm)
+                    this.articleService.saveArticle(articleSave)
                     , HttpStatus.CREATED);
         }
 
@@ -155,30 +164,45 @@ public class ControllerArticle {
     /**
      * Permet la mise à jour d'un article.
      *
-     * @param articleForm
+     * @param articleSave
      * @return
      * @throws Exception
      */
     @PutMapping(path = "/updateArticle",
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    @ApiOperation(value = "Sauvegarde ou met a jour les données d'un article", response = Article.class)
-    public ResponseEntity<Object> updateArticle(@Valid @RequestBody ArticleForm articleForm)
+    @ApiOperation(value = "Met à jour les données d'un article", response = Article.class)
+    public ResponseEntity<Object> updateArticle(@Valid @RequestBody ArticleUpdate articleUpdate)
             throws Exception {
 
-        Article article = this.articleService.saveArticle(articleForm)
-                .orElseThrow(() -> new ArticleException(
-                        String.format("L'article n° %d n'a pas était mise à jour ", articleForm.getIdArticle()),
-                        HttpStatus.BAD_REQUEST
-                ));
+        log.info("La mise à jour d'un article ");
+        if (articleUpdate.getIdArticle() == null) {
+            log.info("la création d'un article ne doit pas être excuter a partir de ce endpoint ");
+            return ResponseHandler.generateResponse(new CustomerResponse(
+                    HttpStatus.FORBIDDEN,
+                    "Accès interdit",
+                    "Vous n'êtes pas autorisé à créer un article " +
+                            "a parti de ce point de terminaison",
+                    "/article/updateArticle"));
 
-        log.info("Endpoint updateArticle ok ");
-        return ResponseHandler.generateResponse(
-                "L'article numero a bien était générer ",
-                HttpStatus.CREATED,
-                article);
+        } else {
 
-        /*    return new ResponseEntity<Object>(
+            Article article = this.articleService.updateArticle(articleUpdate)
+                    .orElseThrow(() -> new ArticleException(
+                            String.format("L'article n° %d n'a pas était mise à jour ",
+                                    articleUpdate.getIdArticle()),
+                            HttpStatus.NOT_FOUND
+                    ));
+
+            log.info("L'article n° " + articleUpdate.getIdArticle() + " va être mise à jour ");
+            return ResponseHandler.generateResponse(
+                    "L'article n° " +articleUpdate.getIdArticle() + " à été mise à jour ",
+                    HttpStatus.CREATED,
+                    article);
+        }
+
+
+/*            return new ResponseEntity<Object>(
                         article , HttpStatus.CREATED);*/
 
     }
@@ -289,10 +313,10 @@ public class ControllerArticle {
 
     }
 
-    @GetMapping(path = "/getArticleSection")
+/*    @GetMapping(path = "/getArticleSection")
     public List<Domain> getListArticleWithSection() {
         return this.articleService.getArticleWithSection();
-    }
+    }*/
 
     // TODO get liste de commentaire
 

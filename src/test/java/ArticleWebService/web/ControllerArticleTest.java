@@ -19,6 +19,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -255,10 +256,14 @@ public class ControllerArticleTest {
 
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/article/getArticle/{id}", id))
+                .andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isNotFound())
-                .andExpect(result -> Assertions.assertTrue(
-                        result.getResolvedException() instanceof ArticleException));
-
+                .andExpect(result -> {
+                            Throwable exception = result.getResolvedException();
+                            Assertions.assertTrue(exception instanceof ArticleException);
+                            Assertions.assertEquals(HttpStatus.NOT_FOUND, ((ArticleException) exception).getStatus());
+                        }
+                );
     }
 
 
@@ -300,8 +305,6 @@ public class ControllerArticleTest {
                         .get("/article/getAllArticlesSection?page=0&size=6&sectionId=1"))
                 .andExpect(MockMvcResultMatchers
                         .status().isOk());
-
-
     }
 
 
@@ -381,7 +384,6 @@ public class ControllerArticleTest {
                         .jsonPath("$.idUser")
                         .value(this.idUserTest_0));
     }*/
-
     @Test
     @DisplayName("Upload images in server")
     public void saveImage() throws Exception {

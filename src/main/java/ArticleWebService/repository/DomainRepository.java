@@ -12,6 +12,6 @@ import java.util.Set;
 @Repository
 public interface DomainRepository extends CrudRepository<Domain, Integer> {
 
-    @Query("SELECT d FROM Domain d JOIN FETCH d.sections")
-    List<Domain> findAllWithSections();
+/*    @Query("SELECT d FROM Domain d JOIN FETCH d.sections")
+    List<Domain> findAllWithSections();*/
 }

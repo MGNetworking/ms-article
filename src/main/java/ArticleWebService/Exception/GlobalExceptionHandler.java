@@ -47,7 +47,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     }
 
-
     /**
      * Centralise les exceptions lors du traitement de validation.
      * Utilisé uniquement pour la validation des formulaires.
@@ -72,9 +71,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         for (FieldError error : ex.getBindingResult().getFieldErrors()) {
 
             // ignor les messages avec contenant les valeurs null
-            if (!error.getDefaultMessage().contains("null")) {
+/*            if (!error.getDefaultMessage().contains("null")) {
                 listeError.put(error.getField(), error.getDefaultMessage());
-            }
+            }*/
         }
 
         Map<String, Object> body = new LinkedHashMap<>();

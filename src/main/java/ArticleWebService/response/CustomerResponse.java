@@ -17,11 +17,11 @@ public class CustomerResponse {
                             String path) {
 
         detailMessage = new LinkedHashMap<>();
-        detailMessage.put(Message.TIMESTAMP.name(), LocalDateTime.now().toString());
-        detailMessage.put(Message.STATUS.name(), status.value());
-        detailMessage.put(Message.ERROR.name(), error);
-        detailMessage.put(Message.MESSAGE.name(), message);
-        detailMessage.put(Message.PATH.name(), path);
+        detailMessage.put(Message.TIMESTAMP.getValues(), LocalDateTime.now().toString());
+        detailMessage.put(Message.STATUS.getValues(), status.value());
+        detailMessage.put(Message.ERROR.getValues(), error);
+        detailMessage.put(Message.MESSAGE.getValues(), message);
+        detailMessage.put(Message.PATH.getValues(), path);
     }
 
     public Map<String, Object> getDetailMessage(){

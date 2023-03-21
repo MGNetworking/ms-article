@@ -23,6 +23,8 @@ public class DateSerialisation extends JsonSerializer {
                           JsonGenerator jsonGenerator,
                           SerializerProvider serializerProvider) throws IOException {
 
+        log.info("Demande Serialisation d'objet : " + objet.toString());
+
         if (objet instanceof Timestamp) {
 
             try {

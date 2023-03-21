@@ -32,13 +32,13 @@ public class Section implements Serializable {
     @Column(name = "description", nullable = false)
     private String description;
 
-    @OneToMany(mappedBy = "section", fetch = FetchType.LAZY)
-    @JsonIgnore
-    private Collection<Article> articles = new ArrayList<>();
+/*    @OneToMany(mappedBy = "section", fetch = FetchType.LAZY)
+    @JsonBackReference
+    private Collection<Article> articles = new ArrayList<>();*/
 
-    @ManyToOne(fetch = FetchType.LAZY)
+/*    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_domain", referencedColumnName = "id_domain")
-    @JsonIgnore
-    private Domain domain;
+    //@JsonIgnore
+    private Domain domain;*/
 
 }
