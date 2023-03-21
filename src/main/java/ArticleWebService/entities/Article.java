@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Type;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -64,16 +65,31 @@ public class Article implements Serializable {
     @Column(name = "description_art", nullable = false)
     private String description;
 
+    //@Column(name = "date_creation", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @JsonSerialize(using = DateSerialisation.class)
     @JsonDeserialize(using = DateDeserializer.class)
-    @Column(name = "date_creation", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @CreationTimestamp
+    @Column(name = "date_creation", nullable = true)
     private Timestamp dateCreation;
+
 
     @JsonSerialize(using = DateSerialisation.class)
     @JsonDeserialize(using = DateDeserializer.class)
+    @UpdateTimestamp
     @Column(name = "date_maj", nullable = true)
     private Timestamp dateMaj;
+
+    /*    @JsonSerialize(using = DateSerialisation.class)
+    @JsonDeserialize(using = DateDeserializer.class)
+    @Temporal(TemporalType.TIMESTAMP)
+    @CreationTimestamp
+    private Date dateCreation;*/
+
+    /*    @Temporal(TemporalType.TIMESTAMP)
+    @UpdateTimestamp
+    @Column(name = "date_maj", nullable = true)
+    private Date dateMaj;*/
+
 
     @Column(name = "vue", nullable = true)
     private int vue;

@@ -1,5 +1,9 @@
 package ArticleWebService.entities;
 
+import ArticleWebService.dto.DateDeserializer;
+import ArticleWebService.dto.DateSerialisation;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -51,6 +55,8 @@ public class ArticleUpdate {
     private String article;
 
     @NotNull(message = "L'article à déjà été créer et doit donc posséde une date de création")
+    @JsonSerialize(using = DateSerialisation.class)
+    @JsonDeserialize(using = DateDeserializer.class)
     private Timestamp dateCreation;
 
     /**

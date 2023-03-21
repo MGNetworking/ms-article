@@ -47,6 +47,20 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     }
 
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Object> handleException(ArticleException ex,
+                                                         WebRequest request,
+                                                         HttpServletRequest servletRequest,
+                                                         HttpServletResponse httpServletResponse) {
+
+        return ResponseHandler.generateResponse(new CustomerResponse(
+                ex.getStatus(),
+                ex.getStatus().getReasonPhrase(),
+                ex.getMessage(),
+                servletRequest.getRequestURI()));
+
+    }
+
     /**
      * Centralise les exceptions lors du traitement de validation.
      * Utilisé uniquement pour la validation des formulaires.

@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
+import javax.persistence.EntityManager;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -36,6 +37,9 @@ public class ArticleServiceImpl implements ArticleService {
 
     @Value("${file.upload-dir}")
     private String uriStore;
+
+    @Autowired
+    private EntityManager entityManager;
 
     @Autowired
     public ArticleServiceImpl(ArticleRepository articleRepository,
@@ -106,22 +110,9 @@ public class ArticleServiceImpl implements ArticleService {
         log.info("Identifiant user : " + articleUpdate.getIdUser());
 
         Article article = this.modelMapper.map(articleUpdate, Article.class);
+        article = this.entityManager.merge(article);
 
-        // récupération de l'article a mettre à jours
-        Article articleData = this.articleRepository
-                .findById(articleUpdate.getIdArticle())
-                .get();
-
-        // modification des données
-        articleData.setDescription(article.getDescription());
-        articleData.setTitre(article.getTitre());
-        articleData.setImgDescription(article.getImgDescription());
-        articleData.setDescription(article.getDescription());
-        articleData.setVisibiliter(article.isVisibiliter());
-        articleData.setArticle(article.getArticle());
-
-
-        return Optional.of(this.articleRepository.save(articleData));
+        return Optional.of(this.articleRepository.save(article));
 
     }
 
