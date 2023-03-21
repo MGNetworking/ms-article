@@ -72,24 +72,11 @@ public class Article implements Serializable {
     @Column(name = "date_creation", nullable = true)
     private Timestamp dateCreation;
 
-
     @JsonSerialize(using = DateSerialisation.class)
     @JsonDeserialize(using = DateDeserializer.class)
     @UpdateTimestamp
     @Column(name = "date_maj", nullable = true)
     private Timestamp dateMaj;
-
-    /*    @JsonSerialize(using = DateSerialisation.class)
-    @JsonDeserialize(using = DateDeserializer.class)
-    @Temporal(TemporalType.TIMESTAMP)
-    @CreationTimestamp
-    private Date dateCreation;*/
-
-    /*    @Temporal(TemporalType.TIMESTAMP)
-    @UpdateTimestamp
-    @Column(name = "date_maj", nullable = true)
-    private Date dateMaj;*/
-
 
     @Column(name = "vue", nullable = true)
     private int vue;

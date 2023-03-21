@@ -46,6 +46,6 @@ public interface ArticleService {
 
     void deleteArticleById(Integer idArticle)  throws IllegalArgumentException ;
 
-/*    List<Domain> getArticleWithSection();*/
+    public List<Domain> getAllDomainWithSection();
 
 }

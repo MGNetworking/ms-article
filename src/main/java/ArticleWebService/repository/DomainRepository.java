@@ -10,8 +10,6 @@ import java.util.List;
 import java.util.Set;
 
 @Repository
-public interface DomainRepository extends CrudRepository<Domain, Integer> {
+public interface DomainRepository extends JpaRepository<Domain, Integer> {
 
-/*    @Query("SELECT d FROM Domain d JOIN FETCH d.sections")
-    List<Domain> findAllWithSections();*/
 }

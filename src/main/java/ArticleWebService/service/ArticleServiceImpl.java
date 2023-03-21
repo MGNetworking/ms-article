@@ -94,7 +94,7 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     public Optional<Article> saveArticle(ArticleSave articleSave) throws Exception {
 
-        log.info("Sauvegarde de l'article : " + articleSave.getTitre());
+        log.info("Tire de l'article : " + articleSave.getTitre());
         log.info("Identifiant user : " + articleSave.getIdUser());
 
         Article article = this.modelMapper.map(articleSave, Article.class);
@@ -122,14 +122,9 @@ public class ArticleServiceImpl implements ArticleService {
         this.articleRepository.deleteById(idArticle);
     }
 
-/*    @Override
-    public List<Domain> getArticleWithSection() {
-
-        List<Domain> domainList = this.domainRepository.findAllWithSections();
-        return domainList
-                .stream()
-                .distinct()
-                .collect(Collectors.toList());
-    }*/
+    @Override
+    public List<Domain> getAllDomainWithSection(){
+        return this.domainRepository.findAll();
+    }
 
 }

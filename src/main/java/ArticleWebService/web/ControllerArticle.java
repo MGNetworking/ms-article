@@ -177,6 +177,7 @@ public class ControllerArticle {
 
         log.info("La mise à jour d'un article ");
         if (articleUpdate.getIdArticle() == null) {
+
             log.info("la création d'un article ne doit pas être excuter a partir de ce endpoint ");
             return ResponseHandler.generateResponse(new CustomerResponse(
                     HttpStatus.FORBIDDEN,
@@ -313,10 +314,10 @@ public class ControllerArticle {
 
     }
 
-/*    @GetMapping(path = "/getArticleSection")
-    public List<Domain> getListArticleWithSection() {
-        return this.articleService.getArticleWithSection();
-    }*/
+    @GetMapping(path = "/getAllDomain")
+    public List<Domain> getAllDomain() {
+        return this.articleService.getAllDomainWithSection();
+    }
 
     // TODO get liste de commentaire
 

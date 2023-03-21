@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import javax.persistence.Column;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Null;
 import javax.validation.constraints.Size;
 import java.sql.Timestamp;
 import java.util.List;
@@ -55,5 +56,9 @@ public class ArticleSave {
     @NotEmpty(message = "Vous n'avais pas créer de contenu d'article")
     private String article;
 
+    /**
+     * La liste des soruces de l'article, si l'article en posséde.
+     * Cette Attribut n'est pas obligatoire
+     */
     private List<String> source;
 }
