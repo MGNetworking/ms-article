@@ -319,11 +319,5 @@ public class ControllerArticle {
         return this.articleService.getAllDomainWithSection();
     }
 
-    // TODO get liste de commentaire
-
-    // TODO get List de sources
-
-    // TODO get note article
-
 
 }

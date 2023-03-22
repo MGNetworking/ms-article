@@ -47,9 +47,6 @@ public class ArticleUpdate {
     @NotEmpty(message = "Vous devez décrire votre article")
     private String description;
 
-    @NotNull(message = "Vous devezz faire un choix concernant la visiblité de l'article : true ou false")
-    private boolean visibiliter;
-
     @NotNull(message = "L'article ne doit pas être null")
     @NotEmpty(message = "Vous n'avais pas créer de contenu d'article")
     private String article;
@@ -58,6 +55,13 @@ public class ArticleUpdate {
     @JsonSerialize(using = DateSerialisation.class)
     @JsonDeserialize(using = DateDeserializer.class)
     private Timestamp dateCreation;
+
+    @NotNull(message = "Vous devezz faire un choix concernant la visiblité de l'article : true ou false")
+    private boolean visibiliter;
+
+    public boolean getVisibiliter(){
+        return this.visibiliter;
+    }
 
     /**
      * La liste des soruces de l'article, si l'article en posséde.

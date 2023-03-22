@@ -23,6 +23,7 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
+@Cacheable(false) // déactive le cache de 2eme niveau
 @Table(name = "article", schema = "ms_article")
 public class Article implements Serializable {
 
@@ -74,7 +75,7 @@ public class Article implements Serializable {
 
     @JsonSerialize(using = DateSerialisation.class)
     @JsonDeserialize(using = DateDeserializer.class)
-    @UpdateTimestamp
+    //@UpdateTimestamp
     @Column(name = "date_maj", nullable = true)
     private Timestamp dateMaj;
 
@@ -83,4 +84,9 @@ public class Article implements Serializable {
 
     @Column(name = "visibiliter", nullable = false)
     private boolean visibiliter;
+
+    public boolean getVisibiliter(){
+        return this.visibiliter;
+    }
+
 }

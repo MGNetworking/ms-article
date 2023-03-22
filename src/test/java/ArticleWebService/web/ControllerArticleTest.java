@@ -297,12 +297,22 @@ public class ControllerArticleTest {
 
     }
 
+    /**
+     * @throws Exception
+     */
     @Test
     @DisplayName("Get All Article with section and Pagination")
     public void getArticleSection() throws Exception {
 
+        int page = 0;
+        int size = 6;
+        int sectionId = 1;
+
         mockMvc.perform(MockMvcRequestBuilders
-                        .get("/article/getAllArticlesSection?page=0&size=6&sectionId=1"))
+                        .get("/article/getAllArticlesSection")
+                        .param("page", String.valueOf(page))
+                        .param("size", String.valueOf(size))
+                        .param("sectionId", String.valueOf(sectionId)))
                 .andExpect(MockMvcResultMatchers
                         .status().isOk());
     }

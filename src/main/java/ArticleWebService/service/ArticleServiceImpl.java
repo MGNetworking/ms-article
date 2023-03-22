@@ -104,16 +104,42 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    public Optional<Article> updateArticle(ArticleUpdate articleUpdate) throws Exception {
+    public Optional<Article> updateArticle(ArticleUpdate articleUpdate) throws ArticleException {
 
         log.info("Titre de l'article : " + articleUpdate.getTitre());
         log.info("Identifiant user : " + articleUpdate.getIdUser());
 
-        Article article = this.modelMapper.map(articleUpdate, Article.class);
-        article = this.entityManager.merge(article);
+        //Article article = this.modelMapper.map(articleUpdate, Article.class);
 
-        return Optional.of(this.articleRepository.save(article));
+        // Récupérer l'article de la base de données en utilisant son ID
+        Optional<Article> optionalArticle = this.articleRepository.findById(articleUpdate.getIdArticle());
 
+
+        if (optionalArticle.isPresent()) {
+
+            Article art = optionalArticle.get();
+
+            // Modification des valeur de l'objet
+            art.setTitre(articleUpdate.getTitre());
+            art.setArticle(articleUpdate.getArticle());
+            art.setDescription(articleUpdate.getDescription());
+            art.setImgDescription(articleUpdate.getImgDescription());
+            art.setVisibiliter(articleUpdate.getVisibiliter());
+
+            // met à jour l'article en base de données
+            Article updateArt = this.articleRepository.save(art);
+
+            entityManager.flush();
+
+            // Rafraîchir l'état de l'objet en mémoire avec les valeurs actuelles en base de données
+            this.entityManager.refresh(updateArt);
+
+            return Optional.of(updateArt);
+        } else {
+            throw new ArticleException("L'article avec l'ID " + articleUpdate.getIdArticle() +
+                    " n'existe pas en base de données",
+                    HttpStatus.NOT_FOUND);
+        }
     }
 
 
@@ -123,7 +149,7 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    public List<Domain> getAllDomainWithSection(){
+    public List<Domain> getAllDomainWithSection() {
         return this.domainRepository.findAll();
     }
 
