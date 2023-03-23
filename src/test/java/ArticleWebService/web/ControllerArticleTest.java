@@ -2,12 +2,18 @@ package ArticleWebService.web;
 
 import ArticleWebService.Exception.ArticleException;
 import ArticleWebService.entities.Article;
+import ArticleWebService.entities.ArticleSave;
+import ArticleWebService.entities.ArticleUpdate;
+import ArticleWebService.entities.Section;
 import ArticleWebService.service.FileSystemStorageServiceImplementation;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.jayway.jsonpath.JsonPath;
 import lombok.extern.slf4j.Slf4j;
+import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.*;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -18,6 +24,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -28,8 +35,11 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.io.File;
 import java.nio.file.Files;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 
 /**
  * Le service de configuration doit être en cours d'exécution
@@ -39,6 +49,7 @@ import static org.hamcrest.CoreMatchers.is;
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ActiveProfiles(value = "dev", resolver = SystemPropertiesActiveProfileResolver.class)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Slf4j
 public class ControllerArticleTest {
 
@@ -99,6 +110,9 @@ public class ControllerArticleTest {
     private static String accesTokenTest_0;
     private static String accesTokenTest_1;
     private static String accesTokenTest_2;
+
+    private String nameImages;
+    private String idArticleForDelete;
 
     // permet la sérialisation et de désérialisation JSON en Java
     private ObjectMapper mapper = new ObjectMapper();
@@ -232,6 +246,7 @@ public class ControllerArticleTest {
 
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders
                         .get("/article/getArticle/{id}", 1))
+                .andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andReturn();
 
@@ -287,6 +302,7 @@ public class ControllerArticleTest {
                         .param("page", Integer.toString(page))
                         .param("size", Integer.toString(size))
                         .contentType(MediaType.APPLICATION_JSON))
+                .andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.content")
                         .isEmpty())
@@ -313,8 +329,19 @@ public class ControllerArticleTest {
                         .param("page", String.valueOf(page))
                         .param("size", String.valueOf(size))
                         .param("sectionId", String.valueOf(sectionId)))
+                .andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers
                         .status().isOk());
+    }
+
+    @Test
+    @DisplayName("Get All Domain")
+    public void getAllDomain() throws Exception {
+
+        this.mockMvc.perform(MockMvcRequestBuilders
+                        .get("/article/getAllDomain"))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(MockMvcResultMatchers.status().isOk());
     }
 
 
@@ -324,11 +351,12 @@ public class ControllerArticleTest {
      *
      * @throws Exception
      */
-/*    @Test
+    @Test
+    @Order(3)
     @DisplayName("Save article in dataBase ")
     public void saveArticle() throws Exception {
 
-        ArticleForm articleForm = new ArticleForm();
+        ArticleSave articleForm = new ArticleSave();
         articleForm.setIdUser(this.idUserTest_0);
 
         Section section = new Section();
@@ -343,7 +371,7 @@ public class ControllerArticleTest {
         // sérialisation en Json de l'articleForm
         String paylaod = mapper.writeValueAsString(articleForm);
 
-        mockMvc.perform(MockMvcRequestBuilders.post("/article/saveArticle")
+        MvcResult resul = mockMvc.perform(MockMvcRequestBuilders.post("/article/saveArticle")
                         .header("Authorization", "bearer " + accesTokenTest_0)
                         .content(paylaod)
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
@@ -352,16 +380,34 @@ public class ControllerArticleTest {
                 .andExpect(MockMvcResultMatchers.status().isCreated())
                 .andExpect(MockMvcResultMatchers
                         .jsonPath("$.idUser")
-                        .value(this.idUserTest_0));
-    }*/
+                        .value(this.idUserTest_0))
+                .andReturn();
 
-/*    @Test
+        String reponseContentString = resul.getResponse().getContentAsString();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode jsonNode = objectMapper.readTree(reponseContentString);
+        this.idArticleForDelete = jsonNode.get("idArticle").asText();
+
+        Assertions.assertNotNull(this.idArticleForDelete);
+    }
+
+    /**
+     * Test la mise a jour d'article. cette article appartient a l'utiliseut test_1
+     * et la mise a jour et effectuer via l'utilisateur possèdent les droit ADMIN.
+     * le user-id => a2b57a09-2e47-4690-b76f-7bc3afdbbae1
+     * Correspondant a l'identifiant utilisateur max possèdant les droits ADMIN.
+     *
+     * @throws Exception
+     */
+    @Test
+    @Order(4)
     @DisplayName("Update article in dataBase ")
     public void updateArticle() throws Exception {
 
         // get article 1
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders
-                        .get("/article/getArticle/5"))
+                        .get("/article/getArticle/{id}", this.idArticleForDelete))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andReturn();
 
@@ -373,28 +419,51 @@ public class ControllerArticleTest {
         Article article = this.mapper.readValue(objectJson, Article.class);
         log.info("article " + article);
 
-        // Mapping de l'article vers ArticleForm
+        // Mapping de l'article vers ArticleUpdate
         ModelMapper modelMapper = new ModelMapper();
-        ArticleForm articleForm = modelMapper.map(article, ArticleForm.class);
+        ArticleUpdate articleUpdate = modelMapper.map(article, ArticleUpdate.class);
 
         // modification de l'article
-        articleForm.setArticle("Cette article et un test de mise a jour");
+        if (articleUpdate.getTitre().equals("saveArticle_USER_OK")) {
+            log.info("modification du titre de l'article");
+            articleUpdate.setArticle("saveArticle_USER_OK => is ok ");
+        } else {
+            articleUpdate.setArticle("saveArticle_USER_OK");
+        }
+
 
         // sérialiseation du ArticleForm en JSON
-        String paylaod = this.mapper.writeValueAsString(articleForm);
+        String paylaod = this.mapper.writeValueAsString(articleUpdate);
 
         // envoi les modifications de l'article
-        mockMvc.perform(MockMvcRequestBuilders.post("/article/saveArticle")
+        mockMvc.perform(MockMvcRequestBuilders.put("/article/updateArticle")
                         .header("Authorization", "bearer " + accesTokenTest_0)
+                        .header("user-id", "a2b57a09-2e47-4690-b76f-7bc3afdbbae1")
                         .content(paylaod)
                         .contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isCreated())
                 .andExpect(MockMvcResultMatchers
-                        .jsonPath("$.idUser")
-                        .value(this.idUserTest_0));
-    }*/
+                        .jsonPath("$.data.dateMaj")
+                        .exists());
+    }
+
+
     @Test
+    @Order(5)
+    @DisplayName("Delete article by ID")
+    public void deleteArticle() throws Exception {
+
+        this.mockMvc.perform(MockMvcRequestBuilders
+                        .delete("/article/deleteArticle/{id}", this.idArticleForDelete))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(MockMvcResultMatchers.status().isOk());
+
+
+    }
+
+    @Test
+    @Order(1)
     @DisplayName("Upload images in server")
     public void saveImage() throws Exception {
 
@@ -424,8 +493,18 @@ public class ControllerArticleTest {
                         imageByte);                                // le byte code de l'image
 
         // appel du point de terminaison
-        mockMvc.perform(MockMvcRequestBuilders.multipart("/article/saveImages").file(mockMultipartFile))
-                .andExpect(MockMvcResultMatchers.status().isCreated());
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.multipart("/article/saveImages")
+                        .file(mockMultipartFile))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(MockMvcResultMatchers.status().isCreated())
+                .andReturn();
+
+        String reponseString = result.getResponse().getContentAsString();
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode jsonResponse = objectMapper.readTree(reponseString);
+        this.nameImages = jsonResponse.get("value").asText();
+
+        Assertions.assertNotNull(this.nameImages);
 
 
     }
@@ -435,33 +514,29 @@ public class ControllerArticleTest {
      *
      * @throws Exception
      */
-/*    @Test
+    @Test
+    @Order(2)
     @DisplayName("Remove image in server")
     public void deleteImages() throws Exception {
 
-        File[] files = new File(this.directory).listFiles();
-        log.info("nombre de fichier : " + files.length);
 
-        String nameFile = null;
-        for (File f : files) {
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.delete("/article/deleteImages")
+                        .param("nameImages", this.nameImages))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(MockMvcResultMatchers
+                        .status()
+                        .isOk())
+                .andReturn();
 
-            log.info("nom du fichier : " + files.getClass().getName());
-            Matcher matcher = Pattern.compile("([\\w]+\\.jpg)").matcher(f.getName());
+        String reponseString = result.getResponse().getContentAsString();
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode jsonResponse = objectMapper.readTree(reponseString);
+        String nameDelete = jsonResponse.get("data").asText();
 
-            if (matcher.find()) {
-                nameFile = f.getName();
-                log.info("File name find : " + nameFile);
-                break;
-            }
-        }
+        Assertions.assertEquals(this.nameImages, nameDelete);
 
-        // certifie que l'images est présent sur le serveur
-        Assertions.assertNotNull(nameFile);
 
-        mockMvc.perform(MockMvcRequestBuilders.delete("/article/deleteImages")
-                        .param("nameImages", nameFile))
-                .andExpect(MockMvcResultMatchers.status().isOk());
-    }*/
+    }
 
 
 }

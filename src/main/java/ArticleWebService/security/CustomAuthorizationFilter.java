@@ -42,7 +42,7 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
 
         log.info("Uri request : " + uriRequest);
 
-        if (uriRequest.equals("/article/saveArticle")) {
+        if (uriRequest.equals("/article/updateArticle")) {
 
             if (headerUser != null) {
                 log.info("headerUser : " + headerUser);

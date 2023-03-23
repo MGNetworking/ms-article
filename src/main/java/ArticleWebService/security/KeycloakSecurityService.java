@@ -69,13 +69,17 @@ public class KeycloakSecurityService extends KeycloakWebSecurityConfigurerAdapte
                         "/article/getAllArticles",
                         "/article/saveImages",
                         "/article/getAllArticlesSection",
-                        "/article/updateArticle")
+                        "/article/getAllDomain")
                 .permitAll();
 
 
         http.authorizeRequests()
                 .antMatchers("/article/saveArticle")
                 .hasAuthority("USER");
+
+        http.authorizeRequests()
+                .antMatchers("/article/updateArticle")
+                .hasAnyAuthority("ADMIN", "USER");
 
         // filtre personnalilsé
         http.addFilterAfter(this.customAuthFilter,
