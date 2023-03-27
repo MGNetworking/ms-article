@@ -372,7 +372,7 @@ public class ControllerArticleTest {
         String paylaod = mapper.writeValueAsString(articleForm);
 
         MvcResult resul = mockMvc.perform(MockMvcRequestBuilders.post("/article/saveArticle")
-                        .header("Authorization", "bearer " + accesTokenTest_0)
+                        .header("Authorization", "Bearer " + accesTokenTest_0)
                         .content(paylaod)
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .accept(MediaType.APPLICATION_JSON_VALUE))
@@ -437,7 +437,7 @@ public class ControllerArticleTest {
 
         // envoi les modifications de l'article
         mockMvc.perform(MockMvcRequestBuilders.put("/article/updateArticle")
-                        .header("Authorization", "bearer " + accesTokenTest_0)
+                        .header("Authorization", "Bearer " + accesTokenTest_0)
                         .header("user-id", "a2b57a09-2e47-4690-b76f-7bc3afdbbae1")
                         .content(paylaod)
                         .contentType(MediaType.APPLICATION_JSON_VALUE))
