@@ -42,13 +42,16 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
 
         log.info("Uri request : " + uriRequest);
 
-        if (uriRequest.equals("/article/updateArticle")) {
+        boolean updateArticle = uriRequest.equals("/article/updateArticle");
+        boolean deleteArticle = uriRequest.startsWith("/article/deleteArticle/");
+
+        if (updateArticle || deleteArticle) {
 
             if (headerUser != null) {
-                log.info("headerUser : " + headerUser);
+                log.info("header User-id : " + headerUser);
 
-                if (!this.authentification.userCreatorArticle(headerUser)) {
-                    log.info("n'est authorisé ... ");
+                if (!this.authentification.isAutorization(headerUser)) {
+                    log.info("n'est pas authorisé ... ");
                     CustomerResponse exception = new CustomerResponse(
                             HttpStatus.FORBIDDEN,
                             "Accès interdit",
@@ -70,7 +73,7 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
 
         }
 
-        log.info("Fait suivre la requête dans le filterChain ");
+        log.info("Fait suivre la requête dans la Chain des filtres");
         filterChain.doFilter(request, response);
 
     }

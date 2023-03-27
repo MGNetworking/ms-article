@@ -48,7 +48,7 @@ public class KeycloakSecurityService extends KeycloakWebSecurityConfigurerAdapte
      * http.cors();
      * http.headers().frameOptions().disable();
      * http.headers().frameOptions().sameOrigin();
-     *
+     * <p>
      * Doit être désactivé :
      * http.csrf().disable();
      *
@@ -65,21 +65,22 @@ public class KeycloakSecurityService extends KeycloakWebSecurityConfigurerAdapte
 
         // gestion des accès au ressources
         http.authorizeRequests()
-                .antMatchers("/article/getArticle/*",
-                        "/article/getAllArticles",
+                .antMatchers("/article/getAllArticles",
                         "/article/saveImages",
                         "/article/getAllArticlesSection",
                         "/article/getAllDomain")
                 .permitAll();
-
-
+        // USER role
         http.authorizeRequests()
                 .antMatchers("/article/saveArticle")
                 .hasAuthority("USER");
 
+        // USER and ADMIN Roles
         http.authorizeRequests()
-                .antMatchers("/article/updateArticle")
+                .antMatchers("/article/updateArticle",
+                        "/article/deleteArticle/* ")
                 .hasAnyAuthority("ADMIN", "USER");
+
 
         // filtre personnalilsé
         http.addFilterAfter(this.customAuthFilter,

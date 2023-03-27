@@ -455,7 +455,9 @@ public class ControllerArticleTest {
     public void deleteArticle() throws Exception {
 
         this.mockMvc.perform(MockMvcRequestBuilders
-                        .delete("/article/deleteArticle/{id}", this.idArticleForDelete))
+                        .delete("/article/deleteArticle/{id}", this.idArticleForDelete)
+                        .header("Authorization", "Bearer " + accesTokenTest_0)
+                        .header("user-id", "a2b57a09-2e47-4690-b76f-7bc3afdbbae1"))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
