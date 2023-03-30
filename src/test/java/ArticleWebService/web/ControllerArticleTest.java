@@ -48,7 +48,7 @@ import static org.hamcrest.CoreMatchers.nullValue;
 @SpringBootTest
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@ActiveProfiles(value = "dev", resolver = SystemPropertiesActiveProfileResolver.class)
+//@ActiveProfiles(value = "preprod", resolver = SystemPropertiesActiveProfileResolver.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Slf4j
 public class ControllerArticleTest {
