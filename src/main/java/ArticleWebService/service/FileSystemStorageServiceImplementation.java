@@ -1,6 +1,6 @@
 package ArticleWebService.service;
 
-import ArticleWebService.component.ConfigurationArticle;
+import ArticleWebService.configuration.ConfigSystem;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.utility.RandomString;
 import org.apache.commons.io.FilenameUtils;
@@ -12,12 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URI;
-import java.net.URL;
 import java.nio.file.*;
-import java.util.Arrays;
 import java.util.Date;
 
 /**
@@ -30,9 +25,12 @@ public class FileSystemStorageServiceImplementation implements FileSystemStorage
 
     @Autowired
     Environment environment;
+    @Autowired
+    ConfigSystem configSystem;
 
     @Value("${file.domain-dir}")
     private String ipLocation;
+
 
     /**
      * Allow to upload file picture in server local
@@ -53,8 +51,13 @@ public class FileSystemStorageServiceImplementation implements FileSystemStorage
             log.info("remplacment de l'ancien nom de fichier par le nouveau");
             String  name = file.getOriginalFilename().replace(file.getOriginalFilename(),nameFile );
 
+            /* ancien version
             String pathlocal = environment.getProperty("file.upload-dir");
             Path path = Paths.get(pathlocal + "/" + name);
+            */
+
+            // initialisation du chemin d'accès au fichier
+            Path path = Paths.get(this.configSystem.getPath() + "/" + name);
 
             // recherche du dossier de reception
             if (!Files.exists(path.getParent())) {
@@ -95,7 +98,9 @@ public class FileSystemStorageServiceImplementation implements FileSystemStorage
 
         try {
             log.info("Suppression de l'images : " + fileName);
-            Files.delete(Paths.get(environment.getProperty("file.upload-dir") + "/" + fileName));
+            // Files.delete(Paths.get(environment.getProperty("file.upload-dir") + "/" + fileName));
+            Files.delete(Paths.get(this.configSystem.getPath() + "/" + fileName));
+
             return true;
         } catch (IOException ioe) {
             log.error("Erreur delete images : " + ioe.getMessage());

@@ -35,8 +35,6 @@ public class ArticleServiceImpl implements ArticleService {
     private FileSystemStorageServiceImplementation fsssI;
     private ModelMapper modelMapper;
 
-    @Value("${file.upload-dir}")
-    private String uriStore;
 
     @Autowired
     private EntityManager entityManager;

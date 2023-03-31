@@ -65,8 +65,6 @@ public class ControllerArticleTest {
 
     @Value("${file.domain-dir}")
     private String ipLocation;
-    @Value("${file.upload-dir}")
-    private String directory;
 
     // URL connection
     @Value("${urlToken.keycloak}")
