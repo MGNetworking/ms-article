@@ -51,10 +51,6 @@ public class FileSystemStorageServiceImplementation implements FileSystemStorage
             log.info("remplacment de l'ancien nom de fichier par le nouveau");
             String  name = file.getOriginalFilename().replace(file.getOriginalFilename(),nameFile );
 
-            /* ancien version
-            String pathlocal = environment.getProperty("file.upload-dir");
-            Path path = Paths.get(pathlocal + "/" + name);
-            */
 
             // initialisation du chemin d'accès au fichier
             Path path = Paths.get(this.configSystem.getPath() + "/" + name);
@@ -98,7 +94,6 @@ public class FileSystemStorageServiceImplementation implements FileSystemStorage
 
         try {
             log.info("Suppression de l'images : " + fileName);
-            // Files.delete(Paths.get(environment.getProperty("file.upload-dir") + "/" + fileName));
             Files.delete(Paths.get(this.configSystem.getPath() + "/" + fileName));
 
             return true;
