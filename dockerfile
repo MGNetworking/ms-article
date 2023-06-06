@@ -1,16 +1,31 @@
-# Stage Build
 FROM maven:3.8.5-jdk-8-slim as build
-COPY src /home/app/src
-COPY pom.xml /home/app
-RUN mvn -f /home/app/pom.xml clean test package -Dspring.profiles.active=dev
 
-# Stage package
+# Création du répertoire de travail
+WORKDIR /app
+
+COPY src /app/src
+COPY pom.xml /app/pom.xml
+
+RUN mvn package -Dspring.profiles.active=dev -Dspring-boot.run.jvmArguments=-Dspring.profiles.active=dev
+
+# Image de base pour l'exécution de l'application
 FROM openjdk:8-jdk-alpine
 
-COPY --from=build /home/app/target/*.jar app.jar
+# Définition de l'utilisateur
+#USER root
 
-EXPOSE 8077
-ENTRYPOINT [ "java" ,"-jar", "app.jar" ]
+# Création du répertoire de travail
+RUN mkdir /app
+WORKDIR /app
+
+# Copie du jar de l'application
+COPY --from=build /app/target/*.jar /app/app.jar
+
+# Définition de la variable d'environnement pour activer le profil "dev"
+ENV SPRING_PROFILES_ACTIVE=dev
+
+EXPOSE 8666
+ENTRYPOINT [ "java","-jar", "app.jar" ]
 
 # docker build -t article/latest .
 
