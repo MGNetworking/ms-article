@@ -1,17 +1,31 @@
-# Stage Build
+# Définition de l'image de base
 FROM maven:3.8.5-jdk-8-slim as build
-COPY src /home/app/src
-COPY pom.xml /home/app
-RUN mvn -f /home/app/pom.xml clean test package -Dspring.profiles.active=prod
+
+# Création du répertoire de travail
+WORKDIR /app
+COPY src /app/src
+COPY pom.xml /app/pom.xml
+
+# arguement venant du docker compose
+ARG CONFIG_SERVICE_URI_ARG
+ARG env_profile
+
+# variable attendu dans le fichier bootstrap.yml du projet
+ENV CONFIG_SERVICE_URI=$CONFIG_SERVICE_URI_ARG
+ENV SPRING_PROFILES_ACTIVE=$env_profile
+
+# lancement de la compilation
+RUN mvn package
 
 # Stage package
 FROM openjdk:8-jdk-alpine
+WORKDIR /app
 
-COPY --from=build /home/app/target/*.jar app.jar
+# Copie du jar de l'application
+COPY --from=build /app/target/*.jar /app/app.jar
 
 EXPOSE 8077
 ENTRYPOINT [ "java" ,"-jar", "app.jar" ]
 
 # docker build -t article/latest .
-
 # docker run -e "SPRING_PROFILES_ACTIVE=dev" --name article -p 8089:8089 -d article/latest
