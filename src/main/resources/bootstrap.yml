@@ -11,4 +11,4 @@ spring:
     name: msarticle
   cloud:
     config:
-      uri:  http://localhost:8089
+      uri: ${SPRING_CONFIG_URI:http://localhost:8089}
