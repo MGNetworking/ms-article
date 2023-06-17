@@ -1,26 +1,51 @@
 package ArticleWebService.component;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.EnumerablePropertySource;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.StreamSupport;
 
+
+@Slf4j
 @Component
 public class ConfigurationArticle {
 
     @Autowired
     Environment environment;
 
-    public Map<String,String> getProperties() {
+    public Map<String, String> getProperties() {
 
         List<String> listProperties = new ArrayList<>();
-
         Map<String, String> param = new HashMap<>();
 
+        log.info("StreamSupport de Profile ");
+        StreamSupport.stream(((ConfigurableEnvironment) this.environment)
+                        .getPropertySources()
+                        .spliterator(), false)
+                .filter(ps -> ps instanceof EnumerablePropertySource)
+                .map(ps -> ((EnumerablePropertySource) ps).getPropertyNames())
+                .flatMap(Arrays::stream)
+                .distinct()
+                .forEach(propName -> {
+
+                            log.info(propName + " : " + environment.getProperty(propName));
+
+                            // info.profile == prod , ne pas rendre visible en prod du password data Base
+  /*                          if (!environment.getProperty(propName).equals("prod")) {
+                                // propName = datasource.password  , spring.datasource.password
+                                param.put(propName, environment.getProperty(propName));
+                            }*/
+                            param.put(propName, environment.getProperty(propName));
+
+                        }
+                );
+
+/*
         //
         param.put("name", environment.getProperty("spring.application.name"));
         param.put("profile", environment.getProperty("info.profile"));
@@ -40,7 +65,7 @@ public class ConfigurationArticle {
         param.put("datasource url", environment.getProperty("spring.datasource.url"));
         param.put("datasource username", environment.getProperty("spring.datasource.username"));
 
-        if (!environment.getProperty("info.profile").equals("prod")){
+        if (!environment.getProperty("info.profile").equals("prod")) {
             param.put("datasource password", environment.getProperty("spring.datasource.password"));
         }
         param.put("datasource driver-class-name", environment.getProperty("spring.datasource.driver-class-name"));
@@ -62,11 +87,10 @@ public class ConfigurationArticle {
 
         // serveur
         param.put("server forward-headers-strategy", environment.getProperty("server.forward-headers-strategy"));
-        param.put("storage-article location", environment.getProperty("storage-article.location"));
+        param.put("storage-article location", environment.getProperty("storage-article.location"));*/
 
         return param;
     }
-
 
 
 }

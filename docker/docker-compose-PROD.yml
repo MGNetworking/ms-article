@@ -1,0 +1,34 @@
+version: '3.9'
+
+services:
+  article:
+    container_name: article
+    restart: always
+    env_file:
+      - .env
+    build:
+      context: ../
+      dockerfile: dockerfile
+      args:
+        - CONFIG_SERVICE_URI_ARG=${IP_DEV}
+        - env_profile=${env_DEV}
+    image: ms-article-service
+    deploy:
+      replicas: 1
+    ports:
+      - "0:9010"
+    volumes:
+      # Path absolut pour l'échange des fichiers
+      - ./$PWD TODO dossier local:/blog/images:rw
+    environment:
+      - SPRING_PROFILES_ACTIVE=${env_DEV}
+      - CONFIG_SERVICE_URI=${IP_DEV}
+
+    networks:
+      - spring-network
+
+networks:
+  spring-network:
+    name: blog-network
+    external: true    # indic qui ce connectera au réseau existant blog-network
+    driver: bridge    # indic le type de réseau docker

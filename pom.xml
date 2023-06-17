@@ -32,7 +32,6 @@
         <junit-jupiter.version>5.5.2</junit-jupiter.version>
 
 
-
     </properties>
 
     <!--============================= -->
@@ -201,6 +200,9 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <executable>true</executable>
+                    <environmentVariables>
+                        <SPRING_CONFIG_IMPORT>optional:configserver:http://localhost:8089</SPRING_CONFIG_IMPORT>
+                    </environmentVariables>
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>
