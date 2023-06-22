@@ -1,7 +1,7 @@
 version: '3.9'
 
 services:
-  article:
+  article-service:
     container_name: article
     restart: always
     env_file:
@@ -23,6 +23,7 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=${env_DEV}
       - CONFIG_SERVICE_URI=${IP_DEV}
+      - eureka.client.service-url.defaultZone=${eureka_Zone}
 
     networks:
       - spring-network
