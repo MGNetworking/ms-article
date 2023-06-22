@@ -18,37 +18,61 @@ delete_conteneur() {
 }
 
 delete_reseau() {
-  docker network ls --filter "name=$nom_reseau"
-  if [[ $? -eq 0 ]]; then
-    echo "Le réseau n'est plus actif"
+
+  # Vérifie si le conteneur est actif
+  if docker ps -f "network=blog-network" -f "status=running" --format '{{.ID}}' | grep -q .; then
+    echo "************************************"
+    echo "Un conteneur est toujours actif sur le réseau bridge (blog-network)."
+    echo "Le réseau blog-network ne peut être supprimer."
+  else
+    echo "************************************"
+    echo "Les conteneurs ne sont plus actif sur le réseau bridge (blog-network)."
+    echo "Le réseau blog-network peut être supprimer "
+    docker network rm $nom_reseau > /dev/null 2>&1
+    docker network ls --filter "name=$nom_reseau"  > /dev/null 2>&1
+
+    if [[ $? -eq 0 ]]; then
+      echo "************************************"
+      echo "Le réseau a été supprimé avec succès."
+    else
+      echo "************************************"
+      echo "Échec de la suppression du réseau $nom_reseau"
+    fi
   fi
 }
 
-docker compose -f docker-compose-DEV.yml down
+docker compose -f ./docker/docker-compose-DEV.yml down
 
 # Vérifier si le conteneur n'est plus en cours d'exécution
-if [[ -z "$(docker ps -q -f 'status=exited' -f 'name=$mon_conteneur')" ]]; then
+if [[ -z "$(docker ps -q -f 'status=exited' -f 'name='$mon_conteneur)" ]]; then
+  echo "************************************"
   echo "Le conteneur n'est plus en cours d'exécution."
 
-  # Recherche de l'images avant supression
+  # Recherche de l'images avant suppression
   if [[ $(docker images -q $image) != "" ]]; then
 
-    echo "Suppression du conteneur "
     delete_conteneur
-    echo "Etat du réseau $nom_reseau :  "
     delete_reseau
 
   else
+    echo "************************************"
     echo "L'images : $image a déjà était supprimer "
   fi
 
 else
+  echo "************************************"
   echo "Le conteneur est toujours en cours d'exécution."
 fi
 
 # affichage
-echo "Liste des processus en cours d'exécution : "
+echo "************************************"
+echo "Liste des processus en cours d'exécution "
 docker ps -a
 
-echo "Liste des images déployées : "
+echo "************************************"
+echo "Liste des images déployées "
 docker images
+
+echo "************************************"
+echo "List des réseaux "
+docker network ls
