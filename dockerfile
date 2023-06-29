@@ -1,5 +1,6 @@
 # Définition de l'image de base
 FROM maven:3.8.5-jdk-8-slim as build
+MAINTAINER ghalem maxime
 
 # Création du répertoire de travail
 WORKDIR /app

@@ -4,6 +4,7 @@ services:
   article-service:
     container_name: article
     restart: always
+    image: ms-article-service:${version-latest}
     env_file:
       - .env
     build:
@@ -12,7 +13,6 @@ services:
       args:
         - CONFIG_SERVICE_URI_ARG=${IP_PROD}
         - env_profile=${env_PROD}
-    image: ms-article-service
     deploy:
       replicas: 1
     ports:
