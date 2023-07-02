@@ -4,7 +4,7 @@ services:
   article-service:
     container_name: article
     restart: always
-    image: ms-article-service:${version-latest}
+    image: ms-article-service:${version:-latest}
     env_file:
       - .env
     build:
