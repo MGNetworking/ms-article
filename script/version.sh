@@ -63,5 +63,6 @@ if grep -q "^version=$PROJECT_VERSION$" "$path_env"; then
   exit 0 # renvoy true
 else
   echo "Erreur lors de la copie de la chaîne dans le fichier $path_env."
+
   exit 1 # renvoy false
 fi
