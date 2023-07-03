@@ -1,0 +1,5 @@
+# Fichiers de script avec des fins de ligne LF (Linux)
+*.sh   eol=lf
+
+# Tous les autres fichiers avec des fins de ligne CRLF (Windows)
+*             eol=crlf
