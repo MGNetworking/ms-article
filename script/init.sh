@@ -1,6 +1,6 @@
 #!/bin/bash
 
-name_conteneur="eureka"
+name_conteneur="article"
 
 docker info >/dev/null 2>&1
 DOCKER_STATUS=$?
@@ -8,7 +8,7 @@ DOCKER_STATUS=$?
 if [ $DOCKER_STATUS -eq 0 ]; then
   echo "Docker est en cours d'exécution."
 
-  status=$(docker inspect --format='{{.State.Status}}' $name_conteneur > /dev/null 2>&1)
+  status=$(docker inspect --format='{{.State.Status}}' $name_conteneur >/dev/null 2>&1)
 
   # si déjà encours d'ex
   if [[ $status == "running" ]]; then
@@ -33,6 +33,8 @@ if [ $DOCKER_STATUS -eq 0 ]; then
 
     ./script/Get_IP_Eureka_Service.sh
     ip_eureka_service=$?
+
+    ./script/version.sh
 
     if [[ $ip_config_service -eq 0 && $ip_eureka_service -eq 0 ]]; then # 0 = true
       echo "Création de l'images est du conteneur $name_conteneur"
