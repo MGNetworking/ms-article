@@ -2,18 +2,18 @@
 
 nom_reseau="blog-network"
 image="ms-article-service"
-mon_conteneur="configuration"
+mon_conteneur="article"
 
 delete_conteneur() {
   # suppression de l'images conteneuriser
-  docker rmi $image
-  result=$(docker images -f "reference=$image")
+  docker rmi $1
+  docker images -f "reference=$1"
 
   # verification le code de retour de la suppression de l'image
-  if [ $? -eq 0 ]; then
-    echo "L'images : $image a bien été supprimer "
+  if [[ $? -eq 0 ]]; then
+    echo "L'images : $1 a bien été supprimer "
   else
-    echo "L'images : $image n'a pas été supprimer "
+    echo "L'images : $1 n'a pas été supprimer "
   fi
 }
 
@@ -28,8 +28,8 @@ delete_reseau() {
     echo "************************************"
     echo "Les conteneurs ne sont plus actif sur le réseau bridge (blog-network)."
     echo "Le réseau blog-network peut être supprimer "
-    docker network rm $nom_reseau > /dev/null 2>&1
-    docker network ls --filter "name=$nom_reseau"  > /dev/null 2>&1
+    docker network rm $nom_reseau
+    docker network ls --filter "name=$nom_reseau"
 
     if [[ $? -eq 0 ]]; then
       echo "************************************"
@@ -39,6 +39,7 @@ delete_reseau() {
       echo "Échec de la suppression du réseau $nom_reseau"
     fi
   fi
+
 }
 
 docker compose -f ./docker/docker-compose-DEV.yml down
@@ -48,10 +49,12 @@ if [[ -z "$(docker ps -q -f 'status=exited' -f 'name='$mon_conteneur)" ]]; then
   echo "************************************"
   echo "Le conteneur n'est plus en cours d'exécution."
 
-  # Recherche de l'images avant suppression
-  if [[ $(docker images -q $image) != "" ]]; then
+  # Obtenir le tag (version) de l'image du conteneur
+  tag=$(docker images --filter=reference=$image --format "{{.Tag}}")
 
-    delete_conteneur
+  # par nom est son tag get le num de l'images
+  if [[ $(docker images -q $image:$tag) != "" ]]; then
+    delete_conteneur $image:$tag
     delete_reseau
 
   else
@@ -66,11 +69,11 @@ fi
 
 # affichage
 echo "************************************"
-echo "Liste des processus en cours d'exécution "
+echo "Liste des processus en cours d'exécution : "
 docker ps -a
 
 echo "************************************"
-echo "Liste des images déployées "
+echo "Liste des images déployées : "
 docker images
 
 echo "************************************"
