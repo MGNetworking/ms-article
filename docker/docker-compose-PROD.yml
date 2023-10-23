@@ -25,10 +25,10 @@ services:
       - CONFIG_SERVICE_URI=${IP_PROD}
 
     networks:
-      - spring-network
+      - keycloak_postgre
 
 networks:
-  spring-network:
-    name: blog-network
-    external: true    # indic qui ce connectera au réseau existant blog-network
-    driver: bridge    # indic le type de réseau docker
+  keycloak_postgre:
+    name: sso_bd
+    external: true  # indic qu'ils est déjà present
+    driver: bridge  # Réseau docker isolé
