@@ -1,6 +1,6 @@
 #!/bin/bash
 
-network_spring="blog-network"
+network_spring="sso_bd"
 
 echo "Affichage de la liste des réseau "
 
