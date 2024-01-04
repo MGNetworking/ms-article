@@ -2,5 +2,6 @@
 *.txt text eol=lf
 *.sh text eol=lf
 
-# Utiliser les paramètres par défaut pour les autres fichiers
-* text=auto
+# Exclure les images du traitement "text"
+*.png -text
+*.jpg -text
