@@ -141,7 +141,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- This 2 dependence its useful for used keycloak -->
+        <!-- This 2 dependence it's useful for used keycloak -->
         <!-- dependence for adaptateur keycloak -->
         <dependency>
             <groupId>org.keycloak</groupId>
@@ -200,9 +200,6 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <executable>true</executable>
-                    <environmentVariables>
-                        <SPRING_CONFIG_IMPORT>optional:configserver:http://localhost:8089</SPRING_CONFIG_IMPORT>
-                    </environmentVariables>
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>

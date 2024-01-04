@@ -16,6 +16,7 @@ ARG eureka_defaultZone
 ENV CONFIG_SERVICE_URI=$CONFIG_SERVICE_URI_ARG
 ENV SPRING_PROFILES_ACTIVE=$env_profile
 
+
 RUN echo "CONFIG_SERVICE_URI: $CONFIG_SERVICE_URI"
 RUN echo "SPRING_PROFILES_ACTIVE: $SPRING_PROFILES_ACTIVE"
 
@@ -29,15 +30,6 @@ WORKDIR /app
 # Copie du jar de l'application
 COPY --from=build /app/target/*.jar /app/app.jar
 
-# Création du répertoire de travail
-RUN mkdir /app
-WORKDIR /app
-
-# Copie du jar de l'application
-COPY --from=build /app/target/*.jar /app/app.jar
-
-# Définition de la variable d'environnement pour activer le profil "dev"
-ENV SPRING_PROFILES_ACTIVE=dev
 
 EXPOSE 8666
 ENTRYPOINT [ "java","-jar", "app.jar" ]

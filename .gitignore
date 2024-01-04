@@ -31,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### les images de testes ###
+src/main/resources/static/images-MockMVC
+src/main/resources/static/innerpage

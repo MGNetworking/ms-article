@@ -1,5 +1,7 @@
-# Fichiers de script avec des fins de ligne LF (Linux)
-*.sh   eol=lf
+# Utiliser LF pour les fichiers déjà au format LF
+*.txt text eol=lf
+*.sh text eol=lf
 
-# Tous les autres fichiers avec des fins de ligne CRLF (Windows)
-*             eol=crlf
+# Exclure les images du traitement "text"
+*.png -text
+*.jpg -text

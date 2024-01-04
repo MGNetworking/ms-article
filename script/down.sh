@@ -1,6 +1,6 @@
 #!/bin/bash
 
-nom_reseau="blog-network"
+nom_reseau="sso_bd"
 image="ms-article-service"
 mon_conteneur="article"
 
