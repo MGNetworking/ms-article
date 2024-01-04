@@ -33,5 +33,5 @@ build/
 .vscode/
 
 ### les images de testes ###
-src/main/resources/static/images-MockMVC
-src/main/resources/static/innerpage
+#src/main/resources/static/images-MockMVC
+#src/main/resources/static/innerpage
