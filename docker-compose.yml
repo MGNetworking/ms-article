@@ -13,7 +13,8 @@ services:
       args:
         - CONFIG_SERVICE_URI_ARG=${IP_DEV}
         - env_profile=${env_DEV}
-        - eureka_defaultZone=${eureka_Zone}
+        - POSTGRES_DATASOURCE_URL_ARG=${DB_URI}
+#        - eureka_defaultZone=${eureka_Zone}
     deploy:
       replicas: 1
     ports:
@@ -25,6 +26,7 @@ services:
       - SPRING_PROFILES_ACTIVE=${env_DEV}
       - CONFIG_SERVICE_URI=${IP_DEV}
       - eureka.client.service-url.defaultZone=${eureka_Zone}
+      - POSTGRES_DATASOURCE_URL=${DB_URI}
 
     networks:
       - keycloak_postgre
