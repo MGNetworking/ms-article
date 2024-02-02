@@ -12,4 +12,4 @@ spring:
   cloud:
     config:
       uri:
-        - ${CONFIG_SERVICE_URI:http://localhost:8089}
+        - ${CONFIG_SERVICE_URI_host:http://ms-configuration:8089}

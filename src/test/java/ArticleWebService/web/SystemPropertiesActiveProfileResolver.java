@@ -19,17 +19,20 @@ public class SystemPropertiesActiveProfileResolver implements ActiveProfilesReso
 
         String[] springPropertieProfile = new String[1];
 
-        log.info("Les listes et recherche des propriétées d'environement Java du projet ms-article");
+        log.info("Les listes et recherche des propriétés environment Java du projet ms-article");
         System.getProperties().values().forEach(
                 ele -> {
                     log.info(ele.toString());
-                    if (Pattern.matches("-Dspring.profiles.active=dev", ele.toString())) {
+
+                    String input = ele.toString();
+
+                    if (input.contains("-Dspring.profiles.active=dev")) {
                         log.info("*****************************");
                         log.info("le profile dev a était trouver ");
                         log.info("*****************************");
                         springPropertieProfile[0] = "dev";
 
-                    } else if (Pattern.matches("-Dspring.profiles.active=pre-prod", ele.toString())) {
+                    } else if (input.contains("-Dspring.profiles.active=pre-prod")) {
 
                         log.info("*****************************");
                         log.info("le profile pre-prod a était trouver ");
@@ -37,7 +40,7 @@ public class SystemPropertiesActiveProfileResolver implements ActiveProfilesReso
 
                         springPropertieProfile[0] = "pre-prod";
 
-                    } else if (Pattern.matches("-Dspring.profiles.active=prod", ele.toString())) {
+                    } else if (input.contains("-Dspring.profiles.active=prod")) {
 
                         log.info("*****************************");
                         log.info("le profile prod a était trouver ");
