@@ -1,6 +1,5 @@
 #!/bin/bash
 
-nom_reseau="sso_bd"
 image="ms-article-service"
 mon_conteneur="article"
 
@@ -28,14 +27,19 @@ if [[ -z "$(docker ps -q -f 'status=exited' -f 'name='$mon_conteneur)" ]]; then
   # Obtenir le tag (version) de l'image du conteneur
   tag=$(docker images --filter=reference=$image --format "{{.Tag}}")
 
-  # par nom est son tag get le num de l'images
+  # recherche de l'images
   if [[ $(docker images -q $image:$tag) != "" ]]; then
+
     delete_conteneur $image:$tag
 
   else
     echo "************************************"
     echo "L'images : $image a déjà était supprimer "
   fi
+
+  echo "************************************"
+  echo "Suppression des images Docker sans étiquette "
+  docker image prune -f -a
 
 else
   echo "************************************"

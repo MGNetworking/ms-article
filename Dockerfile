@@ -1,31 +1,36 @@
 # Définition de l'image de base
 FROM maven:3.8.5-jdk-8-slim as build
-MAINTAINER ghalem maxime
+MAINTAINER "ghalem maxime"
 
 # Création du répertoire de travail
 WORKDIR /app
-COPY src /app/src
-COPY pom.xml /app/pom.xml
+
+# copie des fichiers source
+COPY ./src /app/src
+COPY ./pom.xml /app/pom.xml
 
 # argument venant du docker compose
-ARG env_profile
+ARG SPRING_PROFILES_ACTIVE
+ARG CONFIG_SERVICE_URI_host
 
-# profile attendu pour la compilation
-ENV SPRING_PROFILES_ACTIVE=$env_profile
+# variable d'environnement set pour maven
+ENV SPRING_PROFILES_ACTIVE=$SPRING_PROFILES_ACTIVE
+ENV CONFIG_SERVICE_URI_host=$CONFIG_SERVICE_URI_host
 
 # lancement de la compilation
 RUN mvn package
 
 # Image de base pour l'exécution de l'application
 FROM openjdk:8-jdk-alpine
-WORKDIR /app
 
-# Copie du jar de l'application
+# Installation des tools pour wait_for_config.sh
+RUN apk --no-cache add curl jq
+
+WORKDIR /app
 COPY --from=build /app/target/*.jar /app/app.jar
 
+COPY ./script/wait_for_config.sh /app
+RUN chmod +x /app/wait_for_config.sh
 
-EXPOSE 8666
-ENTRYPOINT [ "java","-jar", "app.jar" ]
-
-# docker build -t article/latest .
-# docker run -e "SPRING_PROFILES_ACTIVE=dev" --name article -p 8089:8089 -d article/latest
+EXPOSE 9010
+ENTRYPOINT ["sh", "/app/wait_for_config.sh"]

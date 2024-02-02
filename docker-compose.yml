@@ -2,37 +2,28 @@ version: '3.9'
 
 services:
   article:
-    container_name: article
+    container_name: ms-article
     restart: always
     image: ms-article-service:${version:-latest}
     env_file:
       - .env
     build:
-      context: ../
-      dockerfile: dockerfile
-      args:
-        - CONFIG_SERVICE_URI_ARG=${IP_DEV}
-        - env_profile=${env_DEV}
-        - POSTGRES_DATASOURCE_URL_ARG=${DB_URI}
-#        - eureka_defaultZone=${eureka_Zone}
+      context: .
+      dockerfile: Dockerfile
+      args: # pour la construction de l'image
+        - SPRING_PROFILES_ACTIVE=${profile_actif_dev}
+        - CONFIG_SERVICE_URI_host=${service_config_host_dev}
     deploy:
       replicas: 1
     ports:
-      - "0:9010"
-#    volumes:
-      # Path absolut pour l'échange des fichiers
-#      - ./$PWD TODO dossier local:/blog/images:rw
-    environment:
-      - SPRING_PROFILES_ACTIVE=${env_DEV}
-      - CONFIG_SERVICE_URI=${IP_DEV}
-      - eureka.client.service-url.defaultZone=${eureka_Zone}
-      - POSTGRES_DATASOURCE_URL=${DB_URI}
-
+      - "9010:9010"
+    environment: # pour la construction du conteneur
+      - SPRING_PROFILES_ACTIVE=${profile_actif_dev}
+      - CONFIG_SERVICE_URI_docker=${service_config_docker}
     networks:
       - keycloak_postgre
 
 networks:
   keycloak_postgre:
     name: sso_bd
-    external: true    # indic qui ce connectera au réseau existant blog-network
     driver: bridge    # indic le type de réseau docker
