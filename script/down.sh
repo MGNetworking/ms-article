@@ -17,32 +17,8 @@ delete_conteneur() {
   fi
 }
 
-delete_reseau() {
 
-  # Vérifie si le conteneur est actif
-  if docker ps -f "network=blog-network" -f "status=running" --format '{{.ID}}' | grep -q .; then
-    echo "************************************"
-    echo "Un conteneur est toujours actif sur le réseau bridge (blog-network)."
-    echo "Le réseau blog-network ne peut être supprimer."
-  else
-    echo "************************************"
-    echo "Les conteneurs ne sont plus actif sur le réseau bridge (blog-network)."
-    echo "Le réseau blog-network peut être supprimer "
-    docker network rm $nom_reseau
-    docker network ls --filter "name=$nom_reseau"
-
-    if [[ $? -eq 0 ]]; then
-      echo "************************************"
-      echo "Le réseau a été supprimé avec succès."
-    else
-      echo "************************************"
-      echo "Échec de la suppression du réseau $nom_reseau"
-    fi
-  fi
-
-}
-
-docker compose -f ./docker/docker-compose-DEV.yml down
+docker compose down
 
 # Vérifier si le conteneur n'est plus en cours d'exécution
 if [[ -z "$(docker ps -q -f 'status=exited' -f 'name='$mon_conteneur)" ]]; then
@@ -55,7 +31,6 @@ if [[ -z "$(docker ps -q -f 'status=exited' -f 'name='$mon_conteneur)" ]]; then
   # par nom est son tag get le num de l'images
   if [[ $(docker images -q $image:$tag) != "" ]]; then
     delete_conteneur $image:$tag
-    delete_reseau
 
   else
     echo "************************************"
