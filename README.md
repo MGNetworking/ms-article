@@ -1,62 +1,171 @@
-## Table of contents
-* [General info](#general-info)
-* [Technologies](#technologies)
-* [Setup](#setup)
+# API de Gestion d'Articles
 
-## General info
+Bienvenue dans l'API de Gestion d'Articles, une solution puissante pour la création, la modification et la mise à jour
+d'articles sur votre site web.
 
-Le but de ce projet et est la gestion des articles. Il devra permettre d'exposer le point de 
-terminaison pour la gestion des articles sur le blog. 
-Ce service et ce travail sont conçus pour fonctionner sous l'autorité d'une passerelle
+## Table des matières
+
+* [Fonctionnalités principales](#fonctionnalités-principales)
+* [Configuration et dépendances](#configuration-requise)
+    * [Étapes de Configuration](#étapes-de-configuration)
+    * [Les dépendances externes](#les-dépendances-externes)
+* [Intégration avec ms-gateway](#intégration-avec-ms-gateway)
+    * [Accès via ms-gateway](#accès-via-ms-gateway)
+    * [Accès Direct par Adresse IP](#accès-direct-par-adresse-ip)
+    * [Postman](#postman)
+* [Les Scripts](#les-scripts)
+* [Mode Débogage](#mode-débogage)
+
+## Documentation
+
+La documentation complète de l'API est disponible dans le dossier [docs](/docs). Vous y trouverez des informations
+détaillées sur l'installation, les points d'extrémité, des exemples pratiques, et bien plus encore.
+
+## Fonctionnalités principales
+
+`Création d'Articles `: Permet aux utilisateurs d'ajouter de nouveaux articles via le site web en utilisant des requêtes
+simples.
+
+`Modification d'Articles` : Offre la flexibilité nécessaire pour mettre à jour le contenu des articles existants en
+fonction des besoins des utilisateurs.
+
+`Mise à Jour d'Articles` : Fournit des mécanismes pour mettre à jour les informations des articles, garantissant une
+gestion précise et à jour du contenu.
+
+`Affichage d'Articles` : Permet aux sites web d'afficher facilement les articles stockés dans la base de données,
+offrant ainsi une expérience utilisateur fluide.
+
+## Configuration Requise
+
+Avant de commencer, assurez-vous simplement que vous disposez d'un environnement compatible avec `Java` et `Maven`.
+Cette API a été développée avec `Spring Boot version 2.4.5`, et Maven se chargera automatiquement de l'importation des
+dépendances spécifiées dans le fichier `pom.xml`.
+
+### Étapes de Configuration
+
+1. Assurez-vous que Maven et importer les dépendances et soit prête à fonctionner.
+2. Assurez-vous que l'API `ms-configuration` soit en cours d'exécution et accessible.
+3. Lancement de l'API
+    * `run.sh` : Il permet d'exécuter la compilation est l'exécution de L'API [voir les scripts](#les-scripts)
+    * `Maven`  : Dans l'interface graphique de l'IDE intellij, vous pouvez créer une configuration en mode
+      debug [voir Mode Débogage ](#mode-débogage)
+
+### Les dépendances externes
+
+C'est dependence externe sont indispensables et obligatoires pour le fonctionnement de ce projet.
+
+[docker-keycloak-postgres](https://github.com/MGNetworking/docker-keycloak-postgres) : Vous aurais besoin du
+projet. Il doit être en cours d'exécution dans l'environnement d'écrit dans le fichier de properties. Ce projet est en
+gestion des autorisations utilisateur pour la création, la mise à jour des articles du site. Ce projet est utilisé
+pendant la phase de test unitaire, il est donc obligatoire et doit être opérationnelle pour l'utilisation de l'API
+ms-article.
+
+[ms-configuration](https://github.com/MGNetworking/ms-configuration) : Ce projet fait partie du
+projet principal [back-end](https://github.com/MGNetworking/back-end) qui regroupe toutes les API de ce projet, il
+possède comme ce projet son propre depôt.
+
+## Intégration avec ms-gateway
+
+Cette API fonctionne au travers du micro-service [ms-gateway](https://github.com/MGNetworking/ms-gateway). Cette API
+fait parti du projet principal [back-end](https://github.com/MGNetworking/back-end). Cependant, elle peut également être
+accessible directement par son adresse IP.
+
+### Accès via ms-gateway
+
+L'accès à cette API via `ms-gateway`, suit le modèle standard de routage au sein de notre architecture micro-services.
+Consultez la documentation de [ms-gateway](https://github.com/MGNetworking/ms-gateway) pour obtenir des informations
+spécifiques sur la configuration des routes.
+
+### Accès Direct par Adresse IP
+
+Si nécessaire, vous pouvez accéder directement à cette API en utilisant son adresse IP. Assurez-vous que les règles de
+pare-feu et de sécurité appropriées sont en place.
+
+### Postman
+
+Pour simplifier l'interaction avec l'API pour le test en développement, dans le dossier Postman Collection, vous
+trouverez le fichier `REST API  ms-article.postman_collection.json`. Vous pouvez l'importé dans votre environnement
+Postman.
+
+Il contient une description d'utilisation et des exemples de requêtes pour les principaux points de terminaison de l'
+API `ms-article`.
+
+## Les Scripts
+
+Les scripts `run.sh` et `down.sh` ont été créer dans le but de facilité l'exécution du projet en environment DEV, mais
+pas pour le mode debug. Ils ont pour objectif de test l'exécution de l'API dans l'infrastructure docker de manière plus
+simple et rapide.
+
+* `run.sh` : Il permet de lancer l'API avec 2 modes compilation différent :
+
+    * La Compilation via Dockerfile :  
+      Cette compilation sera exécuter une phase de Build via le `Dockerfile` par le `docker-compose.yml` en utilisant
+      l'image `maven:3.8.5-jdk-8-slim` , puis une phase de copiage dans l'image `openjdk:8-jdk-alpine ` des fichiers
+      compilé. Cela permet d'avoir une image d'API plus légère et donc optimisée.
+
+    * La Compilation via Maven :  
+      Cette compilation exécute la compilation avec Maven avec votre environnement de manière plus directe qu'avec le
+      Dockerfile. Cela permet d'éviter de compilé l'image via le `Dockerfile-dev` par le `docker-compose-dev.yml` ce qui
+      est un gain de temps, ce qui est un
+      gain de temps puisque la Compilation via Dockerfile doit à chaque lancement récupérer toutes les dépendances du
+      projet contenu dans le pom.xml avec sa compilation.
 
 
+* `down.sh` : Il permet l'arrêter est la suppression du conteneur de l'image. Il supprime aussi toutes les images et
+  conteneur non utilisé ainsi que les orphelins sur le système host.
 
-Ce micro-service a pour but la gestion des articles du blog. Il expose ces point de terminaison 
-pour enregistrer, modifier et supprimer des articles.
 
-Ces points de terminaison son accessible soit directement sur le micro-service, soit indirectement 
-par le micro-service `Gateway`
+* `wait_for_config.sh` : Ce script n'est pas utilisé dans le development de manière direct, mais il est ajouté dans la
+  phase de compilation dans le but d'attendre que le service `ms-configuration` soit en cours d'exécution. Si ce service
+  n'est pas en cours d'exécution, il ne pourra récupérer son fichier de properties ce qui provoquera un échec
+  d'exécution.
 
-## Technologies
-Ce projet a été créer avec : `Spring boot version : 2.4.5`
+NB : Le service `ms-configuration` est aussi important pendant la phase de compilation. Sans son fichier de
+configuration, il ne peut n'y compiler n'y s'exécuter !!!
 
-## Setup
+## Mode Débogage
 
-Les scripts `init.sh` et `down.sh` ont etait créer dans le but de facilité l'exécution du projet en environnenemt DEV.
+Si vous avez besoin de déboguer l'API, suivez ces étapes pour configurer un environnement de débogage :
 
-__Les script__
-* __init.sh__ : permet de lancer le docker compose
-* __down.sh__ : permet l'arréter est la suppression du conteneur et l'images
-* __Get_IP_Config_Service.sh__ : permet de récupére l'IP du service `Configuration`
-* __Get_IP_Eureka_Service.sh__ : permet de récupére l'IP duc service `Eureka Discovery Client`
-* __reseau.sh__ : permet de voir le reseau bridge du conteneur
+Dans intellij, aller vers éditer une configuration, puis ajoute avec le plus et sélectionner Maven
 
-__Les variables d'environement__  
-Les variables d'envrionnement du projet sont contenu dans le fichier `.env`.
-Le contenu de la variable `IP_DEV` et génére par le script `get_machine_ip.sh` dans le but récupérer
-automatique l'idresse ip local de la machine.
+![maven-debug.png](images/edit-configuration.png)
 
-__La variable__ `IP_DEV` :
-1. La variable `IP_DEV` permet de transmettre `docker compose` la valeur de l'ip qui RUN le projet
-   afin de la transmettra au dockerfile pour la complation.
-2. Le dockerfile le récupére en argument et la transfert en variable d'environnement.
-3. Puis pendant la phase de compilation le fichier `application.yml` récupére cette variable d'environnement
-   pour localiser l'emplacement du service de configuration, qui va permet de récupére le fichier de properties du
-   service.
+Cela ajoutera un onglet supplémentaire qu'il vous faudra configurer.
 
-__NB__  
-Pour le lancement des scripts `Bash`, Vous aurez besoin d'un interpréteur de commande de type `UNIX`.
-Le `Git bash` peux être utilisé, mais pas 100%, il y a certain variable inconnue dans les scripts pour le `Git bash`.
+![maven-debug.png](images/maven-debug.png)
+Dans l'espace Run ajoute la commande :
 
-Aussi, il est possible que les fichiers contienne des caractères de fin de ligne type
-window. Cela peut provoquer des erreurs, voici une commande `linux` permettent de modifier ces
-caractères.
+```shell
+clean package spring-boot:run "-Dspring-boot.run.jvmArguments=-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005 -Dspring.profiles.active=dev"
+```
 
-Exemple :
-````shell
-dos2unix init.sh
-````
+Détail de la commande pour le mode debug :
 
-Cette commmande permettra par exemple de modifier les caractères spéciaux contenu dans
-le fichier `init.sh`
+1. `clean package` : Les goals Maven
+2. `spring-boot:run` : Le lancement de l'API
+3. `-Dspring-boot.run.jvmArguments` le passage en arguments pour la JVM
+4. `-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005`  
+   Cette partie de la commande correspond à la configuration du débogueur Java (Java Debugger Wire Protocol - JDWP) pour
+   une application Spring Boot.
+
+    * `-Xdebug` : Active le support du débogueur Java.
+    * `-Xrunjdwptransport=dt_socket,server=y,suspend=y,address=5005` :
+        * `transport=dt_socket`: Spécifie le mode de transport pour la communication entre le débogueur et
+          l'application.
+          Dans ce cas, il utilise le socket (dt_socket).
+        * `server=y`: Indique que l'application doit agir en tant que serveur pour le débogueur, ce qui signifie qu'elle
+          attendra une connexion du débogueur.
+        * `suspend=y`: Indique que l'application doit être suspendue jusqu'à ce qu'une connexion de débogage soit
+          établie.
+          Cela signifie que l'application attendra le débogueur avant de commencer à s'exécuter.
+        * `address=5005`: Spécifie le port sur lequel l'application écoutera les connexions du débogueur. Dans ce cas,
+          le port est 5005.
+
+5. `-Dspring.profiles.active=dev` : Le profile active permet de prècisé l'environnement dans lequel s'execute
+   cette API. Cela aura pour effet au moment de l'exécution, de cibler le fichier de properties avec lequel cette API
+   va fonctionner et aussi les testes unitaires qui seront exécuter au moment de la compilation.
+
+Working directory : Cible le dossier projet (l'API ms-article)
+
 

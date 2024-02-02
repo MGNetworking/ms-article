@@ -1,0 +1,441 @@
+{
+	"info": {
+		"_postman_id": "10195054-8f06-449a-a1e7-43920956342d",
+		"name": "REST API  ms-article",
+		"description": "# 🚀 Get started here\n\nCe projet vous permet d'exécuter des operation CRUD (GET, POST, PUT, DELETE) sur l'API ms-article de manière direct sans passé par le micro-service Gateway.\n\n## 🔖 **How to use this template**\n\n#### **Step 1: Send requests**\n\nRESTful APIs allow you to perform CRUD operations using the POST, GET, PUT, and DELETE HTTP methods.\n\nThis collection contains each of these [request](https://learning.postman.com/docs/sending-requests/requests/) types. Open each request and click \"Send\" to see what happens.\n\n#### **Step 2: View responses**\n\nObserve the response tab for status code (200 OK), response time, and size.\n\n#### **Step 3: Send new Body data**\n\nUpdate or add new data in \"Body\" in the POST request. Typically, Body data is also used in PUT request.\n\n```\n{\n    \"name\": \"Add your name in the body\"\n}\n\n ```\n\n#### **Step 4: Update the variable**\n\nVariables enable you to store and reuse values in Postman. We have created a [variable](https://learning.postman.com/docs/sending-requests/variables/) called `base_url` with the sample request [https://postman-api-learner.glitch.me](https://postman-api-learner.glitch.me). Replace it with your API endpoint to customize this collection.\n\n#### **Step 5: Add tests in the \"Tests\" tab**\n\nTests help you confirm that your API is working as expected. You can write test scripts in JavaScript and view the output in the \"Test Results\" tab.\n\n<img src=\"https://content.pstmn.io/b5f280a7-4b09-48ec-857f-0a7ed99d7ef8/U2NyZWVuc2hvdCAyMDIzLTAzLTI3IGF0IDkuNDcuMjggUE0ucG5n\">\n\n## 💪 Pro tips\n\n- Use folders to group related requests and organize the collection.\n- Add more [scripts](https://learning.postman.com/docs/writing-scripts/intro-to-scripts/) in \"Tests\" to verify if the API works as expected and execute workflows.\n    \n\n## 💡Related templates\n\n[API testing basics](https://go.postman.co/redirect/workspace?type=personal&collectionTemplateId=e9a37a28-055b-49cd-8c7e-97494a21eb54&sourceTemplateId=ddb19591-3097-41cf-82af-c84273e56719)  \n[API documentation](https://go.postman.co/redirect/workspace?type=personal&collectionTemplateId=e9c28f47-1253-44af-a2f3-20dce4da1f18&sourceTemplateId=ddb19591-3097-41cf-82af-c84273e56719)  \n[Authorization methods](https://go.postman.co/redirect/workspace?type=personal&collectionTemplateId=31a9a6ed-4cdf-4ced-984c-d12c9aec1c27&sourceTemplateId=ddb19591-3097-41cf-82af-c84273e56719)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "11348257"
+	},
+	"item": [
+		{
+			"name": "Get All Articles Section",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{ms-article_localhost}}/article/getAllArticlesSection?page=0&size=10&sectionId=1",
+					"host": [
+						"{{ms-article_localhost}}"
+					],
+					"path": [
+						"article",
+						"getAllArticlesSection"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "0"
+						},
+						{
+							"key": "size",
+							"value": "10"
+						},
+						{
+							"key": "sectionId",
+							"value": "1"
+						}
+					]
+				},
+				"description": "This is a GET request and it is used to \"get\" data from an endpoint. There is no request body for a GET request, but you can use query parameters to help specify the resource you want data on (e.g., in this request, we have `id=1`).\n\nA successful GET response will have a `200 OK` status, and should include some kind of response body - for example, HTML web content or JSON data."
+			},
+			"response": []
+		},
+		{
+			"name": "Get Article by id",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": []
+				},
+				"url": {
+					"raw": "{{ms-article_localhost}}/article/getArticle/45",
+					"host": [
+						"{{ms-article_localhost}}"
+					],
+					"path": [
+						"article",
+						"getArticle",
+						"45"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get ALL Domain",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{ms-article_localhost}}/article/getAllDomain",
+					"host": [
+						"{{ms-article_localhost}}"
+					],
+					"path": [
+						"article",
+						"getAllDomain"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Article Pagination",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{ms-article_localhost}}/article/getAllArticles?page=0&size=6",
+					"host": [
+						"{{ms-article_localhost}}"
+					],
+					"path": [
+						"article",
+						"getAllArticles"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "0",
+							"description": "numero de la page"
+						},
+						{
+							"key": "size",
+							"value": "6",
+							"description": "nombre d'article "
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TODO Get  Article by Id And User Id Copy",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{ms-article_localhost}}/article/getArticlebyIdAndUserId/52c6ba34-8df7-47b2-969b-843776fc1bff/2",
+					"host": [
+						"{{ms-article_localhost}}"
+					],
+					"path": [
+						"article",
+						"getArticlebyIdAndUserId",
+						"52c6ba34-8df7-47b2-969b-843776fc1bff",
+						"2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get config-service Copy",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{ms-article_localhost}}/article-config/config-service",
+					"host": [
+						"{{ms-article_localhost}}"
+					],
+					"path": [
+						"article-config",
+						"config-service"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Save Article",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful POST request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"accept-encoding": true,
+					"connection": true,
+					"accept": true
+				}
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJzUTJ6SXo5UjRWSWxrd3h3cFpTclNQeFMzcXBwNloxTjI3VWRLczBaLVNzIn0.eyJleHAiOjE2NzkwNjkzNDMsImlhdCI6MTY3OTA2OTA0MywianRpIjoiZTM3OGEyMTgtNjA1OC00ODM3LWJiZGUtMGFmMjdjOGRmMTNiIiwiaXNzIjoiaHR0cHM6Ly9rZXljbG9hay1wcmUuZ2hvdmVyYmxvZy5vdmgvYXV0aC9yZWFsbXMvZ2hvdmVyYmxvZyIsImF1ZCI6ImFjY291bnQiLCJzdWIiOiJhMmI1N2EwOS0yZTQ3LTQ2OTAtYjc2Zi03YmMzYWZkYmJhZTEiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJvdmVyYmxvZ19hbmd1bGFyIiwic2Vzc2lvbl9zdGF0ZSI6ImE3OTVjMDJkLWQwOTUtNGMwNS1iYzc0LTkxYzY2MTNiNDU3YiIsImFjciI6IjEiLCJhbGxvd2VkLW9yaWdpbnMiOlsiKiJdLCJyZWFsbV9hY2Nlc3MiOnsicm9sZXMiOlsib2ZmbGluZV9hY2Nlc3MiLCJBRE1JTiIsInVtYV9hdXRob3JpemF0aW9uIiwiVVNFUiIsImRlZmF1bHQtcm9sZXMtZ2hvdmVyYmxvZyJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoiZW1haWwgcHJvZmlsZSIsInNpZCI6ImE3OTVjMDJkLWQwOTUtNGMwNS1iYzc0LTkxYzY2MTNiNDU3YiIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwicHJlZmVycmVkX3VzZXJuYW1lIjoibWF4IiwiZ2l2ZW5fbmFtZSI6IiIsImZhbWlseV9uYW1lIjoiIiwiZW1haWwiOiJtYXhAZ21haWwuY29tIn0.mdUgtNOmoT3ZwDPFrAu7UwfbMlH0YI5IBpP5NOvxzi2iwPPpMf__AROi6ICidtE0neo5BkCD2SMSmDY8ck1wGmEJfCrIE9axnTGxeVMHNxucfCxSKTUlyEx5FoHHHkmtG_DzuHzPeG3lhinNovsf-81W8lwWhGFM5HXddrevoy8JSezjhC4MREeYfi0YzAprvT-d-rHgBf6YN3cLEH9dokfgV9nTtPyroXxQR4qSbQwGeu8OoyXYF5BjBzjJVHSdA7-ruH8JvfXPzENVz3AEMB8HTpwT4dwQjnm5FlQSaoIE-HFcaJd70lflp5RlZhB6hiF9fSyaKoZY53smHxuI1A",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Cache-Control",
+						"value": "no-cache",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "user-id",
+						"value": "52c6ba34-8df7-47b2-969b-843776fc1bff",
+						"type": "text",
+						"description": "User max role ADMIN / USER"
+					},
+					{
+						"key": "user-id",
+						"value": "a2b57a09-2e47-4690-b76f-7bc3afdbbae1",
+						"description": "User test 1  role  USER",
+						"type": "text",
+						"disabled": true
+					},
+					{
+						"key": "user-id",
+						"value": "f0c1f119-1eec-46b5-9dd6-2c8e780814d0",
+						"description": "User test 2 aucun role",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "\r\n{\r\n    \"idUser\": \"52c6ba34-8df7-47b2-969b-843776fc1bff\",\r\n    \"idCommentaire\": null,\r\n    \"idSource\": null,\r\n    \"idNote\": null,\r\n    \"section\": {\r\n        \"idSection\": 1,\r\n        \"description\": \"Java\"\r\n    },\r\n    \"titre\": \"Save article with Postman\",\r\n    \"article\": \"Test la sauvegarde d'un article produit par un formulaire \",\r\n    \"description\": \"article créer sans ROLE ADMIN\",\r\n    \"vue\": 0,\r\n    \"visibiliter\": false\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{ms-article}}/article/saveArticle",
+					"host": [
+						"{{ms-article}}"
+					],
+					"path": [
+						"article",
+						"saveArticle"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Article Copy",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful PUT request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"accept": true
+				}
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJzUTJ6SXo5UjRWSWxrd3h3cFpTclNQeFMzcXBwNloxTjI3VWRLczBaLVNzIn0.eyJleHAiOjE2Nzk5Mjc0MTMsImlhdCI6MTY3OTkyNzExMywianRpIjoiNjE4NWU4ZDctZWVmYi00NzdmLTg3ZTItZWJjNWNmN2QzZDY0IiwiaXNzIjoiaHR0cHM6Ly9rZXljbG9hay1wcmUuZ2hvdmVyYmxvZy5vdmgvYXV0aC9yZWFsbXMvZ2hvdmVyYmxvZyIsImF1ZCI6ImFjY291bnQiLCJzdWIiOiJhMmI1N2EwOS0yZTQ3LTQ2OTAtYjc2Zi03YmMzYWZkYmJhZTEiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJvdmVyYmxvZ19hbmd1bGFyIiwic2Vzc2lvbl9zdGF0ZSI6IjViZjMyNWYyLTZhYzAtNDA2NS05OGQ1LTQxNjczOTMxN2UzZSIsImFjciI6IjEiLCJhbGxvd2VkLW9yaWdpbnMiOlsiKiJdLCJyZWFsbV9hY2Nlc3MiOnsicm9sZXMiOlsib2ZmbGluZV9hY2Nlc3MiLCJBRE1JTiIsInVtYV9hdXRob3JpemF0aW9uIiwiVVNFUiIsImRlZmF1bHQtcm9sZXMtZ2hvdmVyYmxvZyJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoiZW1haWwgcHJvZmlsZSIsInNpZCI6IjViZjMyNWYyLTZhYzAtNDA2NS05OGQ1LTQxNjczOTMxN2UzZSIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwicHJlZmVycmVkX3VzZXJuYW1lIjoibWF4IiwiZ2l2ZW5fbmFtZSI6IiIsImZhbWlseV9uYW1lIjoiIiwiZW1haWwiOiJtYXhAZ21haWwuY29tIn0.HhT35-dv7_eZFZPPghbAf98X2JBiutsdak_ObJzVt6xB53AHP8J8H1auYR6tsA3i2usb8C2RRgMVPUbqSIKbxpYjLJ6Y52iUU9Nq4938soGDRbgd8Zo_lbczYd0NMdkVDJSVmhvZF2vhYsZLfY3WilMWx2tb02oWJsYdL6VdN7nuTaB9oklSSvc3i9sZtouTrlTanp7JUpsEZ2VKqI_IOy_GtRZHpzJauu9Q3juoQWk-ZzvVIWhcnBNKxxmtQQdO93NZrYy088jkjKzVShJ8J_nDpDcRobcAKLkyfFGpZEpgrenjM4eLrpPAuxKTz7lgso_Updk2Xb7zIzlODtkF7w",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Cache-Control",
+						"value": "no-cache",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "user-id",
+						"value": "52c6ba34-8df7-47b2-969b-843776fc1bff",
+						"type": "text",
+						"description": "USER => teste 1"
+					},
+					{
+						"key": "user-id",
+						"value": "a2b57a09-2e47-4690-b76f-7bc3afdbbae1",
+						"type": "text",
+						"description": "ADMIN => max",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"idArticle\": 36,\r\n    \"idUser\": \"52c6ba34-8df7-47b2-969b-843776fc1bff\",\r\n    \"idCommentaire\": null,\r\n    \"idSource\": null,\r\n    \"idNote\": null,\r\n    \"section\": {\r\n        \"idSection\": 1,\r\n        \"description\": \"Java\"\r\n    },\r\n    \"titre\": \"Teste de mise a jour\",\r\n    \"article\": \"test de mise a jour d'article avec les un utilisateur qui possède le droits ADMIN mais qui n'est pas le créateur de l'article\",\r\n    \"imgDescription\": null,\r\n    \"description\": \"Article créer avec le ROLE USER\",\r\n    \"dateCreation\": \"2023-03-14 11:45:33\",\r\n    \"dateMaj\": null,\r\n    \"vue\": 0,\r\n    \"visibiliter\": false\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{ms-article_localhost}}/article/updateArticle",
+					"host": [
+						"{{ms-article_localhost}}"
+					],
+					"path": [
+						"article",
+						"updateArticle"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Article by Id",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJzUTJ6SXo5UjRWSWxrd3h3cFpTclNQeFMzcXBwNloxTjI3VWRLczBaLVNzIn0.eyJleHAiOjE2Nzk5MjY4MzIsImlhdCI6MTY3OTkyNjUzMiwianRpIjoiNGRkNjgzMmUtOTJkYi00M2QxLWJmYWUtYjBjNzkxNTU3YmY0IiwiaXNzIjoiaHR0cHM6Ly9rZXljbG9hay1wcmUuZ2hvdmVyYmxvZy5vdmgvYXV0aC9yZWFsbXMvZ2hvdmVyYmxvZyIsImF1ZCI6ImFjY291bnQiLCJzdWIiOiJhMmI1N2EwOS0yZTQ3LTQ2OTAtYjc2Zi03YmMzYWZkYmJhZTEiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJvdmVyYmxvZ19hbmd1bGFyIiwic2Vzc2lvbl9zdGF0ZSI6IjViZjMyNWYyLTZhYzAtNDA2NS05OGQ1LTQxNjczOTMxN2UzZSIsImFjciI6IjEiLCJhbGxvd2VkLW9yaWdpbnMiOlsiKiJdLCJyZWFsbV9hY2Nlc3MiOnsicm9sZXMiOlsib2ZmbGluZV9hY2Nlc3MiLCJBRE1JTiIsInVtYV9hdXRob3JpemF0aW9uIiwiVVNFUiIsImRlZmF1bHQtcm9sZXMtZ2hvdmVyYmxvZyJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoiZW1haWwgcHJvZmlsZSIsInNpZCI6IjViZjMyNWYyLTZhYzAtNDA2NS05OGQ1LTQxNjczOTMxN2UzZSIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwicHJlZmVycmVkX3VzZXJuYW1lIjoibWF4IiwiZ2l2ZW5fbmFtZSI6IiIsImZhbWlseV9uYW1lIjoiIiwiZW1haWwiOiJtYXhAZ21haWwuY29tIn0.T1mc-fe52WXgcMBJafHFvzeE6bNgLgWomD8QmKwY9CZVUQNZ0_-F6SZ05EOpa3gE3Y_xMIDelDdseHiyLzDfvkyzpMoptDK2pQbnIpqz0a8qy-WYDQEHgL6x9mPFTSq_96wosh_-eKqqAhTwHjdHJp7q43l7x8lkqdIPUOjqN39nhQuSDFKVjVM1Dnsgf4mOm9Q8Kzx9jrabFUD7ZyVikXsKKVoezX7ei25OyGBGZLdN1OgUwhgE1I-ijbH2aywsX-ZMKE4jF4TRAiByaT9rRNrRyC8Mg3vNkw7MRISl38zj9pEiodxEnOHNJagiVfrhZ9ywZEhStvgLUhg9rJaSQw",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "user-id",
+						"value": "a2b57a09-2e47-4690-b76f-7bc3afdbbae1",
+						"description": "User max role ADMIN / USER",
+						"type": "text",
+						"disabled": true
+					},
+					{
+						"key": "user-id",
+						"value": "52c6ba34-8df7-47b2-969b-843776fc1bff",
+						"description": "User test 1 max role  USER",
+						"type": "text"
+					},
+					{
+						"key": "user-id",
+						"value": "f0c1f119-1eec-46b5-9dd6-2c8e780814d0",
+						"description": "User test 2 aucun role",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"url": {
+					"raw": "{{ms-article}}/article/deleteArticle/40",
+					"host": [
+						"{{ms-article}}"
+					],
+					"path": [
+						"article",
+						"deleteArticle",
+						"40"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "id",
+			"value": "1"
+		},
+		{
+			"key": "ms-article_localhost",
+			"value": "http://localhost:9010"
+		}
+	]
+}
