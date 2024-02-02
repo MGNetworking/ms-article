@@ -1,11 +1,5 @@
 ########## Localisation du fichier de configuration
-# Par son nom, qui doit ce trouver dans ce fichier imperativement ainsi que
-# par son profile (passe en parametre de la jvm) comme dans cette exemple
-# mvn spring-boot:run -Dspring-boot.run.jvmArguments="-Dspring.profiles.active=dev"
-# ou avec la varible java
-# java -jar -Dspring.profiles.active=dev path-to-file/fichier.jar
-# recherche les fichiers de configuration du micro service
-# Ce qui donnera pour ce micro service avec le profile dev  http://localhost:8089/msarticle/dev
+# exemple : http://localhost:8089/msarticle/dev
 spring:
   application:
     name: msarticle
