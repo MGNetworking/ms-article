@@ -1,7 +1,7 @@
 version: '3.9'
 
 services:
-  article:
+  ms-article:
     container_name: ms-article
     restart: always
     image: ms-article-service:${version:-latest}
