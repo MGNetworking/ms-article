@@ -1,9 +1,7 @@
 @Library('JenkinsLib_Shared') _
 
 pipeline {
-
     agent any
-
     stages {
 
         stage('Maven Build') {
@@ -11,18 +9,15 @@ pipeline {
                 docker {
                     image 'maven:3.8.5-jdk-8-slim'
                     // mapping de jenkins vers le conteneur
-                    args '-v /var/jenkins_home/settings.xml:/root/.m2/settings.xml'
+                    args '-v /var/jenkins_home/settings.xml:/root/.m2/settings.xml -v /var/run/docker.sock:/var/run/docker.sock'
                 }
             }
             steps {
                 script {
-                    // Effectuez le build dans le dossier de travail
-                    dir('workspace') {
-                        sh '''
+                    sh '''
                         export CONFIG_SERVICE_URI_host="http://192.168.1.27:8089"
                         mvn clean package "-Dspring-boot.run.jvmArguments=-Dspring.profiles.active=dev"
-                        '''
-                    }
+                    '''
                 }
             }
         }
@@ -32,9 +27,7 @@ pipeline {
             steps {
                 script {
                     // Accédez aux résultats du build précédent dans le dossier de travail
-                    dir('workspace') {
-                        sh 'docker compose -f docker-compose-dev.yml build --no-cache'
-                    }
+                    sh 'docker compose -f docker-compose-dev.yml build --no-cache'
                 }
             }
         }
