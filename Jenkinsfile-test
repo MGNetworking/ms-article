@@ -12,10 +12,10 @@ pipeline {
         }
     }
 
-    environment {
-        // Définir le chemin vers le fichier settings.xml
-        MAVEN_SETTINGS = '/var/jenkins_home/setting.xml'
-    }
+//    environment {
+//        // Définir le chemin vers le fichier settings.xml
+//        MAVEN_SETTINGS = '/var/jenkins_home/setting.xml'
+//    }
 
 //    tools {
 //        maven '3.8.5-jdk-8-slim'
