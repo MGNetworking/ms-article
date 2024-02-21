@@ -2,20 +2,29 @@
 
 pipeline {
 
-    agent any
+//    agent any
+
+    agent {
+        docker {
+            image 'maven:3.8.5-jdk-8-slim'
+            // mapping de jenkins vers le conteneur
+            args '-v /var/jenkins_home/settings.xml:/root/.m2/settings.xml'
+        }
+    }
 
     environment {
         // Définir le chemin vers le fichier settings.xml
         MAVEN_SETTINGS = '/var/jenkins_home/setting.xml'
     }
 
-    tools {
-        maven '3.8.5-jdk-8-slim'
-    }
+//    tools {
+//        maven '3.8.5-jdk-8-slim'
+//    }
+
 
     stages{
 
-        stage('Maven test'){
+        stage('Maven Version'){
             steps{
                 script{
                     sh 'mvn --version'
@@ -25,7 +34,7 @@ pipeline {
             }
         }
 
-        stage('Maven test'){
+        stage('Maven Build'){
             steps{
                 script{
                     sh '''
