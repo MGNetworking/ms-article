@@ -1,0 +1,59 @@
+@Library('JenkinsLib_Shared') _
+
+pipeline {
+
+    agent any
+
+    environment {
+        // Définir le chemin vers le fichier settings.xml
+        MAVEN_SETTINGS = '/var/jenkins_home/setting.xml'
+    }
+
+    tools {
+        maven '3.8.5-jdk-8-slim'
+    }
+
+    stages{
+
+        stage('Maven test'){
+            steps{
+                script{
+                    sh 'mvn --version'
+                    //sh "cat /var/jenkins_home/setting.xml"
+                    //sh "cat $MAVEN_SETTINGS"
+                }
+            }
+        }
+
+        stage('Maven test'){
+            steps{
+                script{
+                    sh '''
+                        export CONFIG_SERVICE_URI_host="http://192.168.1.68:8089"
+                        mvn clean package "-Dspring-boot.run.jvmArguments=-Dspring.profiles.active=dev"
+                    
+                        echo "Création de l'images : $name_conteneur"
+                        docker compose -f docker-compose-dev.yml build --no-cache
+                    
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                echo "Fin du test ..."
+            }
+        }
+        success {
+            echo 'Réussite du build'
+        }
+        failure {
+            echo "Échec du build";
+
+        }
+    }
+
+}
