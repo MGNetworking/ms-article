@@ -29,7 +29,7 @@ RUN apk --no-cache add curl jq
 WORKDIR /app
 
 # Création du dossier de log
-RUN mkdir /logs
+#RUN mkdir /logs
 
 # Copie des scripts
 COPY ./script/wait_for_config.sh /app

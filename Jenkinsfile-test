@@ -4,13 +4,13 @@ pipeline {
 
     agent any
 
-//    agent {
-//        docker {
-//            image 'maven:3.8.5-jdk-8-slim'
-//            // mapping de jenkins vers le conteneur
-//            args '-v /var/jenkins_home/settings.xml:/root/.m2/settings.xml'
-//        }
-//    }
+    agent {
+        docker {
+            image 'maven:3.8.5-jdk-8-slim'
+            // mapping de jenkins vers le conteneur
+            args '-v /var/jenkins_home/settings.xml:/root/.m2/settings.xml'
+        }
+    }
 
 //    environment {
 //        // Définir le chemin vers le fichier settings.xml
@@ -24,22 +24,23 @@ pipeline {
 
     stages{
 
-//        stage('Maven Version'){
-//            steps{
-//                script{
-//                    sh 'mvn --version'
-//                    sh "cat /var/jenkins_home/setting.xml"
-//                    sh "cat $MAVEN_SETTINGS"
-//                }
-//            }
-//        }
+        stage('Maven Version'){
+            steps{
+                script{
+                    sh 'mvn --version'
+                    //sh "cat /var/jenkins_home/setting.xml"
+                    //sh "cat $MAVEN_SETTINGS"
+                }
+            }
+        }
 
         stage('Maven Build'){
             steps{
                 script{
-
                     sh '''
-                       docker compose -f docker-compose-test.yml build --no-cache
+                        export CONFIG_SERVICE_URI_host="http://192.168.1.27:8089"
+                        mvn clean package "-Dspring-boot.run.jvmArguments=-Dspring.profiles.active=dev"
+                        docker compose -f docker-compose-dev.yml build --no-cache
                     '''
                 }
             }
