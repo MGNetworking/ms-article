@@ -24,15 +24,15 @@ pipeline {
 
     stages{
 
-        stage('Maven Version'){
-            steps{
-                script{
-                    //sh 'mvn --version'
-                    //sh "cat /var/jenkins_home/setting.xml"
-                    //sh "cat $MAVEN_SETTINGS"
-                }
-            }
-        }
+//        stage('Maven Version'){
+//            steps{
+//                script{
+//                    sh 'mvn --version'
+//                    sh "cat /var/jenkins_home/setting.xml"
+//                    sh "cat $MAVEN_SETTINGS"
+//                }
+//            }
+//        }
 
         stage('Maven Build'){
             steps{
