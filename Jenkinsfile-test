@@ -2,20 +2,20 @@
 
 pipeline {
 
-//    agent any
+    agent any
 
-    agent {
-        docker {
-            image 'maven:3.8.5-jdk-8-slim'
-            // mapping de jenkins vers le conteneur
-            args '-v /var/jenkins_home/settings.xml:/root/.m2/settings.xml'
-        }
-    }
+//    agent {
+//        docker {
+//            image 'maven:3.8.5-jdk-8-slim'
+//            // mapping de jenkins vers le conteneur
+//            args '-v /var/jenkins_home/settings.xml:/root/.m2/settings.xml'
+//        }
+//    }
 
-    environment {
-        // Définir le chemin vers le fichier settings.xml
-        MAVEN_SETTINGS = '/root/.m2/settings.xml'
-    }
+//    environment {
+//        // Définir le chemin vers le fichier settings.xml
+//        MAVEN_SETTINGS = '/root/.m2/settings.xml'
+//    }
 
 //    tools {
 //        maven '3.8.5-jdk-8-slim'
@@ -37,14 +37,9 @@ pipeline {
         stage('Maven Build'){
             steps{
                 script{
-                    // corespond a preprod CONFIG_SERVICE_URI_host="http://192.168.1.27:8089
+
                     sh '''
-                        export CONFIG_SERVICE_URI_host="http://192.168.1.27:8089"
-                        mvn clean package "-Dspring-boot.run.jvmArguments=-Dspring.profiles.active=dev"
-                    
-                        echo "Création de l'images : $name_conteneur"
-                        docker compose -f docker-compose-dev.yml build --no-cache
-                    
+                       docker compose -f docker-compose-test.yml build --no-cache
                     '''
                 }
             }
