@@ -178,6 +178,12 @@
             <artifactId>logback-classic</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.ghoverblog</groupId>
+            <artifactId>JenkinsLib_Shared</artifactId>
+            <version>1.0.1-RELEASES</version>
+        </dependency>
+
     </dependencies>
 
     <!--============================= -->
@@ -216,5 +222,13 @@
             </plugin>
         </plugins>
     </build>
+
+    <repositories>
+        <repository>
+            <id>maven-private</id>
+            <url>https://sonatype-nexus.backhole.ovh/repository/maven-private/</url>
+        </repository>
+    </repositories>
+
 
 </project>
