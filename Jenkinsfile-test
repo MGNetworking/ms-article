@@ -37,8 +37,9 @@ pipeline {
         stage('Maven Build'){
             steps{
                 script{
+                    // corespond a preprod CONFIG_SERVICE_URI_host="http://192.168.1.27:8089
                     sh '''
-                        export CONFIG_SERVICE_URI_host="http://192.168.1.68:8089"
+                        export CONFIG_SERVICE_URI_host="http://192.168.1.27:8089"
                         mvn clean package "-Dspring-boot.run.jvmArguments=-Dspring.profiles.active=dev"
                     
                         echo "Création de l'images : $name_conteneur"
