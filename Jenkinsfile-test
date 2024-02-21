@@ -9,7 +9,7 @@ pipeline {
                 docker {
                     image 'maven:3.8.5-jdk-8-slim'
                     // mapping de jenkins vers le conteneur
-                    args '-v /var/jenkins_home/settings.xml:/root/.m2/settings.xml -v /var/run/docker.sock:/var/run/docker.sock'
+                    args '-v /var/jenkins_home/settings.xml:/root/.m2/settings.xml -v /var/run/docker.sock:/var/run/docker.sock -v maven-repo:/root/.m2/repository'
                 }
             }
             steps {
