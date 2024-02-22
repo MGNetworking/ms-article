@@ -1,14 +1,15 @@
 #!/bin/bash
 
-name_conteneur="article"
+name_stack="ms-article"
+name_images="sonatype-nexus.backhole.ovh/ms-article-service"
 
-env=("Compilation via Dockerfile" "Compilation via Maven puis copier des fichiers dans le Dockerfile" )
-echo "Lancement du pour le développement en Mode Dev "
+env=("Run stack $name_stack" "Compilation / build and Run stack $name_stack" )
+echo "Lancement de la compilation (Mode Dev) "
 echo "Choisissez votre type de compilation :"
 
 affichage=""
 for i in "${!env[@]}"; do
-  affichage+="[$i] pour l'environnement ${env[$i]} \n"
+  affichage+="[$i] ${env[$i]} \n"
 done
 
 # Affiche a l'utilisateur tout des options disponibles
@@ -20,37 +21,45 @@ trouver=false
 selection=""
 # recherche du choix sélectionné
 if [ -n "${env[$choix]}" ]; then
-  echo "Le programme va être lancé avec le choix suivant : ${env[$choix]}"
+  echo "Vous avez choisi : ${env[$choix]}"
   selection=${env[$choix]}
   trouver=true
 fi
 
 # Fonction de compilation dans le Dockerfile
-compilation_Dockerfile(){
+run_stack(){
 
-    echo "Compilation du projet $name_conteneur dans le Dockerfile "
-    echo "Compilation du projet $name_conteneur et création de sont image"
-    docker compose build --no-cache
+    if [[ -z $(docker images --filter "reference=$name_images"  | grep "$name_images" ) ]]; then
 
-    echo "Création du conteneur $name_conteneur"
-    docker compose up -d
-    docker compose logs -f
+    echo "l'images n'a pas etait trouver vous ne pouvez pas créer la stack"
+    exit 1
+    fi
+
+    echo "deploy de la stack : $name_stack"
+    docker stack deploy -c ./docker-compose-swarm.yml $name_stack
+
+    echo "Liste des stack"
+    docker service ls
+
 }
 
 compilation_Maven(){
 
-    echo "Compilation du projet $name_conteneur via Maven"
+    echo "Compilation du projet $name_stack via Maven"
 
     # Variable d'environnement
     export CONFIG_SERVICE_URI_host="http://192.168.1.68:8089"
     mvn clean package "-Dspring-boot.run.jvmArguments=-Dspring.profiles.active=dev"
 
-    echo "Création de l'images : $name_conteneur"
-    docker compose -f docker-compose-dev.yml build --no-cache
+    echo "Création de l'images : $name_stack"
+    docker compose -f docker-compose.yml build --no-cache
 
-    echo "Création du conteneur $name_conteneur"
-    docker compose -f docker-compose-dev.yml up -d
-    docker compose -f docker-compose-dev.yml logs -f
+    echo "deploy de la stack du service : $name_stack"
+    docker stack deploy -c ./docker-compose-swarm.yml $name_stack
+
+    echo "Liste des stack"
+    docker service ls
+
 }
 
 docker info >/dev/null 2>&1
@@ -60,33 +69,33 @@ DOCKER_STATUS=$?
 if [ $DOCKER_STATUS -eq 0 ]; then
   echo "Docker est en cours d'exécution."
 
-  status=$(docker inspect --format='{{.State.Status}}' $name_conteneur >/dev/null 2>&1)
+  status=$(docker inspect --format='{{.State.Status}}' $name_stack >/dev/null 2>&1)
 
   # Vérifie l'états du service
   if [[ $status == "running" ]]; then
 
-    timeUTC=$(docker inspect --format='{{.State.StartedAt}}' $name_conteneur)
+    timeUTC=$(docker inspect --format='{{.State.StartedAt}}' $name_stack)
     conversion=$(date -d $timeUTC)
 
     # Si il est toujours en cours d'exécution
     echo "************************************"
-    echo "Le conteneur $name_conteneur est en cour d'exécution depuis : $conversion"
-    echo "Suppression du conteneur $name_conteneur"
+    echo "Le conteneur $name_stack est en cour d'exécution depuis : $conversion"
+    echo "Suppression du conteneur $name_stack"
     docker compose -f docker-compose.yml logs -f
 
   elif [[ $status == "exited" ]]; then
 
     # Si il est toujours en cours d'exécution
     echo "************************************"
-    echo "le conteneur $name_conteneur à été stoppé, mais et toujours actif"
-    echo "Suppression du conteneur $name_conteneur"
-    docker container start $name_conteneur
+    echo "le conteneur $name_stack à été stoppé, mais et toujours actif"
+    echo "Suppression du conteneur $name_stack"
+    docker container start $name_stack
 
   else
 
       if [ $choix -eq 0 ]; then
 
-        compilation_Dockerfile
+        run_stack
 
       elif [ $choix -eq 1  ]; then
 

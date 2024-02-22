@@ -1,50 +1,71 @@
 #!/bin/bash
-
-image="ms-article-service"
-mon_conteneur="article"
+version="1.0.0"
+image="sonatype-nexus.backhole.ovh/ms-article-service"
+name_stack="ms-article"
 
 delete_conteneur() {
-  # suppression de l'images conteneuriser
-  docker rmi $1
+
+  echo "************************************"
+  echo "delete stack : stack_$name_stack "
+  docker stack rm $name_stack
+
+  echo "delete image : $image:$version "
+  sleep 10
+  docker rmi $image:$version
   docker images -f "reference=$1"
+  echo "Sorti $?"
 
   # verification le code de retour de la suppression de l'image
   if [[ $? -eq 0 ]]; then
-    echo "L'images : $1 a bien été supprimer "
+    echo "L'image : $1 a bien été supprimer "
   else
-    echo "L'images : $1 n'a pas été supprimer "
+    echo "L'image : $1 n'a pas été supprimer "
   fi
 }
 
-
-docker compose down
-
-# Vérifier si le conteneur n'est plus en cours d'exécution
-if [[ -z "$(docker ps -q -f 'status=exited' -f 'name='$mon_conteneur)" ]]; then
+delete_stack(){
   echo "************************************"
-  echo "Le conteneur n'est plus en cours d'exécution."
+  echo "delete stack : $name_stack "
+  docker stack rm $name_stack
+}
 
-  # Obtenir le tag (version) de l'image du conteneur
-  tag=$(docker images --filter=reference=$image --format "{{.Tag}}")
 
-  # recherche de l'images
-  if [[ $(docker images -q $image:$tag) != "" ]]; then
+# interface user
+env=("Delete stack $name_stack" "Delete stack $name_stack and delete image $image" )
+echo "Lancement de la compilation (Mode Dev) "
+echo "Choisissez votre suppression :"
 
-    delete_conteneur $image:$tag
+affichage=""
+for i in "${!env[@]}"; do
+  affichage+="[$i] ${env[$i]} \n"
+done
 
-  else
-    echo "************************************"
-    echo "L'images : $image a déjà était supprimer "
-  fi
+# Affiche a l'utilisateur tout des options disponibles
+echo -e "$affichage"
+read choix
 
-  echo "************************************"
-  echo "Suppression des images Docker sans étiquette "
-  docker image prune -f -a
-
-else
-  echo "************************************"
-  echo "Le conteneur est toujours en cours d'exécution."
+trouver=false
+selection=""
+# recherche du choix sélectionné
+if [ -n "${env[$choix]}" ]; then
+  echo "Vous avez sélectionné : ${env[$choix]}"
+  selection=${env[$choix]}
+  trouver=true
 fi
+
+if [ $choix -eq 0 ]; then
+
+  delete_stack
+
+elif [ $choix -eq 1  ]; then
+
+  delete_conteneur
+fi
+
+
+echo "************************************"
+echo "Suppression des images Docker sans étiquette "
+docker image prune -f -a
 
 # affichage
 echo "************************************"
