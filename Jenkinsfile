@@ -8,7 +8,7 @@ pipeline {
     agent any
     stages {
 
-        stage('Maven Build') {
+        stage('Maven compilation') {
             agent {
                 docker {
                     image 'maven:3.8.5-jdk-8-slim'
@@ -40,6 +40,16 @@ pipeline {
                     // Accédez aux résultats du build précédent dans le dossier de travail
                     sh 'docker compose -f docker-compose.yml build --no-cache'
 
+                }
+            }
+        }
+
+        stage('Deploy Build ms-article') {
+            agent any
+            steps {
+                script {
+                    // Accédez aux résultats du build précédent dans le dossier de travail
+                    sh 'docker stack deploy -c ./docker-compose-swarm.yml ms-article'
                 }
             }
         }
