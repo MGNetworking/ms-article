@@ -32,6 +32,9 @@ build/
 ### VS Code ###
 .vscode/
 
+#### settings.xml
+settings.xml
+
 ### les images de testes ###
 #src/main/resources/static/images-MockMVC
 #src/main/resources/static/innerpage
