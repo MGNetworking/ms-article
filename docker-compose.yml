@@ -4,23 +4,13 @@ services:
   ms-article:
     container_name: ms-article
     restart: always
-    image: ms-article-service:${version:-latest}
+    image: sonatype-nexus.backhole.ovh/ms-article-service:${version:-latest}
     env_file:
       - .env
     build:
       context: .
-      dockerfile: Dockerfile-dev
+      dockerfile: Dockerfile
     deploy:
       replicas: 1
     ports:
       - "9010:9010"
-    environment:
-      - SPRING_PROFILES_ACTIVE=${profile_actif_dev}
-      - CONFIG_SERVICE_URI_docker=${service_config_docker}
-    networks:
-      - keycloak_postgre
-
-networks:
-  keycloak_postgre:
-    name: sso_bd
-    driver: bridge    # indic le type de réseau docker
