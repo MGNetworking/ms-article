@@ -234,6 +234,12 @@
         <repository>
             <id>maven-private</id>
             <url>https://sonatype-nexus.backhole.ovh/repository/maven-private/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
         </repository>
     </repositories>
 
