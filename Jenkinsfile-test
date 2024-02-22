@@ -12,12 +12,14 @@ pipeline {
             agent {
                 docker {
                     image 'maven:3.8.5-jdk-8-slim'
-                    // ' -v /var/jenkins_home/maven:/root/.m2/repository'
                     // conteneur créer a la voler dans le workspace/projet pour exécuter des commandes
                     // mapping /var/jenkins_home/workspace/projet (pom.xml) vers le conteneur
-                    args '-v /var/jenkins_home/settings.xml:/root/.m2/settings.xml' +
-                            ' -v /var/run/docker.sock:/var/run/docker.sock' +
-                            ' -v /var/jenkins_home/maven:/root'
+//                    args '-v /var/jenkins_home/settings.xml:/root/.m2/settings.xml' +
+//                            ' -v /var/run/docker.sock:/var/run/docker.sock' +
+//                            ' -v /var/jenkins_home/maven:/root/.m2/repository'
+
+                    args '-v /var/jenkins_home/maven/.m2:/root/.m2' +
+                            ' -v /var/run/docker.sock:/var/run/docker.sock'
                 }
             }
             steps {
