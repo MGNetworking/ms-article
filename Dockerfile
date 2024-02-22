@@ -8,6 +8,7 @@ WORKDIR /app
 # copie des fichiers source
 COPY ./src /app/src
 COPY ./pom.xml /app/pom.xml
+COPY ./settings.xml /root/.m2/settings.xml
 
 # argument venant du docker compose
 ARG SPRING_PROFILES_ACTIVE
