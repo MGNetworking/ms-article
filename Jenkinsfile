@@ -104,7 +104,7 @@ pipeline {
                         export CONFIG_SERVICE_URI_host="http://192.168.1.27:8089"
                         mvn clean package "-Dspring-boot.run.jvmArguments=-Dspring.profiles.active=dev"
                         ls -al target/
-                        docker compose -f docker-compose.yml build --no-cache
+                        docker compose build --no-cache
                     '''
                 }
             }
