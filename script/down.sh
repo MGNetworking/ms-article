@@ -1,17 +1,17 @@
 #!/bin/bash
-version="1.0.0"
-image="sonatype-nexus.backhole.ovh/ms-article-service"
-name_stack="ms-article"
+
+# export des variable du fichier .env
+export $(cat .env)
 
 delete_conteneur() {
 
   echo "************************************"
-  echo "delete stack : stack_$name_stack "
-  docker stack rm $name_stack
+  echo "delete stack : stack_$STACK_NAME "
+  docker stack rm $STACK_NAME
 
-  echo "delete image : $image:$version "
+  echo "delete image : $DOCKER_IMAGE_NAME:$IMAGE_VERSION "
   sleep 10
-  docker rmi $image:$version
+  docker rmi $DOCKER_IMAGE_NAME:$IMAGE_VERSION
   docker images -f "reference=$1"
   echo "Sorti $?"
 
@@ -25,13 +25,13 @@ delete_conteneur() {
 
 delete_stack(){
   echo "************************************"
-  echo "delete stack : $name_stack "
-  docker stack rm $name_stack
+  echo "delete stack : $STACK_NAME "
+  docker stack rm $STACK_NAME
 }
 
 
 # interface user
-env=("Delete stack $name_stack" "Delete stack $name_stack and delete image $image" )
+env=("Delete stack $STACK_NAME" "Delete stack $STACK_NAME and delete image $DOCKER_IMAGE_NAME" )
 echo "Lancement de la compilation (Mode Dev) "
 echo "Choisissez votre suppression :"
 
