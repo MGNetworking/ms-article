@@ -47,8 +47,8 @@ pipeline {
             }
         }
 
-        stage("Open connection"){
-            steps{
+        stage("Open connection") {
+            steps {
                 script {
                     // definition config serveur
                     remote = configurerServeur.config('Preprod', '192.168.1.27', true)
@@ -75,11 +75,12 @@ pipeline {
         stage("Status stack : article") {
             steps {
                 script {
-
-                    String result = sshCommand remote: remote, command: "docker stack ls | grep $NAME_SERVICE"
+                    String result = ""
+                    result = sshCommand remote: remote, command: "docker stack ls | grep $NAME_SERVICE", failOnError: false
 
                     result.contains($NAME_SERVICE) ? DEPLOY = true : false
                     echo "La stack $NAME_SERVICE est " + (DEPLOY ? "déployée" : "non déployée") + " sur le serveur"
+
 
                 }
             }
@@ -219,36 +220,36 @@ pipeline {
             }
         }
         success {
-            steps {
-                script {
-                    echo('Réussite du build')
-                    String loginResult = sshCommand remote: remote, command: "docker logout $DOMAIN_REGISTRY"
-                    if (loginResult.contains("Removing login credentials")) {
-                        echo "La deconnection au dépôt depuis le serveur réussi"
-                    } else {
-                        error("Echec de la deconnexion au dépot depuis le serveur Preprod")
-                    }
+
+            script {
+                echo('Réussite du build')
+                String loginResult = sshCommand remote: remote, command: "docker logout $DOMAIN_REGISTRY"
+                if (loginResult.contains("Removing login credentials")) {
+                    echo "La deconnection au dépôt depuis le serveur réussi"
+                } else {
+                    error("Echec de la deconnexion au dépot depuis le serveur Preprod")
                 }
             }
+
 
         }
         failure {
             script {
-                steps {
-                    echo "Échec du build ";
 
-                    // le rollback
-                    String rollbackResult = sshCommand remote: remote, command: "docker service rollback $NAME_SERVICE"
-                    echo("Rollback : $rollbackResult")
+                echo "Échec du build ";
 
-                    // Logout du depot sur preprod
-                    String loginResult = sshCommand remote: remote, command: "docker logout $DOMAIN_REGISTRY"
-                    if (loginResult.contains("Removing login credentials")) {
-                        echo "La deconnection au dépôt depuis le serveur réussi"
-                    } else {
-                        error("Echec de la deconnexion au dépot depuis le serveur Preprod")
-                    }
+                // le rollback
+                String rollbackResult = sshCommand remote: remote, command: "docker service rollback $NAME_SERVICE"
+                echo("Rollback : $rollbackResult")
+
+                // Logout du depot sur preprod
+                String loginResult = sshCommand remote: remote, command: "docker logout $DOMAIN_REGISTRY"
+                if (loginResult.contains("Removing login credentials")) {
+                    echo "La deconnection au dépôt depuis le serveur réussi"
+                } else {
+                    error("Echec de la deconnexion au dépot depuis le serveur Preprod")
                 }
+
             }
 
 
