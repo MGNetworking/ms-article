@@ -5,7 +5,7 @@ FROM openjdk:8-jdk-alpine
 RUN apk --no-cache add curl jq
 
 WORKDIR /app
-COPY ./target/*.jar /app/app.jar
+COPY target/*.jar /app/app.jar
 
 COPY ./script/wait_for_config.sh  /app
 COPY ./script/healthcheck.sh /app
