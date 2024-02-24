@@ -76,7 +76,7 @@ pipeline {
             steps {
                 script {
                     String result = ""
-                    result = sshCommand remote: remote, command: "docker stack ls | grep $NAME_SERVICE", failOnError: false
+                    result = sshCommand remote: remote, failOnError: false, sudo: false, command: "docker stack ls | grep $NAME_SERVICE"
 
                     result.contains($NAME_SERVICE) ? DEPLOY = true : false
                     echo "La stack $NAME_SERVICE est " + (DEPLOY ? "déployée" : "non déployée") + " sur le serveur"
