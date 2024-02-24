@@ -29,7 +29,7 @@ pipeline {
                     // Séparer le contenu en lignes et traiter chaque ligne
                     envContent.readLines().each { line ->
                         // Diviser la ligne en clé et valeur
-                        def (key, value) = line.split('=')
+                        def (key, value) = line.split('=').collect { it.trim() }
 
                         // Définir la variable d'environnement dans le contexte du pipeline
                         env."${key.trim()}" = value.trim()
