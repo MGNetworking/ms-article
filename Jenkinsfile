@@ -16,20 +16,40 @@ pipeline {
 
     }
 
-
     stages {
 
         stage('Load Environment Variables') {
             steps {
                 script {
-                    echo "Le Path : ${WORKSPACE}";
-                    def envFile = '.env'
-                    sh("cat ${envFile}")
-                    load(envFile)
+                    echo "L'espace de travail : ${WORKSPACE}";
+
+                    // lecture du fichier
+                    def envContent = readFile(".env").trim()
+
+                    // Séparer le contenu en lignes et traiter chaque ligne
+                    envContent.readLines().each { line ->
+                        // Diviser la ligne en clé et valeur
+                        def (key, value) = line.split('=')
+
+                        // Définir la variable d'environnement dans le contexte du pipeline
+                        env."${key.trim()}" = value.trim()
+                    }
+
+                    // Afficher les variables d'environnement pour le débogage
+                    env.getProperties().each { key, value ->
+                        echo "${key}=${value}"
+                    }
 
                     echo "Nouvelle version de l'application : ${IMAGE_VERSION}";
                     echo "service config host preprod : ${service_config_host_pre}";
 
+                }
+            }
+        }
+
+        stage("Open connection"){
+            steps{
+                script {
                     // definition config serveur
                     remote = configurerServeur('Preprod', '192.168.1.27', true)
                     remote.user = env.Preprod_CREDS_USR
@@ -47,7 +67,6 @@ pipeline {
                     // Pull projet sur branch preprod
                     String commande = sshCommand remote: remote, command: "cd /home/max/docker_home/ms-article &&  git checkout preprod && git pull origin preprod"
                     echo("sorti : $commande")
-
                 }
             }
         }
