@@ -51,7 +51,7 @@ pipeline {
             steps{
                 script {
                     // definition config serveur
-                    remote = configurerServeur('Preprod', '192.168.1.27', true)
+                    remote = configurerServeur.config('Preprod', '192.168.1.27', true)
                     remote.user = env.Preprod_CREDS_USR
                     remote.password = env.Preprod_CREDS_PSW
 
