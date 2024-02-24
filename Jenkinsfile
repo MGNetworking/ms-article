@@ -90,7 +90,7 @@ pipeline {
         }
 
 
-        stage('Maven compilation') {
+        stage('Compilation') {
             agent {
                 docker {
                     image 'maven:3.8.5-jdk-8-slim'
@@ -103,17 +103,9 @@ pipeline {
                     sh '''
                         export CONFIG_SERVICE_URI_host="http://192.168.1.27:8089"
                         mvn clean package "-Dspring-boot.run.jvmArguments=-Dspring.profiles.active=dev"
+                        ls -al target/
+                        docker compose -f docker-compose.yml build --no-cache
                     '''
-                }
-            }
-        }
-
-        stage('Docker Build') {
-            steps {
-                script {
-                    sh 'ls -al target/'
-                    // Accédez aux résultats du build précédent dans le dossier de travail
-                    sh 'docker compose -f docker-compose.yml build --no-cache'
                 }
             }
         }
