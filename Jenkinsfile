@@ -111,6 +111,7 @@ pipeline {
         stage('Docker Build') {
             steps {
                 script {
+                    sh 'ls -al target/'
                     // Accédez aux résultats du build précédent dans le dossier de travail
                     sh 'docker compose -f docker-compose.yml build --no-cache'
                 }
