@@ -4,7 +4,7 @@ services:
   ms-article:
     container_name: ms-article
     restart: always
-    image: sonatype-nexus.backhole.ovh/ms-article-service:${version:-latest}
+    image: sonatype-nexus.backhole.ovh/ms-article-service:${IMAGE_VERSION:-latest}
     env_file:
       - .env
     build:
