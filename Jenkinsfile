@@ -1,23 +1,76 @@
 @Library('JenkinsLib_Shared') _
 
-
-// note => le WORKSPACE /var/jenkins_home/workspace/Ms article Teste Maven
-// donc c'est /var/jenkins_home/workspace/${Nom du pipeline projet}
+// Configurations des serveurs
+def remote
 
 pipeline {
     agent any
+
+    environment {
+
+        DOMAIN_REGISTRY = "sonatype-nexus.backhole.ovh"
+        DEPLOY = false
+
+        // Get credentials to connection serveur
+        Preprod_CREDS = credentials('PREPROD')
+
+    }
+
+
     stages {
+
+        stage('Load Environment Variables') {
+            steps {
+                script {
+                    echo "Le Path : ${WORKSPACE}";
+                    def envFile = '.env'
+                    sh("cat ${envFile}")
+                    load(envFile)
+
+                    echo "Nouvelle version de l'application : ${IMAGE_VERSION}";
+                    echo "service config host preprod : ${service_config_host_pre}";
+
+                    // definition config serveur
+                    remote = configurerServeur('Preprod', '192.168.1.27', true)
+                    remote.user = env.Preprod_CREDS_USR
+                    remote.password = env.Preprod_CREDS_PSW
+
+                    // Ouverture connection au depot nexus sur Preprod
+                    withCredentials([usernamePassword(credentialsId: 'nexus-credentials', passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) {
+
+                        String loginResult = sshCommand remote: remote, command: "docker login -u $USERNAME -p $PASSWORD $DOMAIN_REGISTRY"
+
+                        loginResult.contains("status: 401 Unauthorized") ? error("Erreur de connection status: 401 Unauthorized") :
+                                echo("Connection au dépôt depuis le serveur réussi : Login Succeeded")
+                    }
+
+                    // Pull projet sur branch preprod
+                    String commande = sshCommand remote: remote, command: "cd /home/max/docker_home/ms-article &&  git checkout preprod && git pull origin preprod"
+                    echo("sorti : $commande")
+
+                }
+            }
+        }
+
+        // Détermine Update ou deploy
+        stage("Status stack : article") {
+            steps {
+                script {
+
+                    String result = sshCommand remote: remote, command: "docker stack ls | grep $NAME_SERVICE"
+
+                    result.contains($NAME_SERVICE) ? DEPLOY = true : false
+                    echo "La stack $NAME_SERVICE est " + (DEPLOY ? "déployée" : "non déployée") + " sur le serveur"
+
+                }
+            }
+        }
+
 
         stage('Maven compilation') {
             agent {
                 docker {
                     image 'maven:3.8.5-jdk-8-slim'
-                    // conteneur créer a la voler dans le workspace/projet pour exécuter des commandes
-                    // mapping /var/jenkins_home/workspace/projet (pom.xml) vers le conteneur
-//                    args '-v /var/jenkins_home/settings.xml:/root/.m2/settings.xml' +
-//                            ' -v /var/run/docker.sock:/var/run/docker.sock' +
-//                            ' -v /var/jenkins_home/maven:/root/.m2/repository'
-
                     args '-v /var/jenkins_home/maven/.m2:/root/.m2' +
                             ' -v /var/run/docker.sock:/var/run/docker.sock'
                 }
@@ -33,40 +86,152 @@ pipeline {
         }
 
         stage('Docker Build') {
-            agent any
             steps {
                 script {
-                    sh 'ls -al target/'
                     // Accédez aux résultats du build précédent dans le dossier de travail
                     sh 'docker compose -f docker-compose.yml build --no-cache'
-
                 }
             }
         }
 
-        stage('Deploy Build ms-article') {
-            agent any
+        stage('Push image dépôt') {
+
             steps {
                 script {
-                    // Accédez aux résultats du build précédent dans le dossier de travail
-                    sh 'docker stack deploy -c ./docker-compose-swarm.yml ms-article'
+
+                    withDockerRegistry(credentialsId: 'nexus-credentials', url: 'https://sonatype-nexus.backhole.ovh/') {
+
+                        def dockerImage = docker.image("$env.DOCKER_IMAGE_NAME:$env.IMAGE_VERSION")
+                        dockerImage.withRegistry('https://sonatype-nexus.backhole.ovh/', 'nexus-credentials') {
+                            def pushResult = dockerImage.push()
+
+                            // Vérifier si le push a réussi
+                            if (pushResult) {
+                                echo "Le push de l'image a été réalisé avec succès."
+                            } else {
+                                error "Erreur lors du push de l'image."
+                            }
+
+                        }
+                    }
                 }
             }
         }
+
+        // Deploy if not exist
+        stage('Deploy ms-article') {
+            when {
+                expression { DEPLOY == false }
+            }
+            steps {
+                script {
+
+                    // pull depuis preprod
+                    String pullResult = sshCommand remote: remote, command: "docker pull $env.DOCKER_IMAGE_NAME:$env.IMAGE_VERSION"
+                    echo("Sorti pullResult : $pullResult")
+
+                    pullResult.contains("Status: Downloaded newer image") ?
+                            echo("Le pull de l'image a été réalisé avec succès.") :
+                            error("Erreur lors du pull de l'image.")
+
+                    def deployResult = sshCommand remote: remote, command: "cd /home/max/docker_home/ms-article && export \$(cat .env) docker stack deploy -c ./docker-compose-swarm.yml $env.STACK_NAME"
+                    echo("Sorti deployResult : $deployResult")
+                }
+
+            }
+        }
+
+        // Update if exist
+        stage('Update ms-article') {
+            when {
+                expression { DEPLOY == true }
+            }
+            steps {
+                script {
+                    // Pull image in preprod and update with image
+                    def deployResult = sshCommand remote: remote, command: "docker pull $env.DOCKER_IMAGE_NAME:$env.IMAGE_VERSION && " +
+                            "docker service update --image $env.DOCKER_IMAGE_NAME:$env.IMAGE_VERSION $NAME_SERVICE"
+
+                }
+            }
+        }
+
+        stage('Test du service ') {
+            when {
+                expression { DEPLOY == true }
+            }
+            steps {
+                script {
+
+                    for (int i = 0; i < 5; i++) {
+                        curl - s
+                        String network = sh(script: "$service_config_host_pre/actuator/health", returnStdout: true).trim()
+
+                        if (network.contains("UP")) {
+                            echo("Le service : $network")
+                            currentResult = "SUCCESS"
+                            break
+                        }
+
+                        sleep time: 30, unit: 'SECONDS'
+                    }
+
+                    if (currentResult.equals("SUCCESS")) {
+                        echo("La mise en service de $NAME_SERVICE à été réalisé avec Succès ")
+                        return
+                    } else {
+                        currentResult = "FAILURE"
+                        error("Le service $NAME_SERVICE est en echec !!!")
+                    }
+
+
+                }
+            }
+        }
+
     }
 
 
     post {
         always {
             script {
-                echo "Fin du test ..."
+                echo "Fin de " + (DEPLOY ? "La mise en service " : "la mise en service")
+
             }
         }
         success {
-            echo 'Réussite du build'
+            steps {
+                script {
+                    echo('Réussite du build')
+                    String loginResult = sshCommand remote: remote, command: "docker logout $DOMAIN_REGISTRY"
+                    if (loginResult.contains("Removing login credentials")) {
+                        echo "La deconnection au dépôt depuis le serveur réussi"
+                    } else {
+                        error("Echec de la deconnexion au dépot depuis le serveur Preprod")
+                    }
+                }
+            }
+
         }
         failure {
-            echo "Échec du build";
+            script {
+                steps {
+                    echo "Échec du build ";
+
+                    // le rollback
+                    String rollbackResult = sshCommand remote: remote, command: "docker service rollback $NAME_SERVICE"
+                    echo("Rollback : $rollbackResult")
+
+                    // Logout du depot sur preprod
+                    String loginResult = sshCommand remote: remote, command: "docker logout $DOMAIN_REGISTRY"
+                    if (loginResult.contains("Removing login credentials")) {
+                        echo "La deconnection au dépôt depuis le serveur réussi"
+                    } else {
+                        error("Echec de la deconnexion au dépot depuis le serveur Preprod")
+                    }
+                }
+            }
+
 
         }
     }
