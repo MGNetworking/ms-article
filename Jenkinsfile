@@ -36,7 +36,7 @@ pipeline {
                     }
 
                     // Afficher les variables d'environnement pour le débogage
-                    env.getProperties().each { key, value ->
+                    env.each { key, value ->
                         echo "${key}=${value}"
                     }
 
