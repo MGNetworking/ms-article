@@ -10,7 +10,6 @@ pipeline {
 
         DOMAIN_REGISTRY = "sonatype-nexus.backhole.ovh"
         DEPLOY = false
-
         ROLLBACK = false
         // Get credentials to connection serveur
         Preprod_CREDS = credentials('PREPROD')
@@ -126,7 +125,7 @@ pipeline {
         }
 
 
-        stage('Compilation | Build') {
+        stage('Maven Compilation') {
             agent {
                 docker {
                     image 'maven:3.8.5-jdk-8-slim'
@@ -141,6 +140,16 @@ pipeline {
                         mvn clean package "-Dspring-boot.run.jvmArguments=-Dspring.profiles.active=dev"
                         docker compose build --no-cache
                     '''
+                }
+            }
+        }
+
+        stage('Docker Build') {
+            agent any
+            steps {
+                script {
+                    def status = sh(script: "docker compose build --no-cache", returnStatus: true)
+                    echo("Status : $status")
                 }
             }
         }
@@ -191,7 +200,7 @@ pipeline {
 
                     } catch (Exception e) {
                         e.printStackTrace()
-                        error("Une erreur est survenu pendant la l'exécution de la requête curl")
+                        error("Une erreur est survenu pendant le deployment")
                     }
 
                 }
@@ -238,13 +247,9 @@ pipeline {
                             sleep time: 15, unit: 'SECONDS'
                         }
                     }
-
-
                     if (currentResult != "SUCCESS") {
                         error("Le service $NAME_SERVICE est en echec !!!")
                     }
-
-
                 }
             }
         }
