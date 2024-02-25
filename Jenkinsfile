@@ -213,6 +213,8 @@ pipeline {
             steps {
                 script {
                     int index = 0
+                    try {
+
 
                     for (index = 0; index < 10; index++) {
 
@@ -229,7 +231,10 @@ pipeline {
                         sleep time: 15, unit: 'SECONDS'
                     }
 
-
+                    }catch (Exception e){
+                        e.printStackTrace()
+                        error("Une exception est sur venu pendant l'exécution de la requête curl !!!!")
+                    }
                     if (index == 9) {
                         currentResult = "FAILURE"
                         error("Le service $NAME_SERVICE est en echec !!!")
