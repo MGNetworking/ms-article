@@ -50,7 +50,7 @@ pipeline {
         stage("Test service ms-config") {
             steps {
                 script {
-                    echo("Vérifi que le service ms-configuration est bien en cours d'exécution sur le serveur preprod")
+                    echo("Vérifie que le service ms-configuration fonctionne correctement sur le serveur de préproduction.")
 
                     for (int index = 0; index < 10; index++) {
 
@@ -60,7 +60,7 @@ pipeline {
                         echo("result $result")
 
                         if (result == "0") {
-                            echo("Le service ms-configuration  est bien cours d'exécution ")
+                            echo("Le service ms-configuration est bien cours d'exécution ")
                             currentResult = "SUCCESS"
                             break
                         } else {
@@ -71,7 +71,7 @@ pipeline {
                     }
 
                     if (currentResult != "SUCCESS") {
-                        error("Le service ms-configuration n'est actif !!!")
+                        error("Le service ms-configuration n'est pas actif !!!")
                     }
                 }
             }
@@ -85,7 +85,7 @@ pipeline {
                     remote.user = env.Preprod_CREDS_USR
                     remote.password = env.Preprod_CREDS_PSW
 
-                    // Ouverture connection au depot nexus sur Preprod
+                    echo("Ouverture de connection au depot nexus sur le serveur Preprod")
                     withCredentials([usernamePassword(credentialsId: 'nexus-credentials', passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) {
 
                         String loginResult = sshCommand remote: remote, failOnError: false, sudo: false,
@@ -95,6 +95,7 @@ pipeline {
                                 echo("Connection au dépôt depuis le serveur réussi : Login Succeeded")
                     }
 
+                    echo("Mise à jours du projet ms-article sur le serveur Preprod")
                     // Pull projet sur branch preprod
                     //String commande = sshCommand remote: remote, command: "cd /home/max/docker_home/ms-article &&  git checkout preprod && git pull origin preprod"
                     String commande = sshCommand remote: remote, failOnError: false, sudo: false,
@@ -109,6 +110,7 @@ pipeline {
         stage("Status stack : article") {
             steps {
                 script {
+                    echo("Vérifi si la stack $NAME_SERVICE est créer ")
                     String result = ""
                     try {
                         result = sshCommand remote: remote, failOnError: false, sudo: false,
@@ -135,6 +137,7 @@ pipeline {
             }
             steps {
                 script {
+                    echo("Compilation du projet ms-article")
                     sh '''
                         export CONFIG_SERVICE_URI_host="http://192.168.1.27:8089"
                         mvn clean package "-Dspring-boot.run.jvmArguments=-Dspring.profiles.active=dev"
@@ -147,6 +150,7 @@ pipeline {
             agent any
             steps {
                 script {
+                    echo("Création de l'image Docker : $env.DOCKER_IMAGE_NAME:$env.IMAGE_VERSION ")
                     sh '''
                         ls -al target/
                         docker compose build --no-cache
@@ -159,17 +163,9 @@ pipeline {
             agent any
             steps {
                 script {
-
+                    echo("push de l'image $env.DOCKER_IMAGE_NAME:$env.IMAGE_VERSION vers le dépôt")
                     def pushResult = docker.image("$env.DOCKER_IMAGE_NAME:$env.IMAGE_VERSION").push()
-                    echo("pushResult : $pushResult")
-                    // Vérifier si le push a réussi
-//                    if (pushResult) {
-//                        echo "Le push de l'image a été réalisé avec succès."
-//                    } else {
-//                        error "Erreur lors du push de l'image."
-//                    }
-
-
+                    echo("Sorti push : $pushResult")
                 }
             }
         }
@@ -178,7 +174,7 @@ pipeline {
         stage('Deploy ms-article') {
             agent any
             when {
-                expression { return DEPLOY }
+                expression { return env.DEPLOY }
             }
             steps {
                 script {
@@ -187,10 +183,10 @@ pipeline {
                     String pullResult = sshCommand remote: remote, command: "docker pull " +
                             "$env.DOCKER_IMAGE_NAME:$env.IMAGE_VERSION"
 
-                    echo("Sorti pullResult : $pullResult")
+                    echo("Sorti pull : $pullResult")
 
                     pullResult.contains("Status: Downloaded newer image") ?
-                            echo("Le pull de l'image a été réalisé avec succès.") :
+                            echo("Le pull de l'image sur le serveur Preprod a été réalisé avec succès.") :
                             error("Erreur lors du pull de l'image.")
                     try {
                         def deployResult = sshCommand remote: remote, failOnError: false, sudo: false,
@@ -198,6 +194,10 @@ pipeline {
                                         "docker stack deploy -c ./docker-compose-swarm.yml $env.STACK_NAME"
 
                         echo("Sorti deployResult : $deployResult")
+
+                        if (deployResult == "Creating service article_ms-article") {
+                            echo("Le déployement à été réaliser avec succès : $deployResult")
+                        }
 
                     } catch (Exception e) {
                         e.printStackTrace()
@@ -212,7 +212,7 @@ pipeline {
         stage('Update ms-article') {
             agent any
             when {
-                expression { return !DEPLOY }
+                expression { return !env.DEPLOY }
             }
             steps {
                 script {
@@ -220,7 +220,7 @@ pipeline {
                     def deployResult = sshCommand remote: remote, failOnError: false, sudo: false,
                             command: "docker pull $env.DOCKER_IMAGE_NAME:$env.IMAGE_VERSION && " +
                                     "docker service update --image $env.DOCKER_IMAGE_NAME:$env.IMAGE_VERSION $NAME_SERVICE"
-                    ROLLBACK = true
+                    env.ROLLBACK = true
 
                 }
             }
@@ -254,14 +254,13 @@ pipeline {
                 }
             }
         }
-
     }
 
 
     post {
         always {
             script {
-                echo "Fin de " + (DEPLOY ? "La mise en service " : "la mise en service")
+                echo "Fin de " + (env.DEPLOY ? "La mise en service " : "la mise en service")
 
             }
         }
@@ -287,7 +286,7 @@ pipeline {
                 echo("Échec du build ");
 
                 // Si update effectuer
-                if (ROLLBACK) {
+                if (env.ROLLBACK) {
                     echo("ROLLBACK ...");
                     String rollbackResult = sshCommand remote: remote, command: "docker service rollback $NAME_SERVICE"
                     echo("Sorti ROLLBACK : $rollbackResult")
