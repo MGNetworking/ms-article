@@ -131,8 +131,8 @@ pipeline {
             steps {
                 script {
 
-                    def dockerImage = docker.image("$env.DOCKER_IMAGE_NAME:$env.IMAGE_VERSION")
-                    dockerImage.withRegistry('https://sonatype-nexus.backhole.ovh/', 'nexus-credentials') {
+                    withDockerRegistry(credentialsId: 'nexus-credentials', url: 'https://sonatype-nexus.backhole.ovh/') {
+                        def dockerImage = docker.image("$env.DOCKER_IMAGE_NAME:$env.IMAGE_VERSION")
                         def pushResult = dockerImage.push()
 
                         // Vérifier si le push a réussi
@@ -142,8 +142,8 @@ pipeline {
                             error "Erreur lors du push de l'image."
                         }
 
-                    }
 
+                    }
                 }
             }
         }
