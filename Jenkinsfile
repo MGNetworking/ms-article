@@ -43,6 +43,12 @@ pipeline {
                     echo "Nouvelle version de l'application : ${IMAGE_VERSION}";
                     echo "service config host preprod : ${service_config_host_pre}";
 
+                    sh '''
+                    docker  version
+                    docker info
+                    docker compose version
+                    '''
+
                 }
             }
         }
@@ -76,12 +82,12 @@ pipeline {
             steps {
                 script {
                     String result = ""
-                    try{
+                    try {
                         result = sshCommand remote: remote, failOnError: false, sudo: false, command: "docker stack ls | grep $NAME_SERVICE"
 
                         result.contains($NAME_SERVICE) ? DEPLOY = true : false
                         echo "La stack $NAME_SERVICE est " + (DEPLOY ? "déployée" : "non déployée") + " sur le serveur"
-                    }catch (Exception e){
+                    } catch (Exception e) {
                         echo("La Stack $NAME_SERVICE n'a pas etait trouver !!!")
                     }
 
@@ -109,9 +115,7 @@ pipeline {
         }
 
         stage('Build Docker compose ') {
-            agent {
-                docker { dockerfile true}
-            }
+            agent any
             steps {
                 script {
                     sh '''
