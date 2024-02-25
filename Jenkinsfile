@@ -214,7 +214,8 @@ pipeline {
                     int index = 0
                     for (index = 0; index < 10; index++) {
 
-                        String network = sh(script: "curl - s $service_config_host_pre/actuator/health", returnStdout: true).trim()
+                        echo("Requet CURL n° $index du service : $NAME_SERVICE a l'adresse : http://192.168.1.27:9010/actuator/health ")
+                        String network = sh(script: "curl -s http://192.168.1.27:9010/actuator/health", returnStdout: true).trim()
 
                         if (network.contains("UP")) {
                             echo("Le service : $network")
