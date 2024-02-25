@@ -147,6 +147,7 @@ pipeline {
 
         // Deploy if not exist
         stage('Deploy ms-article') {
+            agent any
             when {
                 expression { return DEPLOY  }
             }
@@ -170,6 +171,7 @@ pipeline {
 
         // Update if exist
         stage('Update ms-article') {
+            agent any
             when {
                 expression { return DEPLOY  }
             }
@@ -184,6 +186,7 @@ pipeline {
         }
 
         stage('Test du service ') {
+            agent any
             when {
                 expression { return DEPLOY }
             }
