@@ -177,7 +177,8 @@ pipeline {
                         echo("Sorti deployResult : $deployResult")
                         TESTING = true
                     } catch (Exception e) {
-                        error("$e.getMessage()")
+                        e.printStackTrace()
+                        error("Une erreur est survenu pendant la l'exécution de la requête curl")
                     }
 
                 }
