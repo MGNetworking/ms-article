@@ -211,7 +211,12 @@ pipeline {
                     for (int index = 0; index < 10; index++) {
 
                         echo("Requet CURL n° $index du service : $NAME_SERVICE a l'adresse : http://192.168.1.27:9010/actuator/health ")
-                        String network = sh(script: "curl -s http://192.168.1.27:9010/actuator/health", returnStatus: true)
+                        String network = sh(script: "curl -s http://192.168.1.27:9010/actuator/health", returnStatus: true, returnStdout: true)
+
+                        def status = result.getStatus()
+                        def output = result.getStdout().trim()
+                        echo("Status $status")
+                        echo("output $output")
 
                         if (network == 0) {
                             echo("La mise en service de $NAME_SERVICE à été réalisé avec Succès ")
