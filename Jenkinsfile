@@ -71,7 +71,8 @@ pipeline {
                     }
 
                     // Pull projet sur branch preprod
-                    String commande = sshCommand remote: remote, command: "cd /home/max/docker_home/ms-article &&  git checkout preprod && git pull origin preprod"
+                    //String commande = sshCommand remote: remote, command: "cd /home/max/docker_home/ms-article &&  git checkout preprod && git pull origin preprod"
+                    String commande = sshCommand remote: remote, command: "cd /home/max/docker_home/ms-article &&  git pull origin preprod"
                     echo("sorti : $commande")
                 }
             }
