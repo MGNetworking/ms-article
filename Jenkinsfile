@@ -217,7 +217,7 @@ pipeline {
                         echo("Requet CURL n° $index du service : $NAME_SERVICE a l'adresse : http://192.168.1.27:9010/actuator/health ")
                         String network = sh(script: "curl -s http://192.168.1.27:9010/actuator/health", returnStdout: true).trim()
 
-                        if (network != null || network != ""){
+                        if (network != null && network != ""){
                             if (network.contains("UP")) {
                                 echo("Le service : $network")
                                 echo("La mise en service de $NAME_SERVICE à été réalisé avec Succès ")
