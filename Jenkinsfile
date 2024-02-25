@@ -10,7 +10,7 @@ pipeline {
 
         DOMAIN_REGISTRY = "sonatype-nexus.backhole.ovh"
         DEPLOY = false
-        TESTING = false
+
         ROLLBACK = false
         // Get credentials to connection serveur
         Preprod_CREDS = credentials('PREPROD')
@@ -175,7 +175,7 @@ pipeline {
                                         "docker stack deploy -c ./docker-compose-swarm.yml $env.STACK_NAME"
 
                         echo("Sorti deployResult : $deployResult")
-                        TESTING = true
+
                     } catch (Exception e) {
                         e.printStackTrace()
                         error("Une erreur est survenu pendant la l'exécution de la requête curl")
@@ -197,8 +197,6 @@ pipeline {
                     def deployResult = sshCommand remote: remote, failOnError: false, sudo: false,
                             command: "docker pull $env.DOCKER_IMAGE_NAME:$env.IMAGE_VERSION && " +
                                     "docker service update --image $env.DOCKER_IMAGE_NAME:$env.IMAGE_VERSION $NAME_SERVICE"
-
-                    TESTING = true
                     ROLLBACK = true
 
                 }
@@ -207,36 +205,28 @@ pipeline {
 
         stage('Test du service ') {
             agent any
-            when {
-                expression { return TESTING }
-            }
             steps {
                 script {
-                    int index = 0
-                    try {
 
+                    for (int index = 0; index < 10; index++) {
 
-                        for (index = 0; index < 10; index++) {
+                        echo("Requet CURL n° $index du service : $NAME_SERVICE a l'adresse : http://192.168.1.27:9010/actuator/health ")
+                        String network = sh(script: "curl -s http://192.168.1.27:9010/actuator/health", returnStatus: true, returnStdout: true)
 
-                            echo("Requet CURL n° $index du service : $NAME_SERVICE a l'adresse : http://192.168.1.27:9010/actuator/health ")
-                            String network = sh(script: "curl -s http://192.168.1.27:9010/actuator/health", returnStatus: true, returnStdout: true).trim()
-
-                            if (network != null && network != "") {
-                                if (network.contains("UP")) {
-                                    echo("La mise en service de $NAME_SERVICE à été réalisé avec Succès ")
-                                    currentResult = "SUCCESS"
-                                    break
-                                }
+                        if (network == 0) {
+                            if (network.contains("UP")) {
+                                echo("La mise en service de $NAME_SERVICE à été réalisé avec Succès ")
+                                currentResult = "SUCCESS"
+                                break
                             }
+                        } else {
+                            echo "Le service n'est pas encore UP. Attente de 15 secondes..."
                             sleep time: 15, unit: 'SECONDS'
                         }
-
-                    } catch (Exception e) {
-                        e.printStackTrace()
-                        error("Une exception est sur venu pendant l'exécution de la requête curl !!!!")
                     }
-                    if (index == 9) {
-                        currentResult = "FAILURE"
+
+
+                    if (currentResult != "SUCCESS") {
                         error("Le service $NAME_SERVICE est en echec !!!")
                     }
 
