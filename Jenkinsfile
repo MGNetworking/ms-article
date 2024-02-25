@@ -96,7 +96,7 @@ pipeline {
         }
 
 
-        stage('Compilation') {
+        stage('Maven Compilation') {
             agent {
                 docker {
                     image 'maven:3.8.5-jdk-8-slim'
@@ -127,25 +127,23 @@ pipeline {
         }
 
         stage('Push image dépôt') {
-
+            agent any
             steps {
                 script {
 
-                    withDockerRegistry(credentialsId: 'nexus-credentials', url: 'https://sonatype-nexus.backhole.ovh/') {
+                    def dockerImage = docker.image("$env.DOCKER_IMAGE_NAME:$env.IMAGE_VERSION")
+                    dockerImage.withRegistry('https://sonatype-nexus.backhole.ovh/', 'nexus-credentials') {
+                        def pushResult = dockerImage.push()
 
-                        def dockerImage = docker.image("$env.DOCKER_IMAGE_NAME:$env.IMAGE_VERSION")
-                        dockerImage.withRegistry('https://sonatype-nexus.backhole.ovh/', 'nexus-credentials') {
-                            def pushResult = dockerImage.push()
-
-                            // Vérifier si le push a réussi
-                            if (pushResult) {
-                                echo "Le push de l'image a été réalisé avec succès."
-                            } else {
-                                error "Erreur lors du push de l'image."
-                            }
-
+                        // Vérifier si le push a réussi
+                        if (pushResult) {
+                            echo "Le push de l'image a été réalisé avec succès."
+                        } else {
+                            error "Erreur lors du push de l'image."
                         }
+
                     }
+
                 }
             }
         }
