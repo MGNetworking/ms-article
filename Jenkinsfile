@@ -213,8 +213,8 @@ pipeline {
                         echo("Requet CURL n° $index du service : $NAME_SERVICE a l'adresse : http://192.168.1.27:9010/actuator/health ")
                         String result = sh(script: "curl -s http://192.168.1.27:9010/actuator/health", returnStatus: true, returnStdout: true)
 
-                        def status = result.getStatus()
-                        def output = result.getStdout().trim()
+                        def status = result.status
+                        def output = result.stdout.trim()
                         echo("Status $status")
                         echo("output $output")
 
