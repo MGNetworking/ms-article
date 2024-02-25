@@ -161,9 +161,13 @@ pipeline {
                     pullResult.contains("Status: Downloaded newer image") ?
                             echo("Le pull de l'image a été réalisé avec succès.") :
                             error("Erreur lors du pull de l'image.")
+                    try {
+                        def deployResult = sshCommand remote: remote, command: "cd /home/max/docker_home/ms-article && export \$(cat .env) && docker stack deploy -c ./docker-compose-swarm.yml $env.STACK_NAME"
+                        echo("Sorti deployResult : $deployResult")
+                    }catch (Exception e){
+                        error("$e.getMessage()")
+                    }
 
-                    def deployResult = sshCommand remote: remote, command: "cd /home/max/docker_home/ms-article && export \$(cat .env) && docker stack deploy -c ./docker-compose-swarm.yml $env.STACK_NAME"
-                    echo("Sorti deployResult : $deployResult")
                 }
 
             }
