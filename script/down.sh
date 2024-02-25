@@ -6,7 +6,7 @@ export $(cat .env)
 delete_conteneur() {
 
   echo "************************************"
-  echo "delete stack : stack_$STACK_NAME "
+  echo "delete stack : $STACK_NAME "
   docker stack rm $STACK_NAME
 
   echo "delete image : $DOCKER_IMAGE_NAME:$IMAGE_VERSION "
