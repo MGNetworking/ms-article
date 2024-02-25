@@ -215,7 +215,7 @@ pipeline {
 
                         echo("result $result")
 
-                        if (result == 0) {
+                        if (result == "0") {
                             echo("La mise en service de $NAME_SERVICE à été réalisé avec Succès ")
                             currentResult = "SUCCESS"
                             break
