@@ -211,16 +211,15 @@ pipeline {
                     for (int index = 0; index < 10; index++) {
 
                         echo("Requet CURL n° $index du service : $NAME_SERVICE a l'adresse : http://192.168.1.27:9010/actuator/health ")
-                        String network = sh(script: "curl -s http://192.168.1.27:9010/actuator/health", returnStatus: true, returnStdout: true)
+                        String network = sh(script: "curl -s http://192.168.1.27:9010/actuator/health", returnStatus: true)
 
                         if (network == 0) {
-                            if (network.contains("UP")) {
-                                echo("La mise en service de $NAME_SERVICE à été réalisé avec Succès ")
-                                currentResult = "SUCCESS"
-                                break
-                            }
+                            echo("La mise en service de $NAME_SERVICE à été réalisé avec Succès ")
+                            currentResult = "SUCCESS"
+                            break
                         } else {
                             echo "Le service n'est pas encore UP. Attente de 15 secondes..."
+                            echo "Tentative n° $index"
                             sleep time: 15, unit: 'SECONDS'
                         }
                     }
