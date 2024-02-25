@@ -162,7 +162,7 @@ pipeline {
                             echo("Le pull de l'image a été réalisé avec succès.") :
                             error("Erreur lors du pull de l'image.")
 
-                    def deployResult = sshCommand remote: remote, command: "cd /home/max/docker_home/ms-article && export \$(cat .env) docker stack deploy -c ./docker-compose-swarm.yml $env.STACK_NAME"
+                    def deployResult = sshCommand remote: remote, command: "cd /home/max/docker_home/ms-article && export \$(cat .env) && docker stack deploy -c ./docker-compose-swarm.yml $env.STACK_NAME"
                     echo("Sorti deployResult : $deployResult")
                 }
 
@@ -248,17 +248,20 @@ pipeline {
 
                 echo "Échec du build ";
 
-                // le rollback
-                String rollbackResult = sshCommand remote: remote, command: "docker service rollback $NAME_SERVICE"
-                echo("Rollback : $rollbackResult")
+                if (currentResult == "FAILURE"){
+                    // le rollback
+                    String rollbackResult = sshCommand remote: remote, command: "docker service rollback $NAME_SERVICE"
+                    echo("Rollback : $rollbackResult")
 
-                // Logout du depot sur preprod
-                String loginResult = sshCommand remote: remote, command: "docker logout $DOMAIN_REGISTRY"
-                if (loginResult.contains("Removing login credentials")) {
-                    echo "La deconnection au dépôt depuis le serveur réussi"
-                } else {
-                    error("Echec de la deconnexion au dépot depuis le serveur Preprod")
+                    // Logout du depot sur preprod
+                    String loginResult = sshCommand remote: remote, command: "docker logout $DOMAIN_REGISTRY"
+                    if (loginResult.contains("Removing login credentials")) {
+                        echo "La deconnection au dépôt depuis le serveur réussi"
+                    } else {
+                        error("Echec de la deconnexion au dépot depuis le serveur Preprod")
+                    }
                 }
+
 
             }
 
