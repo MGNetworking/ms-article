@@ -138,18 +138,19 @@ pipeline {
                     sh '''
                         export CONFIG_SERVICE_URI_host="http://192.168.1.27:8089"
                         mvn clean package "-Dspring-boot.run.jvmArguments=-Dspring.profiles.active=dev"
-                        docker compose build --no-cache
                     '''
                 }
             }
         }
 
-        stage('Docker Build') {
+        stage('Build Docker compose ') {
             agent any
             steps {
                 script {
-                    def status = sh(script: "docker compose build --no-cache", returnStatus: true)
-                    echo("Status : $status")
+                    sh '''
+                        ls -al target/
+                        docker compose build --no-cache
+                    '''
                 }
             }
         }
