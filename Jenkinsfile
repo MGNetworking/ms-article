@@ -75,7 +75,7 @@ pipeline {
                     // Pull projet sur branch preprod
                     //String commande = sshCommand remote: remote, command: "cd /home/max/docker_home/ms-article &&  git checkout preprod && git pull origin preprod"
                     String commande = sshCommand remote: remote, failOnError: false, sudo: false,
-                            command: "cd /home/max/docker_home/ms-article &&  git pull origin preprod"
+                            command: "cd /home/max/docker_home/ms-article &&  git pull origin dev"
 
                     echo("sorti : $commande")
                 }
@@ -216,6 +216,8 @@ pipeline {
 
                         echo("Requet CURL n° $index du service : $NAME_SERVICE a l'adresse : http://192.168.1.27:9010/actuator/health ")
                         String network = sh(script: "curl -s http://192.168.1.27:9010/actuator/health", returnStdout: true).trim()
+
+                        echo("sorti network :  $network")
 
                         if (network != null && network != ""){
                             if (network.contains("UP")) {
