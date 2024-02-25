@@ -44,12 +44,36 @@ pipeline {
                     echo "Nouvelle version de l'application : ${IMAGE_VERSION}";
                     echo "service config host preprod : ${service_config_host_pre}";
 
-                    sh '''
-                    docker  version
-                    docker info
-                    docker compose version
-                    '''
+                }
+            }
+        }
 
+        stage("Test service ms-config") {
+            steps {
+                script {
+                    echo("Vérifi que le service ms-configuration est bien en cours d'exécution sur le serveur preprod")
+
+                    for (int index = 0; index < 10; index++) {
+
+                        echo("Requet CURL n° $index du service : ms-configuration a l'adresse : $service_config_host_pre/actuator/health ")
+                        String result = sh(script: "curl -s $service_config_host_pre/actuator/health", returnStatus: true)
+
+                        echo("result $result")
+
+                        if (result == "0") {
+                            echo("Le service ms-configuration  est bien cours d'exécution ")
+                            currentResult = "SUCCESS"
+                            break
+                        } else {
+                            echo("Le service ms-configuration n'est pas cours d'exécution ")
+                            echo "Tentative n° $index"
+                            sleep time: 5, unit: 'SECONDS'
+                        }
+                    }
+
+                    if (currentResult != "SUCCESS") {
+                        error("Le service ms-configuration n'est actif !!!")
+                    }
                 }
             }
         }
@@ -102,7 +126,7 @@ pipeline {
         }
 
 
-        stage('Maven Compilation') {
+        stage('Compilation | Build') {
             agent {
                 docker {
                     image 'maven:3.8.5-jdk-8-slim'
@@ -115,17 +139,6 @@ pipeline {
                     sh '''
                         export CONFIG_SERVICE_URI_host="http://192.168.1.27:8089"
                         mvn clean package "-Dspring-boot.run.jvmArguments=-Dspring.profiles.active=dev"
-                    '''
-                }
-            }
-        }
-
-        stage('Build Docker compose ') {
-            agent any
-            steps {
-                script {
-                    sh '''
-                        ls -al target/
                         docker compose build --no-cache
                     '''
                 }
