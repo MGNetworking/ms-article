@@ -10,7 +10,8 @@ pipeline {
 
         DOMAIN_REGISTRY = "sonatype-nexus.backhole.ovh"
         DEPLOY = false
-
+        TESTING = false
+        ROLLBACK = false
         // Get credentials to connection serveur
         Preprod_CREDS = credentials('PREPROD')
 
@@ -64,7 +65,8 @@ pipeline {
                     // Ouverture connection au depot nexus sur Preprod
                     withCredentials([usernamePassword(credentialsId: 'nexus-credentials', passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) {
 
-                        String loginResult = sshCommand remote: remote, command: "docker login -u $USERNAME -p $PASSWORD $DOMAIN_REGISTRY"
+                        String loginResult = sshCommand remote: remote, failOnError: false, sudo: false,
+                                command: "docker login -u $USERNAME -p $PASSWORD $DOMAIN_REGISTRY"
 
                         loginResult.contains("status: 401 Unauthorized") ? error("Erreur de connection status: 401 Unauthorized") :
                                 echo("Connection au dépôt depuis le serveur réussi : Login Succeeded")
@@ -72,7 +74,9 @@ pipeline {
 
                     // Pull projet sur branch preprod
                     //String commande = sshCommand remote: remote, command: "cd /home/max/docker_home/ms-article &&  git checkout preprod && git pull origin preprod"
-                    String commande = sshCommand remote: remote, command: "cd /home/max/docker_home/ms-article &&  git pull origin preprod"
+                    String commande = sshCommand remote: remote, failOnError: false, sudo: false,
+                            command: "cd /home/max/docker_home/ms-article &&  git pull origin preprod"
+
                     echo("sorti : $commande")
                 }
             }
@@ -84,7 +88,8 @@ pipeline {
                 script {
                     String result = ""
                     try {
-                        result = sshCommand remote: remote, failOnError: false, sudo: false, command: "docker stack ls | grep $NAME_SERVICE"
+                        result = sshCommand remote: remote, failOnError: false, sudo: false,
+                                command: "docker stack ls | grep $NAME_SERVICE"
 
                         result.contains($NAME_SERVICE) ? DEPLOY = true : false
                         echo "La stack $NAME_SERVICE est " + (DEPLOY ? "déployée" : "non déployée") + " sur le serveur"
@@ -146,26 +151,32 @@ pipeline {
             }
         }
 
-        // Deploy if not exist
+
         stage('Deploy ms-article') {
             agent any
             when {
-                expression { return DEPLOY  }
+                expression { return DEPLOY }
             }
             steps {
                 script {
 
                     // pull depuis preprod
-                    String pullResult = sshCommand remote: remote, command: "docker pull $env.DOCKER_IMAGE_NAME:$env.IMAGE_VERSION"
+                    String pullResult = sshCommand remote: remote, command: "docker pull " +
+                            "$env.DOCKER_IMAGE_NAME:$env.IMAGE_VERSION"
+
                     echo("Sorti pullResult : $pullResult")
 
                     pullResult.contains("Status: Downloaded newer image") ?
                             echo("Le pull de l'image a été réalisé avec succès.") :
                             error("Erreur lors du pull de l'image.")
                     try {
-                        def deployResult = sshCommand remote: remote, command: "cd /home/max/docker_home/ms-article && export \$(cat .env) && docker stack deploy -c ./docker-compose-swarm.yml $env.STACK_NAME"
+                        def deployResult = sshCommand remote: remote, failOnError: false, sudo: false,
+                                command: "cd /home/max/docker_home/ms-article && export \$(cat .env) && " +
+                                        "docker stack deploy -c ./docker-compose-swarm.yml $env.STACK_NAME"
+
                         echo("Sorti deployResult : $deployResult")
-                    }catch (Exception e){
+                        TESTING = true
+                    } catch (Exception e) {
                         error("$e.getMessage()")
                     }
 
@@ -174,17 +185,20 @@ pipeline {
             }
         }
 
-        // Update if exist
         stage('Update ms-article') {
             agent any
             when {
-                expression { return DEPLOY  }
+                expression { return !DEPLOY }
             }
             steps {
                 script {
                     // Pull image in preprod and update with image
-                    def deployResult = sshCommand remote: remote, command: "docker pull $env.DOCKER_IMAGE_NAME:$env.IMAGE_VERSION && " +
-                            "docker service update --image $env.DOCKER_IMAGE_NAME:$env.IMAGE_VERSION $NAME_SERVICE"
+                    def deployResult = sshCommand remote: remote, failOnError: false, sudo: false,
+                            command: "docker pull $env.DOCKER_IMAGE_NAME:$env.IMAGE_VERSION && " +
+                                    "docker service update --image $env.DOCKER_IMAGE_NAME:$env.IMAGE_VERSION $NAME_SERVICE"
+
+                    TESTING = true
+                    ROLLBACK = true
 
                 }
             }
@@ -193,28 +207,26 @@ pipeline {
         stage('Test du service ') {
             agent any
             when {
-                expression { return DEPLOY }
+                expression { return TESTING }
             }
             steps {
                 script {
+                    int index = 0
+                    for (index = 0; index < 10; index++) {
 
-                    for (int i = 0; i < 5; i++) {
-                        curl - s
-                        String network = sh(script: "$service_config_host_pre/actuator/health", returnStdout: true).trim()
+                        String network = sh(script: "curl - s $service_config_host_pre/actuator/health", returnStdout: true).trim()
 
                         if (network.contains("UP")) {
                             echo("Le service : $network")
+                            echo("La mise en service de $NAME_SERVICE à été réalisé avec Succès ")
                             currentResult = "SUCCESS"
                             break
                         }
 
-                        sleep time: 30, unit: 'SECONDS'
+                        sleep time: 15, unit: 'SECONDS'
                     }
 
-                    if (currentResult.equals("SUCCESS")) {
-                        echo("La mise en service de $NAME_SERVICE à été réalisé avec Succès ")
-                        return
-                    } else {
+                    if (index == 9) {
                         currentResult = "FAILURE"
                         error("Le service $NAME_SERVICE est en echec !!!")
                     }
@@ -238,7 +250,9 @@ pipeline {
 
             script {
                 echo('Réussite du build')
-                String loginResult = sshCommand remote: remote, command: "docker logout $DOMAIN_REGISTRY"
+                String loginResult = sshCommand remote: remote, failOnError: false, sudo: false,
+                        command: "docker logout $DOMAIN_REGISTRY"
+
                 if (loginResult.contains("Removing login credentials")) {
                     echo "La deconnection au dépôt depuis le serveur réussi"
                 } else {
@@ -251,20 +265,22 @@ pipeline {
         failure {
             script {
 
-                echo "Échec du build ";
+                echo("Échec du build ");
 
-                if (currentResult == "FAILURE"){
-                    // le rollback
+                // Si update effectuer
+                if (ROLLBACK) {
+                    echo("ROLLBACK ...");
                     String rollbackResult = sshCommand remote: remote, command: "docker service rollback $NAME_SERVICE"
-                    echo("Rollback : $rollbackResult")
+                    echo("Sorti ROLLBACK : $rollbackResult")
 
-                    // Logout du depot sur preprod
-                    String loginResult = sshCommand remote: remote, command: "docker logout $DOMAIN_REGISTRY"
-                    if (loginResult.contains("Removing login credentials")) {
-                        echo "La deconnection au dépôt depuis le serveur réussi"
-                    } else {
-                        error("Echec de la deconnexion au dépot depuis le serveur Preprod")
-                    }
+                }
+
+                // Logout du depot sur preprod
+                String loginResult = sshCommand remote: remote, command: "docker logout $DOMAIN_REGISTRY"
+                if (loginResult.contains("Removing login credentials")) {
+                    echo "La deconnection au dépôt depuis le serveur réussi"
+                } else {
+                    error("Echec de la deconnexion au dépot depuis le serveur Preprod")
                 }
 
 
