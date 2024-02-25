@@ -4,13 +4,7 @@
 def remote
 
 pipeline {
-    agent {
-        docker {
-            image 'maven:3.8.5-jdk-8-slim'
-            args '-v /var/jenkins_home/maven/.m2:/root/.m2' +
-                    ' -v /var/run/docker.sock:/var/run/docker.sock'
-        }
-    }
+    agent any
 
     environment {
 
@@ -97,11 +91,30 @@ pipeline {
 
 
         stage('Compilation') {
+            agent {
+                docker {
+                    image 'maven:3.8.5-jdk-8-slim'
+                    args '-v /var/jenkins_home/maven/.m2:/root/.m2' +
+                            ' -v /var/run/docker.sock:/var/run/docker.sock'
+                }
+            }
             steps {
                 script {
                     sh '''
                         export CONFIG_SERVICE_URI_host="http://192.168.1.27:8089"
                         mvn clean package "-Dspring-boot.run.jvmArguments=-Dspring.profiles.active=dev"
+                    '''
+                }
+            }
+        }
+
+        stage('Build Docker compose ') {
+            agent {
+                docker { dockerfile true}
+            }
+            steps {
+                script {
+                    sh '''
                         ls -al target/
                         docker compose build --no-cache
                     '''
