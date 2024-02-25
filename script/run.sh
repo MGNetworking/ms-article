@@ -3,7 +3,6 @@
 # export des variable du fichier .env
 export $(cat .env)
 
-
 env=("Run stack $STACK_NAME" "Compilation / build and Run stack $STACK_NAME" )
 echo "Lancement de la compilation (Mode Dev) "
 echo "Choisissez votre type de compilation :"
@@ -17,9 +16,9 @@ done
 echo -e "$affichage"
 read choix
 
-
 trouver=false
 selection=""
+
 # recherche du choix sélectionné
 if [ -n "${env[$choix]}" ]; then
   echo "Vous avez choisi : ${env[$choix]}"
@@ -27,18 +26,13 @@ if [ -n "${env[$choix]}" ]; then
   trouver=true
 fi
 
-# Fonction de compilation dans le Dockerfile
 run_stack(){
-
-
 
     if [[ -z $(docker images --filter "reference=$DOCKER_IMAGE_NAME"  | grep "$DOCKER_IMAGE_NAME" ) ]]; then
 
     echo "l'images n'a pas etait trouver vous ne pouvez pas créer la stack"
     exit 1
     fi
-
-
 
     echo "deploy de la stack : $STACK_NAME"
     docker stack deploy -c ./docker-compose-swarm.yml $STACK_NAME
@@ -58,8 +52,6 @@ compilation_Maven(){
 
     echo "Création de l'images : $STACK_NAME"
     docker compose -f docker-compose.yml build --no-cache
-
-    export $(cat .env)
 
     echo "deploy de la stack du service : $STACK_NAME"
     docker stack deploy -c ./docker-compose-swarm.yml $STACK_NAME
@@ -99,17 +91,12 @@ if [ $DOCKER_STATUS -eq 0 ]; then
     docker container start $STACK_NAME
 
   else
-
       if [ $choix -eq 0 ]; then
-
         run_stack
 
       elif [ $choix -eq 1  ]; then
-
         compilation_Maven
       fi
-
-
   fi
 
 else
