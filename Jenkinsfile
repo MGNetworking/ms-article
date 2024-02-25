@@ -148,7 +148,7 @@ pipeline {
         // Deploy if not exist
         stage('Deploy ms-article') {
             when {
-                expression { DEPLOY == false }
+                expression { return DEPLOY == false }
             }
             steps {
                 script {
@@ -171,7 +171,7 @@ pipeline {
         // Update if exist
         stage('Update ms-article') {
             when {
-                expression { DEPLOY == true }
+                expression { return DEPLOY == true }
             }
             steps {
                 script {
@@ -185,7 +185,7 @@ pipeline {
 
         stage('Test du service ') {
             when {
-                expression { DEPLOY == true }
+                expression { return DEPLOY == true }
             }
             steps {
                 script {
