@@ -92,7 +92,7 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- as developement tools -->
+        <!-- tools pour le dev-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
@@ -170,12 +170,6 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
             <version>5.3.9</version>
-        </dependency>
-
-        <!-- Logback log de l'application -->
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
         </dependency>
 
         <dependency>
