@@ -4,8 +4,12 @@ FROM openjdk:8-jdk-alpine
 # Installation des tools pour wait_for_config.sh
 RUN apk --no-cache add curl jq
 
+# Création du dossier repertoire de travail
 WORKDIR /app
 COPY target/*.jar /app/app.jar
+
+# Création du dossier de logs
+RUN mkdir /app/logs
 
 COPY ./script/wait_for_config.sh  /app
 COPY ./script/healthcheck.sh /app

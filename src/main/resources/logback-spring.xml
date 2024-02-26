@@ -1,0 +1,34 @@
+<configuration>
+
+    <!-- Configuration spécifique pour les classes suivantes -->
+    <logger name="ArticleWebService.web.ControllerArticle" level="debug"/>
+    <logger name="ArticleWebService.service.FileSystemStorageServiceImplementation" level="debug"/>
+
+    <!-- Déclaration des appender et rolling policies (la rotation des fichiers de log) -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>./logs/article.log</file>
+
+        <!-- gestion de la rotation fichier de logs -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+
+            <!-- Emplacement du fichier de log -->
+            <fileNamePattern>./logs/article.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+
+            <maxFileSize>10MB</maxFileSize>     <!-- Taille maximale de chaque fichier de log -->
+            <maxHistory>7</maxHistory>          <!-- Nombre de fichiers de log à conserver -->
+            <totalSizeCap>1GB</totalSizeCap>    <!-- Taille totale maximale des fichiers de log -->
+
+        </rollingPolicy>
+
+        <!-- Encodage des messages de log -->
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Configuration du niveau racine -->
+    <root level="info">
+        <appender-ref ref="FILE"/>
+    </root>
+
+</configuration>
