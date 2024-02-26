@@ -195,7 +195,7 @@ pipeline {
 
                         echo("Sorti deployResult : $deployResult")
 
-                        if (deployResult == "Creating service article_ms-article") {
+                        if (deployResult == "Creating service $NAME_SERVICE") {
                             echo("Le déployement à été réaliser avec succès : $deployResult")
                         }
 
