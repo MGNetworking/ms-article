@@ -55,11 +55,11 @@ pipeline {
                     for (int index = 0; index < 10; index++) {
 
                         echo("Requet CURL n° $index du service : ms-configuration a l'adresse : $service_config_host_pre/actuator/health ")
-                        String result = sh(script: "curl -s $service_config_host_pre/actuator/health", returnStatus: true)
+                        def result = sh(script: "curl -s $service_config_host_pre/actuator/health", returnStatus: true)
 
                         echo("result $result")
 
-                        if (result == "0") {
+                        if (result == 0) {
                             echo("Le service ms-configuration est bien cours d'exécution ")
                             currentResult = "SUCCESS"
                             break
@@ -234,11 +234,11 @@ pipeline {
                     for (int index = 0; index < 10; index++) {
 
                         echo("Requet CURL n° $index du service : $NAME_SERVICE a l'adresse : http://192.168.1.27:9010/actuator/health ")
-                        String result = sh(script: "curl -s http://192.168.1.27:9010/actuator/health", returnStatus: true)
+                        def result = sh(script: "curl -s http://192.168.1.27:9010/actuator/health", returnStatus: true)
 
                         echo("result $result")
 
-                        if (result == "0") {
+                        if (result == 0) {
                             echo("La mise en service de $NAME_SERVICE à été réalisé avec Succès ")
                             currentResult = "SUCCESS"
                             break
