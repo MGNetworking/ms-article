@@ -92,36 +92,49 @@ API `ms-article`.
 
 ## Les Scripts
 
-Les scripts `run.sh` et `down.sh` ont été créer dans le but de facilité l'exécution du projet en environment DEV, mais
-pas pour le mode debug. Ils ont pour objectif de test l'exécution de l'API dans l'infrastructure docker de manière plus
-simple et rapide.
+Les scripts `run.sh` et `down.sh` ont été créer dans le but de facilité l'exécution du projet en environment Swarm DEV,
+mais pas pour le mode debug. Ils ont pour objectif de test l'exécution de l'API dans l'infrastructure Docker Swarm de
+manière plus simple et rapide.
 
-* `run.sh` : Il permet de lancer l'API avec 2 modes compilation différent :
+* `run.sh` : Au lancement de ce script, vous avez 2 choix possible :
 
-    * La Compilation via Dockerfile :  
-      Cette compilation sera exécuter une phase de Build via le `Dockerfile` par le `docker-compose.yml` en utilisant
-      l'image `maven:3.8.5-jdk-8-slim` , puis une phase de copiage dans l'image `openjdk:8-jdk-alpine ` des fichiers
-      compilé. Cela permet d'avoir une image d'API plus légère et donc optimisée.
+    * La Compilation complète puis le Run de la stack :  
+      Pour la compilation complète, vous devez avoir Maven dans votre environnement est le JDK 1.8 de Java.
+      le script lancera la compilation via Maven et votre JDK avec les variables d'environnement nécessaire son
+      exécution.
+      Après la création du Jar, le docker compose responsable de la création de l'image, copiera les fichiers scripts
+      ainsi que le Jar nouvellement créer dans les couches de l'image Docker. Cela permet d'avoir une image d'API plus
+      légère et donc optimisée.
+      Après la création de l'image Docker, le docker compose Swarm, reasonable de la création de la stack, lancera la
+      création de la stack.
 
-    * La Compilation via Maven :  
-      Cette compilation exécute la compilation avec Maven avec votre environnement de manière plus directe qu'avec le
-      Dockerfile. Cela permet d'éviter de compilé l'image via le `Dockerfile-dev` par le `docker-compose-dev.yml` ce qui
-      est un gain de temps, ce qui est un
-      gain de temps puisque la Compilation via Dockerfile doit à chaque lancement récupérer toutes les dépendances du
-      projet contenu dans le pom.xml avec sa compilation.
+    * Le Run de la stack :  
+      Cette possibilité est à utiliser dans le cas ou vous avez déjà créé l'image et donc que vous n'avez plus qu'a
+      créé la stack. Cela permet de gagner du temps quand vous testez l'application est que vous supprimez la stack
+      uniquement
+
+* `down.sh` : Au lancement de ce script, vous avez 2 choix possible :
+
+    * Supprimer la stack : Si vous avez besoin de supprimer la stack uniquement.
+
+    * Supprimer la stack et l'image : Si vous avez besoin de supprimer la stack et l'image du système. Avec cela vous
+      aurai aussi la suppression des images sans étiquette.
 
 
-* `down.sh` : Il permet l'arrêter est la suppression du conteneur de l'image. Il supprime aussi toutes les images et
-  conteneur non utilisé ainsi que les orphelins sur le système host.
-
-
-* `wait_for_config.sh` : Ce script n'est pas utilisé dans le development de manière direct, mais il est ajouté dans la
-  phase de compilation dans le but d'attendre que le service `ms-configuration` soit en cours d'exécution. Si ce service
-  n'est pas en cours d'exécution, il ne pourra récupérer son fichier de properties ce qui provoquera un échec
-  d'exécution.
+* `wait_for_config.sh` : Ce script est utilisé dans le context Swarm docker. Il permet de vérifier que le service
+  `ms-configuration` soit bien en cours d'exécution. En effet, ce service contient les fichiers `.properties`
+  nécessaires a execution de l'application. Sans ce service, l'API ne peut être lancer. Ce script est ajouté pendant la
+  phase de construction de l'image Docker avec d'autre script.
+  Son objectif est d'attendre que le service `ms-configuration` soit en cours d'exécution. Tant qu'il n'est pas en cours
+  d'exécution, pas de RUN de l'API.
 
 NB : Le service `ms-configuration` est aussi important pendant la phase de compilation. Sans son fichier de
 configuration, il ne peut n'y compiler n'y s'exécuter !!!
+
+* `healthcheck.sh` : Dans le fichier docker compose Swarm, responsable de la création de la stack, la gestion de la
+  santé du service y est configuré. Ce script est utilisé dans ce but. Il exécute une requête curl via l'adresse Ip du
+  service dans le context Swarm pour récupérer la santé de celui-ci. Un fichier de log y est disponible
+  dans `/app/logs/healthcheck.log`
 
 ## Mode Débogage
 
@@ -134,16 +147,54 @@ Dans intellij, aller vers éditer une configuration, puis ajoute avec le plus et
 Cela ajoutera un onglet supplémentaire qu'il vous faudra configurer.
 
 ![maven-debug.png](images/maven-debug.png)
+
+| Goal    | description                                                                                 |
+|---------|---------------------------------------------------------------------------------------------|
+| clean   | Supprime les fichiers générés lors des précédentes builds                                   |
+| compile | Compile le code source du projet                                                            |
+| test    | Exécute les tests unitaires du projet                                                       |
+| package | Crée un package du projet, par exemple un fichier JAR ou WAR                                |
+| install | Installe le package dans le référentiel Maven local.                                        |
+| deploy  | Déploie le package dans un référentiel distant.                                             |
+| site    | Génère un site Web pour le projet à partir des informations de documentation et de rapport. |
+
+[Maven](https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html) est basé sur le concept central
+d'un cycle de vie de build. Cela signifie que le processus de construction et de distribution d'un artefact (projet)
+particulier est clairement défini.
+
 Dans l'espace Run ajoute la commande :
 
+Sans la mode debug
+
 ```shell
-clean package spring-boot:run "-Dspring-boot.run.jvmArguments=-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005 -Dspring.profiles.active=dev"
+# context devlocal
+clean test -Dspring.profiles.active=devlocal -DCONFIG_SERVICE_URI_host=http://192.168.1.68:8089 spring-boot:run "-Dspring-boot.run.jvmArguments=-Dspring.profiles.active=devlocal -DCONFIG_SERVICE_URI_host=http://192.168.1.68:8089"
+# ancien context dev
+clean test -Dspring.profiles.active=dev -DCONFIG_SERVICE_URI_host=http://192.168.1.68:8089  spring-boot:run -Dspring-boot.run.jvmArguments="-Dspring.profiles.active=dev -DCONFIG_SERVICE_URI_host=http://192.168.1.68:8089" 
 ```
 
-Détail de la commande pour le mode debug :
+Avec mode debug
 
-1. `clean package` : Les goals Maven
-2. `spring-boot:run` : Le lancement de l'API
+```shell
+# context devlocal
+clean test -Dspring.profiles.active=devlocal -DCONFIG_SERVICE_URI_host=http://192.168.1.68:8089 spring-boot:run -Dspring-boot.run.jvmArguments="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005 -DCONFIG_SERVICE_URI_host=http://192.168.1.68:8089 -Dspring.profiles.active=devlocal"
+# ancien context dev
+clean test -Dspring.profiles.active=dev -DCONFIG_SERVICE_URI_host=http://192.168.1.68:8089 spring-boot:run -Dspring-boot.run.jvmArguments="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005 -DCONFIG_SERVICE_URI_host=http://192.168.1.68:8089 -Dspring.profiles.active=dev"
+```
+
+```shell
+# commande de base 
+mvn spring-boot:run -Dspring-boot.run.jvmArguments="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005"
+```
+
+La commande mvn `spring-boot:run` est principalement utilisée pour exécuter l'application Spring Boot, mais elle ne
+déclenche pas automatiquement l'exécution des tests unitaires
+
+Détail de la commande :
+
+1. `clean test` : lance les testes unitaires (goal test)
+2. `spring-boot:run` : Le lancement de l'API Spring Boot directement à partir du code source sans générer de fichier
+   exécutable (JAR ou WAR) au préalable.
 3. `-Dspring-boot.run.jvmArguments` le passage en arguments pour la JVM
 4. `-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005`  
    Cette partie de la commande correspond à la configuration du débogueur Java (Java Debugger Wire Protocol - JDWP) pour
@@ -152,13 +203,11 @@ Détail de la commande pour le mode debug :
     * `-Xdebug` : Active le support du débogueur Java.
     * `-Xrunjdwptransport=dt_socket,server=y,suspend=y,address=5005` :
         * `transport=dt_socket`: Spécifie le mode de transport pour la communication entre le débogueur et
-          l'application.
-          Dans ce cas, il utilise le socket (dt_socket).
+          l'application. Dans ce cas, il utilise le socket (dt_socket).
         * `server=y`: Indique que l'application doit agir en tant que serveur pour le débogueur, ce qui signifie qu'elle
           attendra une connexion du débogueur.
         * `suspend=y`: Indique que l'application doit être suspendue jusqu'à ce qu'une connexion de débogage soit
-          établie.
-          Cela signifie que l'application attendra le débogueur avant de commencer à s'exécuter.
+          établie. Cela signifie que l'application attendra le débogueur avant de commencer à s'exécuter.
         * `address=5005`: Spécifie le port sur lequel l'application écoutera les connexions du débogueur. Dans ce cas,
           le port est 5005.
 
