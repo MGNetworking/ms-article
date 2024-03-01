@@ -48,7 +48,7 @@ compilation_Maven(){
 
     # Variable d'environnement
     export CONFIG_SERVICE_URI_host="http://192.168.1.68:8089"
-    mvn clean package "-Dspring-boot.run.jvmArguments=-Dspring.profiles.active=dev"
+    mvn clean package "-Dspring-boot.run.jvmArguments=-Dspring.profiles.active=devswarm"
 
     echo "Création de l'images : $STACK_NAME"
     docker compose -f docker-compose.yml build --no-cache
