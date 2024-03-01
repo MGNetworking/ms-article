@@ -29,10 +29,10 @@ services:
         max_failure_ratio: 0.3
     healthcheck:
       test: [ "CMD-SHELL", "/app/healthcheck.sh" ]
-      interval: 30s       # Définit le temps entre les contrôles de santé
-      timeout: 30s        # le délai d'attente pour les commandes de contrôle de santé
-      retries: 5          # Cette option vous permet d'exiger plusieurs échecs successifs avant qu'un conteneur ne soit marqué comme étant en mauvaise santé
-      start_period: 180s  # Définit la durée après le démarrage d'un conteneur pendant laquelle les contrôles de santé doivent être ignorés
+      interval: 15s       # Définit le temps entre les contrôles de santé
+      timeout: 15s        # le délai d'attente pour les commandes de contrôle de santé
+      retries: 3          # Cette option vous permet d'exiger plusieurs échecs successifs avant qu'un conteneur ne soit marqué comme étant en mauvaise santé
+      start_period: 60s  # Définit la durée après le démarrage d'un conteneur pendant laquelle les contrôles de santé doivent être ignorés
     ports:
       - "9010:9010"
     networks:
