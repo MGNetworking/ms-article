@@ -1,8 +1,9 @@
 <configuration>
 
     <!-- Configuration spécifique pour les classes suivantes -->
-    <logger name="ArticleWebService.web.ControllerArticle" level="debug"/>
-    <logger name="ArticleWebService.service.FileSystemStorageServiceImplementation" level="debug"/>
+    <logger name="ArticleWebService.web.ControllerArticle" level="debug" additivity="true"/>
+    <logger name="ArticleWebService.service.FileSystemStorageServiceImplementation" level="debug" additivity="true"/>
+    <logger name="org.springframework.boot.actuate" level="debug" additivity="true"/>
 
     <!-- Déclaration des appender et rolling policies (la rotation des fichiers de log) -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
