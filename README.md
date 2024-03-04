@@ -15,6 +15,7 @@ d'articles sur votre site web.
     * [Postman](#postman)
 * [Les Scripts](#les-scripts)
 * [Mode Débogage](#mode-débogage)
+* [Configuration avec Eureka](#)
 
 ## Documentation
 
@@ -216,5 +217,7 @@ Détail de la commande :
    va fonctionner et aussi les testes unitaires qui seront exécuter au moment de la compilation.
 
 Working directory : Cible le dossier projet (l'API ms-article)
+
+### Configuration avec Eureka
 
 
