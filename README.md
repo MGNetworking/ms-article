@@ -15,11 +15,11 @@ d'articles sur votre site web.
     * [Postman](#postman)
 * [Les Scripts](#les-scripts)
 * [Mode Débogage](#mode-débogage)
-* [Configuration avec Eureka](#)
+* [Scenarios de deployment](#scenarios-de-deployment)
 
 ## Documentation
 
-La documentation complète de l'API est disponible dans le dossier [docs](/docs). Vous y trouverez des informations
+La documentation complète de l'API est disponible dans le dossier [docs](/docs TODO). Vous y trouverez des informations
 détaillées sur l'installation, les points d'extrémité, des exemples pratiques, et bien plus encore.
 
 ## Fonctionnalités principales
@@ -202,7 +202,7 @@ Détail de la commande :
    une application Spring Boot.
 
     * `-Xdebug` : Active le support du débogueur Java.
-    * `-Xrunjdwptransport=dt_socket,server=y,suspend=y,address=5005` :
+    * `-Xrunjdwptransport=dt_socket,server=y,suspend=y,address=5005`:
         * `transport=dt_socket`: Spécifie le mode de transport pour la communication entre le débogueur et
           l'application. Dans ce cas, il utilise le socket (dt_socket).
         * `server=y`: Indique que l'application doit agir en tant que serveur pour le débogueur, ce qui signifie qu'elle
@@ -212,12 +212,101 @@ Détail de la commande :
         * `address=5005`: Spécifie le port sur lequel l'application écoutera les connexions du débogueur. Dans ce cas,
           le port est 5005.
 
-5. `-Dspring.profiles.active=dev` : Le profile active permet de prècisé l'environnement dans lequel s'execute
+5. `-Dspring.profiles.active=devlocal` :  
+   Le profile active permet de prècisé l'environnement dans lequel s'execute
    cette API. Cela aura pour effet au moment de l'exécution, de cibler le fichier de properties avec lequel cette API
    va fonctionner et aussi les testes unitaires qui seront exécuter au moment de la compilation.
 
 Working directory : Cible le dossier projet (l'API ms-article)
 
-### Configuration avec Eureka
+### Scenarios de deployment
+
+Les scenarios permet de mettre en place l'environnement de connection principalement au tour de la communication entre
+le `service ms-article` est le service `registre Eureka`.  
+Cette API regroupe deux scenarios lier a leur environnement :
+
+* local
+* Swarm
+
+1. Dans le `scenarios local`, l'API ou le service ms-article est déployer sur le système host. Il nécessite les
+   configurations suivant :
+
+* La localisation du serveur :
+
+```yaml
+eureka.client.service-url.defaultZone=http://192.168.1.68:8099/eureka
+```
+
+* Indiqué au serveur Eureka registre de privilégier l'utilisation de l'adresse IP lors de l'enregistrement :
+
+```yaml
+eureka.instance.preferIpAddress=true
+```
+
+* Spécifie un identifiant unique pour l'enregistrement dans Eureka Serveur en utilisant sont nom d'application :
+
+```yaml
+spring.application.name=ms-article
+eureka.instance.instance-id=${spring.application.name}:${server.port}:${random.value}
+```
+
+Ces properties vont permettre au service ms-article de ce connecter au service registre en utilisent l'adresse IP du
+service registre Eureka et d'enregistre le service en privilégient l'IP du service ms-article et de créer en identifiant
+dans le service registre en ce basent sur nom sont port de connexion et une valeur aléatoire permettent de le distinguer
+des autres services ms-article.
+
+2. Dans le `scenarios swarm`, l'API ou le service ms-article est déployer dans un cluster docker Swarm. Il déployer a
+   partir d'une image docker. Tous les services deployer au sein de ce cluster peuvent communiqué entre eux par le
+   réseau overlay attribuer. Ce scenario nécessite les configurations suivant :
 
 
+* La localisation du serveur :
+
+```yaml
+eureka.client.service-url.defaultZone=http://ms-eureka:8099/eureka
+```
+
+Dans notre cas `ms-eureka` représente le nom du service registre. Il sera retrouve par la résolution DNS au sien du
+réseau Overlay dans lequel il est déployer.
+
+* Les gestion des interfaces réseau du service. Nous devons privilégier l'interface `eth1` pour connection dans le
+  réseau Overlay et aussi ignorer l'interface `eth0` qui est la connection externe du service.
+
+```yaml
+spring.cloud.inetutils.ignoredInterfaces=eth0
+eureka.instance.network-interface-name=eth1
+```
+
+Voici une explication des interfaces réseau couramment présentes dans un conteneur Docker :
+
+`eth0` : C'est l'interface réseau principale du conteneur. Elle est utilisée pour la communication avec d'autres
+conteneurs sur le même réseau overlay et avec le monde extérieur.
+
+`eth1, eth2` : Ces interfaces supplémentaires peuvent être créées si votre service utilise des fonctionnalités
+spécifiques, comme la mise en réseau multi-hôte. Par exemple, si votre service est configuré pour utiliser des réseaux
+overlay avec plusieurs sous-réseaux, Docker peut créer des interfaces réseau supplémentaires pour chaque sous-réseau.
+
+`Lo` : C'est l'interface de bouclage `(loopback)` qui est utilisée pour la communication interne au conteneur lui-même.
+
+* Indiqué au serveur Eureka registre de privilégier l'utilisation de l'adresse IP lors de l'enregistrement :
+
+```yaml
+eureka.instance.preferIpAddress=true
+```
+
+* Le nom d'hote de l'application :
+
+```yaml
+eureka.instance.hostName=ms-article
+```
+
+* Spécifie un identifiant unique pour l'enregistrement dans Eureka Serveur en utilisant sont nom d'application qui
+  provient de manière accéssoire au nom d'hote :
+
+```yaml
+spring.application.name=${eureka.instance.hostName}
+eureka.instance.instance-id=${eureka.instance.hostName}:${server.port}:${spring.application.instance_id:${random.value}}
+```
+
+Un identifiant unique sera créer a partir des informations donnée dans le but de l'identifier de manière unique au sein
+de stack.
