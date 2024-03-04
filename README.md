@@ -310,3 +310,7 @@ eureka.instance.instance-id=${eureka.instance.hostName}:${server.port}:${spring.
 
 Un identifiant unique sera créer a partir des informations donnée dans le but de l'identifier de manière unique au sein
 de stack.
+
+Résumer :
+Cette configuration permet le `load balancing` via le service Gateway de manière optimum sur chaque instance de service
+`ms-article` créer dans le cluster Swarm.
