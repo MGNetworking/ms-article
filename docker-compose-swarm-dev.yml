@@ -5,6 +5,9 @@ services:
     image: sonatype-nexus.backhole.ovh/ms-article-service:${IMAGE_VERSION:-latest}
     env_file:
       - .env
+    environment: # Variable utilise dans le fichier wait_for_config.sh
+      - PROFILE_ACTIF_SPRING=dev
+      - SERVICE_CONFIG_DOCKER=http://ms-configuration:8089
     deploy:
       replicas: 2
 #      resources:

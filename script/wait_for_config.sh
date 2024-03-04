@@ -3,14 +3,12 @@
 echo  "Lancement du script wait_for_config en cours ... "
 
   while true; do
-    response=$(curl -s $service_config_docker/msarticle/dev)
+    #response=$(curl -s $SERVICE_CONFIG_DOCKER/msarticle/dev)
+    response=$(curl -s $SERVICE_CONFIG_DOCKER/msarticle/$PROFILE_ACTIF_SPRING)
 
-    echo "request vers : $service_config_docker/msarticle/dev"
-    echo "DEBUG: CONFIG_SERVICE_URI : $CONFIG_SERVICE_URI"
-    echo "DEBUG: spring_profiles_active : $spring_profiles_active"
-
-    echo "DEBUG: service_config_docker : $service_config_docker"
-    echo "DEBUG: profile_actif_dev : $profile_actif_dev"
+    echo "request vers : $SERVICE_CONFIG_DOCKER/msarticle/dev"
+    echo "SERVICE_CONFIG_DOCKER : $SERVICE_CONFIG_DOCKER"
+    echo "PROFILE_ACTIF_SPRING: $PROFILE_ACTIF_SPRING"
 
     env
 
@@ -18,7 +16,7 @@ echo  "Lancement du script wait_for_config en cours ... "
       echo "Le service est en cours d'exécution."
       echo "Lancement du service article "
       #exec java -jar app.jar
-      java -jar app.jar --spring.profiles.active=$profile_actif_dev
+      java -jar app.jar --spring.profiles.active=$PROFILE_ACTIF_SPRING
 
       break  # Sortir de la boucle si le service est opérationnel
     else

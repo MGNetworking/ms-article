@@ -3,7 +3,7 @@
 # export des variable du fichier .env
 export $(cat .env)
 
-delete_conteneur() {
+delete_image_stack() {
 
   echo "************************************"
   echo "delete stack : $STACK_NAME "
@@ -59,13 +59,13 @@ if [ $choix -eq 0 ]; then
 
 elif [ $choix -eq 1  ]; then
 
-  delete_conteneur
+  delete_image_stack
 fi
 
 
-echo "************************************"
-echo "Suppression des images Docker sans étiquette "
-docker image prune -f -a
+#echo "************************************"
+#echo "Suppression des images Docker sans étiquette "
+#docker image prune -f -a
 
 # affichage
 echo "************************************"

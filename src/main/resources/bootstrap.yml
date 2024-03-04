@@ -6,4 +6,4 @@ spring:
   cloud:
     config:
       uri:
-        - ${CONFIG_SERVICE_URI_host:http://ms-configuration:8089}
+        - ${SERVICE_CONFIG_DOCKER:http://ms-configuration:8089}

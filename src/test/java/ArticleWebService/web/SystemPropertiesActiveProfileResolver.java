@@ -32,13 +32,13 @@ public class SystemPropertiesActiveProfileResolver implements ActiveProfilesReso
                         log.info("*****************************");
                         springPropertieProfile[0] = "devlocal";
 
-                    } else if (input.contains("-Dspring.profiles.active=devswarm")) {
+                    } else if (input.contains("-Dspring.profiles.active=dev")) {
 
                         log.info("*****************************");
-                        log.info("le profile devswarm a était trouver ");
+                        log.info("le profile dev a était trouver ");
                         log.info("*****************************");
 
-                        springPropertieProfile[0] = "devswarm";
+                        springPropertieProfile[0] = "dev";
 
                     }else if (input.contains("-Dspring.profiles.active=pre-prod")) {
 

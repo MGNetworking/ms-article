@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# export des variable du fichier .env
+# export des variable d'environnement (pour la compilation via Maven)
 export $(cat .env)
 
 env=("Run stack $STACK_NAME" "Compilation / build and Run stack $STACK_NAME" )
@@ -47,14 +47,14 @@ compilation_Maven(){
     echo "Compilation du projet $STACK_NAME via Maven"
 
     # Variable d'environnement
-    export CONFIG_SERVICE_URI_host="http://192.168.1.68:8089"
-    mvn clean package "-Dspring-boot.run.jvmArguments=-Dspring.profiles.active=devswarm"
+    export SERVICE_CONFIG_DOCKER="http://192.168.1.68:8089"
+    mvn clean package "-Dspring-boot.run.jvmArguments=-Dspring.profiles.active=dev"
 
     echo "Création de l'images : $STACK_NAME"
     docker compose -f docker-compose.yml build --no-cache
 
     echo "deploy de la stack du service : $STACK_NAME"
-    docker stack deploy -c ./docker-compose-swarm.yml $STACK_NAME
+    docker stack deploy -c ./docker-compose-swarm-dev.yml $STACK_NAME
 
     echo "Liste des stack"
     docker service ls
