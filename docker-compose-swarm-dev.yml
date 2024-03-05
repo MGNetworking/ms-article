@@ -37,7 +37,7 @@ services:
       retries: 3          # Cette option vous permet d'exiger plusieurs échecs successifs avant qu'un conteneur ne soit marqué comme étant en mauvaise santé
       start_period: 60s  # Définit la durée après le démarrage d'un conteneur pendant laquelle les contrôles de santé doivent être ignorés
     ports:
-      - "9010:9010"
+      - "${PORT}:9010"
     networks:
       - api
 

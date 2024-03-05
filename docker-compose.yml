@@ -13,4 +13,4 @@ services:
     deploy:
       replicas: 1
     ports:
-      - "9010:9010"
+      - "${PORT}:9010"

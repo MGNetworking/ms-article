@@ -52,7 +52,7 @@ pipeline {
                     env.BRANCH_NAME = "preprod"
                     echo("Branche en cour $env.BRANCH_NAME ")
 
-                    remote = configurerServeur.config('Preprod', '192.168.1.27', true)
+                    remote = configurerServeur.config("${env.BRANCH_NAME}", '192.168.1.27', true)
                     remote.user = env.Preprod_CREDS_USR
                     remote.password = env.Preprod_CREDS_PSW
                     SERVICE_CONFIG_URI = "http://${remote.host}:8089"
@@ -113,7 +113,7 @@ pipeline {
                     echo("Mise à jours du projet ms-article sur le serveur ${env.BRANCH_NAME}")
                     // Pull projet sur branch
                     String commande = sshCommand remote: remote, failOnError: false, sudo: false,
-                            command: "cd /home/max/docker_home/ms-article && git checkout ${env.BRANCH_NAME}&&  git pull origin ${env.BRANCH_NAME}"
+                            command: "cd /home/max/docker_home/ms-article && git checkout ${env.BRANCH_NAME} &&  git pull origin ${env.BRANCH_NAME}"
 
                     echo("sorti : ${commande}")
                 }
@@ -245,8 +245,8 @@ pipeline {
 
                     for (int index = 0; index < 10; index++) {
 
-                        echo("Requet CURL n° $index du service : ${NAME_SERVICE} a l'adresse : http://${remote.host}:9010/actuator/health ")
-                        def result = sh(script: "curl -s http://${remote.host}:9010/actuator/health", returnStatus: true)
+                        echo("Requet CURL n° $index du service : ${NAME_SERVICE} a l'adresse : http://${remote.host}:${PORT}/actuator/health")
+                        def result = sh(script: "curl -s http://${remote.host}:${PORT}/actuator/health", returnStatus: true)
 
                         echo("result $result")
 
