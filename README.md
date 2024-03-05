@@ -9,6 +9,7 @@ d'articles sur votre site web.
 * [Configuration et dépendances](#configuration-requise)
     * [Étapes de Configuration](#étapes-de-configuration)
     * [Les dépendances externes](#les-dépendances-externes)
+* [La compilation](#)
 * [Intégration avec ms-gateway](#intégration-avec-ms-gateway)
     * [Accès via ms-gateway](#accès-via-ms-gateway)
     * [Accès Direct par Adresse IP](#accès-direct-par-adresse-ip)
@@ -64,6 +65,23 @@ ms-article.
 [ms-configuration](https://github.com/MGNetworking/ms-configuration) : Ce projet fait partie du
 projet principal [back-end](https://github.com/MGNetworking/back-end) qui regroupe toutes les API de ce projet, il
 possède comme ce projet son propre depôt.
+
+## La compilation
+
+1. phase 1 :  
+   Cette phase permet de compiler les sources en utilisant les Maven goals.
+
+
+2. phase 2 :  
+   Après la compilation, l'image et construite en utilisant le fichier docker compose dédier a cette effet. l'image
+   et construit en couches dans les quel sont copier les scripts d'exécution et le jar précédemment compiler.
+
+
+3. phase 3 :  
+   Après la construction de l'image, celle-ci peut être déployer dans stack. Un docker compose prévu a cette et
+   configurer dans le but de paramètre sa mise jours (update_config) ainsi que la possible de retour en arriére (
+   rollback_config). Aussi dans la configuration du docker compose un mécanisme de vérification de santé (healthcheck) y
+   est configurer.
 
 ## Intégration avec ms-gateway
 
