@@ -49,29 +49,15 @@ pipeline {
                         echo "${key}=${value}"
                     }
 
+                    env.BRANCH_NAME = "prod"
                     echo("Branche en cour $env.BRANCH_NAME ")
 
-                    // TODO set variable
-                    if (env.BRANCH_NAME == 'main') {
-
-                        remote = configurerServeur.config('Preprod', '192.168.1.93', true)
-                        remote.user = env.Prod_CREDS_USR
-                        remote.password = env.Prod_CREDS_PSW
-                        SERVICE_CONFIG_URI = "http://${remote.host}:8089"
-                        // le path du dossier vers le serveur distant
-                        PATH_HOME_SERVER = "/home/max/docker_home"
-
-                    } else if (env.BRANCH_NAME == 'preprod') {
-
-                        remote = configurerServeur.config('Preprod', '192.168.1.27', true)
-                        remote.user = env.Preprod_CREDS_USR
-                        remote.password = env.Preprod_CREDS_PSW
-                        SERVICE_CONFIG_URI = "http://${remote.host}:8089"
-                        // le path du dossier vers le serveur distant
-                        PATH_HOME_SERVER = "/home/max/docker_home"
-
-                    }
-
+                    remote = configurerServeur.config('Preprod', '192.168.1.93', true)
+                    remote.user = env.Prod_CREDS_USR
+                    remote.password = env.Prod_CREDS_PSW
+                    SERVICE_CONFIG_URI = "http://${remote.host}:8089"
+                    // le path du dossier vers le serveur distant
+                    PATH_HOME_SERVER = "/home/max/docker_home"
                     echo "Nouvelle version de l'application : ${IMAGE_VERSION}";
 
 
@@ -82,7 +68,7 @@ pipeline {
         stage("Test : service ms-configuration") {
             steps {
                 script {
-                    echo("Vérifie que le service ms-configuration fonctionne correctement sur le serveur de préproduction.")
+                    echo("Vérifie que le service ms-configuration fonctionne correctement sur le serveur ${env.BRANCH_NAME}")
 
                     for (int index = 0; index < 10; index++) {
 
