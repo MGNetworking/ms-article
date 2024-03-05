@@ -11,8 +11,12 @@ pipeline {
         DOMAIN_REGISTRY = "sonatype-nexus.backhole.ovh"
         DEPLOY = false
         ROLLBACK = false
+        PATH_HOME_SERVER = ""
+        CONFIG_SERICE = ""
+
         // Get credentials to connection serveur
         Preprod_CREDS = credentials('PREPROD')
+        Prod_CREDS = credentials('PROD')
 
     }
 
@@ -28,11 +32,16 @@ pipeline {
 
                     // Séparer le contenu en lignes et traiter chaque ligne
                     envContent.readLines().each { line ->
-                        // Diviser la ligne en clé et valeur
-                        def (key, value) = line.split('=').collect { it.trim() }
 
-                        // Définir la variable d'environnement dans le contexte du pipeline
-                        env."${key.trim()}" = value.trim()
+                        // Ignorer les lignes de commentaire
+                        if (!line.startsWith('#')) {
+
+                            // Diviser la ligne en clé et valeur
+                            def (key, value) = line.split('=').collect { it.trim() }
+
+                            // Définir la variable d'environnement dans le contexte du pipeline
+                            env."${key.trim()}" = value.trim()
+                        }
                     }
 
                     // Afficher les variables d'environnement pour le débogage
@@ -40,22 +49,45 @@ pipeline {
                         echo "${key}=${value}"
                     }
 
+                    echo("Branche en cour $env.BRANCH_NAME ")
+
+                    // TODO set variable
+                    if (env.BRANCH_NAME == 'main') {
+
+                        remote = configurerServeur.config('Preprod', '192.168.1.93', true)
+                        remote.user = env.Prod_CREDS_USR
+                        remote.password = env.Prod_CREDS_PSW
+                        SERVICE_CONFIG_URI = "http://${remote.host}:8089"
+                        // le path du dossier vers le serveur distant
+                        PATH_HOME_SERVER = "/home/max/docker_home"
+
+                    } else if (env.BRANCH_NAME == 'preprod') {
+
+                        remote = configurerServeur.config('Preprod', '192.168.1.27', true)
+                        remote.user = env.Preprod_CREDS_USR
+                        remote.password = env.Preprod_CREDS_PSW
+                        SERVICE_CONFIG_URI = "http://${remote.host}:8089"
+                        // le path du dossier vers le serveur distant
+                        PATH_HOME_SERVER = "/home/max/docker_home"
+
+                    }
+
                     echo "Nouvelle version de l'application : ${IMAGE_VERSION}";
-                    echo "service config host preprod : ${service_config_host_pre}";
+
 
                 }
             }
         }
 
-        stage("Test service ms-config") {
+        stage("Test : service ms-configuration") {
             steps {
                 script {
                     echo("Vérifie que le service ms-configuration fonctionne correctement sur le serveur de préproduction.")
 
                     for (int index = 0; index < 10; index++) {
 
-                        echo("Requet CURL n° $index du service : ms-configuration a l'adresse : $service_config_host_pre/actuator/health ")
-                        def result = sh(script: "curl -s $service_config_host_pre/actuator/health", returnStatus: true)
+                        echo("Requet CURL n° $index du service : ms-configuration a l'adresse : ${SERVICE_CONFIG_URI}:8089/actuator/health ")
+                        def result = sh(script: "curl -s ${SERVICE_CONFIG_URI}/actuator/health", returnStatus: true)
 
                         echo("result $result")
 
@@ -80,28 +112,23 @@ pipeline {
         stage("Open connection") {
             steps {
                 script {
-                    // definition config serveur
-                    remote = configurerServeur.config('Preprod', '192.168.1.27', true)
-                    remote.user = env.Preprod_CREDS_USR
-                    remote.password = env.Preprod_CREDS_PSW
 
                     echo("Ouverture de connection au depot nexus sur le serveur Preprod")
                     withCredentials([usernamePassword(credentialsId: 'nexus-credentials', passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) {
 
                         String loginResult = sshCommand remote: remote, failOnError: false, sudo: false,
-                                command: "docker login -u $USERNAME -p $PASSWORD $DOMAIN_REGISTRY"
+                                command: "docker login -u ${USERNAME} -p ${PASSWORD} ${DOMAIN_REGISTRY}"
 
                         loginResult.contains("status: 401 Unauthorized") ? error("Erreur de connection status: 401 Unauthorized") :
                                 echo("Connection au dépôt depuis le serveur réussi : Login Succeeded")
                     }
 
-                    echo("Mise à jours du projet ms-article sur le serveur Preprod")
-                    // Pull projet sur branch preprod
-                    //String commande = sshCommand remote: remote, command: "cd /home/max/docker_home/ms-article &&  git checkout preprod && git pull origin preprod"
+                    echo("Mise à jours du projet ms-article sur le serveur ${env.BRANCH_NAME}")
+                    // Pull projet sur branch
                     String commande = sshCommand remote: remote, failOnError: false, sudo: false,
-                            command: "cd /home/max/docker_home/ms-article &&  git pull origin dev"
+                            command: "cd /home/max/docker_home/ms-article && git checkout ${env.BRANCH_NAME}&&  git pull origin ${env.BRANCH_NAME}"
 
-                    echo("sorti : $commande")
+                    echo("sorti : ${commande}")
                 }
             }
         }
@@ -110,16 +137,16 @@ pipeline {
         stage("Status stack : article") {
             steps {
                 script {
-                    echo("Vérifi si la stack $NAME_SERVICE est créer ")
+                    echo("Vérifi si la stack ${NAME_SERVICE} est créer ")
                     String result = ""
                     try {
                         result = sshCommand remote: remote, failOnError: false, sudo: false,
-                                command: "docker stack ls | grep $NAME_SERVICE"
+                                command: "docker stack ls | grep ${NAME_SERVICE}"
 
                         result.contains($NAME_SERVICE) ? DEPLOY = true : false
-                        echo "La stack $NAME_SERVICE est " + (DEPLOY ? "déployée" : "non déployée") + " sur le serveur"
+                        echo "La stack ${NAME_SERVICE} est " + (DEPLOY ? "déployée" : "non déployée") + " sur le serveur"
                     } catch (Exception e) {
-                        echo("La Stack $NAME_SERVICE n'a pas etait trouver !!!")
+                        echo("La Stack ${NAME_SERVICE}n'a pas etait trouver !!!")
                     }
 
                 }
@@ -138,9 +165,9 @@ pipeline {
             steps {
                 script {
                     echo("Compilation du projet ms-article")
+
                     sh '''
-                        export CONFIG_SERVICE_URI_host="http://192.168.1.27:8089"
-                        mvn clean package "-Dspring-boot.run.jvmArguments=-Dspring.profiles.active=dev"
+                        mvn clean package -Dspring.profiles.active="${env.BRANCH_NAME}" -DSERVICE_CONFIG_DOCKER="${SERVICE_CONFIG_URI}"
                     '''
                 }
             }
@@ -150,7 +177,7 @@ pipeline {
             agent any
             steps {
                 script {
-                    echo("Création de l'image Docker : $env.DOCKER_IMAGE_NAME:$env.IMAGE_VERSION ")
+                    echo("Création de l'image Docker : ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION} ")
                     sh '''
                         ls -al target/
                         docker compose build --no-cache
@@ -163,8 +190,8 @@ pipeline {
             agent any
             steps {
                 script {
-                    echo("push de l'image $env.DOCKER_IMAGE_NAME:$env.IMAGE_VERSION vers le dépôt")
-                    def pushResult = docker.image("$env.DOCKER_IMAGE_NAME:$env.IMAGE_VERSION").push()
+                    echo("push de l'image ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION}vers le dépôt")
+                    def pushResult = docker.image("${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION}").push()
                     echo("Sorti push : $pushResult")
                 }
             }
@@ -181,22 +208,22 @@ pipeline {
 
                     // pull depuis preprod
                     String pullResult = sshCommand remote: remote, command: "docker pull " +
-                            "$env.DOCKER_IMAGE_NAME:$env.IMAGE_VERSION"
+                            "${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION}"
 
-                    echo("Sorti pull : $pullResult")
+                    echo("Sorti pull : ${pullResult}")
 
                     pullResult.contains("Status: Downloaded newer image") ?
                             echo("Le pull de l'image sur le serveur Preprod a été réalisé avec succès.") :
                             error("Erreur lors du pull de l'image.")
                     try {
                         def deployResult = sshCommand remote: remote, failOnError: false, sudo: false,
-                                command: "cd /home/max/docker_home/ms-article && export \$(cat .env) && " +
-                                        "docker stack deploy -c ./docker-compose-swarm.yml $env.STACK_NAME"
+                                command: "cd ${PATH_HOME_SERVER}/ms-article && export \$(cat .env) && " +
+                                        "docker stack deploy -c ./docker-compose-swarm-${env.BRANCH_NAME}.yml ${env.STACK_NAME}"
 
-                        echo("Sorti deployResult : $deployResult")
+                        echo("Sorti deployResult : ${deployResult}")
 
-                        if (deployResult == "Creating service $NAME_SERVICE") {
-                            echo("Le déployement à été réaliser avec succès : $deployResult")
+                        if (deployResult == "Creating service ${NAME_SERVICE}") {
+                            echo("Le déployement à été réaliser avec succès : ${deployResult}")
                         }
 
                     } catch (Exception e) {
@@ -218,28 +245,28 @@ pipeline {
                 script {
                     // Pull image in preprod and update with image
                     def deployResult = sshCommand remote: remote, failOnError: false, sudo: false,
-                            command: "docker pull $env.DOCKER_IMAGE_NAME:$env.IMAGE_VERSION && " +
-                                    "docker service update --image $env.DOCKER_IMAGE_NAME:$env.IMAGE_VERSION $NAME_SERVICE"
+                            command: "docker pull ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION} && " +
+                                    "docker service update --image ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION} ${NAME_SERVICE}"
                     env.ROLLBACK = true
 
                 }
             }
         }
 
-        stage('Test du service ') {
+        stage('Tests de Validation Post-Déploiement') {
             agent any
             steps {
                 script {
 
                     for (int index = 0; index < 10; index++) {
 
-                        echo("Requet CURL n° $index du service : $NAME_SERVICE a l'adresse : http://192.168.1.27:9010/actuator/health ")
-                        def result = sh(script: "curl -s http://192.168.1.27:9010/actuator/health", returnStatus: true)
+                        echo("Requet CURL n° $index du service : ${NAME_SERVICE} a l'adresse : http://${remote.host}:9010/actuator/health ")
+                        def result = sh(script: "curl -s http://${remote.host}:9010/actuator/health", returnStatus: true)
 
                         echo("result $result")
 
                         if (result == 0) {
-                            echo("La mise en service de $NAME_SERVICE à été réalisé avec Succès ")
+                            echo("La mise en service de ${NAME_SERVICE} à été réalisé avec Succès ")
                             currentResult = "SUCCESS"
                             break
                         } else {
@@ -249,7 +276,7 @@ pipeline {
                         }
                     }
                     if (currentResult != "SUCCESS") {
-                        error("Le service $NAME_SERVICE est en echec !!!")
+                        error("Le service ${NAME_SERVICE} est en echec !!!")
                     }
                 }
             }
@@ -269,7 +296,7 @@ pipeline {
             script {
                 echo('Réussite du build')
                 String loginResult = sshCommand remote: remote, failOnError: false, sudo: false,
-                        command: "docker logout $DOMAIN_REGISTRY"
+                        command: "docker logout ${DOMAIN_REGISTRY}"
 
                 if (loginResult.contains("Removing login credentials")) {
                     echo "La deconnection au dépôt depuis le serveur réussi"
@@ -288,13 +315,13 @@ pipeline {
                 // Si update effectuer
                 if (env.ROLLBACK) {
                     echo("ROLLBACK ...");
-                    String rollbackResult = sshCommand remote: remote, command: "docker service rollback $NAME_SERVICE"
+                    String rollbackResult = sshCommand remote: remote, command: "docker service rollback ${NAME_SERVICE}"
                     echo("Sorti ROLLBACK : $rollbackResult")
 
                 }
 
                 // Logout du depot sur preprod
-                String loginResult = sshCommand remote: remote, command: "docker logout $DOMAIN_REGISTRY"
+                String loginResult = sshCommand remote: remote, command: "docker logout ${DOMAIN_REGISTRY}"
                 if (loginResult.contains("Removing login credentials")) {
                     echo "La deconnection au dépôt depuis le serveur réussi"
                 } else {
