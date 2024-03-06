@@ -71,7 +71,7 @@ public class ControllerArticleTest {
     @Value("${urlToken.keycloak}")
     private String urlTokenKeycloak;
     @Value("${urlLogout.keycloak}")
-    private static String urlLogoutKeycloak;
+    private String urlLogoutKeycloak;
     @Value("${keycloak.resource}")
     private String clientKeycloak;
 
@@ -134,9 +134,9 @@ public class ControllerArticleTest {
         Assertions.assertNotNull(this.passwordTest_2Keycloak);
 
         // initialisation des variable static
-        urlLogoutKeycloak = environment.getProperty("urlLogout.keycloak");
+        this.urlLogoutKeycloak = environment.getProperty("urlLogout.keycloak");
 
-        Assertions.assertNotNull(urlLogoutKeycloak);
+        Assertions.assertNotNull(this.urlLogoutKeycloak);
 
         // si pas initialiser
         if (accesTokenTest_0 == null) {
@@ -161,7 +161,7 @@ public class ControllerArticleTest {
      *
      * @param accesToken String
      */
-    private static void logout(String accesToken) {
+    private void logout(String accesToken) {
 
         if (accesToken != null) {
 
@@ -172,7 +172,7 @@ public class ControllerArticleTest {
 
             // Envoi de la requête
             ResponseEntity<String> response = new RestTemplate().exchange(
-                    urlLogoutKeycloak,
+                    this.urlLogoutKeycloak,
                     HttpMethod.POST,
                     request,
                     String.class);
@@ -191,11 +191,11 @@ public class ControllerArticleTest {
      * @throws Exception dans le cas d'un échec de connexion.
      */
     @AfterAll
-    public static void setlogout() throws Exception {
+    public void setlogout() throws Exception {
 
-        logout(accesTokenTest_0);
-        logout(accesTokenTest_1);
-        logout(accesTokenTest_2);
+        this.logout(accesTokenTest_0);
+        this.logout(accesTokenTest_1);
+        this.logout(accesTokenTest_2);
 
     }
 
