@@ -94,15 +94,15 @@ public class ControllerArticleTest {
 
     // identifiant utilisateur
     // ROLE : ADMIN / USER
-    @Value("${id-user-test0.keycloak}")
+    @Value("${user-Test_0.keycloak}")
     private String idUserTest_0;
 
     //ROLE : USER
-    @Value("${id-user-test1.keycloak}")
+    @Value("${user-Test_1.keycloak}")
     private String idUserTest_1;
 
     // ROLE : (aucun role)
-    @Value("${id-user-test2.keycloak}")
+    @Value("${user-Test_2.keycloak}")
     private String idUserTest_2;
 
     // les tokens de tout les utilisateurs de tests
