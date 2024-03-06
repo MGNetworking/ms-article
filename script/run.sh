@@ -54,7 +54,7 @@ compilation_Maven(){
     docker compose -f docker-compose.yml build --no-cache
 
     echo "deploy de la stack du service : $STACK_NAME"
-    docker stack deploy -c ./docker-compose-swarm-dev.yml $STACK_NAME
+    docker stack deploy -c ./docker-compose-swarm.yml $STACK_NAME
 
     echo "Liste des stack"
     docker service ls

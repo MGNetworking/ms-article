@@ -10,7 +10,5 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    deploy:
-      replicas: 1
     ports:
       - "${PORT}:9010"
