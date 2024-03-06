@@ -13,9 +13,8 @@ pipeline {
         ROLLBACK = false
         PATH_HOME_SERVER = ""
         CONFIG_SERICE = ""
-
+        IMAGE_TAG = ""
         // Get credentials to connection serveur
-        Preprod_CREDS = credentials('PREPROD')
         Prod_CREDS = credentials('PROD')
 
     }
@@ -50,9 +49,9 @@ pipeline {
                     }
 
                     env.BRANCH_NAME = "prod"
-                    echo("Branche en cour $env.BRANCH_NAME ")
+                    echo("Branche en cour ${env.BRANCH_NAME} ")
 
-                    remote = configurerServeur.config('Preprod', '192.168.1.93', true)
+                    remote = configurerServeur.config(env.BRANCH_NAME, '192.168.1.93', true)
                     remote.user = env.Prod_CREDS_USR
                     remote.password = env.Prod_CREDS_PSW
                     SERVICE_CONFIG_URI = "http://${remote.host}:8089"
@@ -99,7 +98,7 @@ pipeline {
             steps {
                 script {
 
-                    echo("Ouverture de connection au depot nexus sur le serveur Preprod")
+                    echo("Ouverture de connection au depot nexus sur le serveur prod")
                     withCredentials([usernamePassword(credentialsId: 'nexus-credentials', passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) {
 
                         String loginResult = sshCommand remote: remote, failOnError: false, sudo: false,
@@ -112,7 +111,7 @@ pipeline {
                     echo("Mise à jours du projet ms-article sur le serveur ${env.BRANCH_NAME}")
                     // Pull projet sur branch
                     String commande = sshCommand remote: remote, failOnError: false, sudo: false,
-                            command: "cd /home/max/docker_home/ms-article && git checkout main &&  git pull origin main"
+                            command: "cd ${PATH_HOME_SERVER}/ms-article && git checkout main &&  git pull origin main"
 
                     echo("sorti : ${commande}")
                 }
@@ -132,7 +131,7 @@ pipeline {
                         result.contains($NAME_SERVICE) ? DEPLOY = true : false
                         echo "La stack ${NAME_SERVICE} est " + (DEPLOY ? "déployée" : "non déployée") + " sur le serveur"
                     } catch (Exception e) {
-                        echo("La Stack ${NAME_SERVICE}n'a pas etait trouver !!!")
+                        echo("La Stack ${NAME_SERVICE} n'a pas etait trouver !!!")
                     }
 
                 }
@@ -174,9 +173,13 @@ pipeline {
             agent any
             steps {
                 script {
-                    echo("push de l'image ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION}vers le dépôt")
-                    def pushResult = docker.image("${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION}").push()
-                    echo("Sorti push : $pushResult")
+                    IMAGE_TAG = "${env.DOCKER_IMAGE_NAME}-prod:${env.IMAGE_VERSION}"
+                    echo("tag de l'image : $IMAGE_TAG")
+                    sh("docker tag ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION} ${IMAGE_TAG}")
+
+                    echo("push de l'image ${IMAGE_TAG} vers le dépôt")
+                    def pushResult = docker.image("${IMAGE_TAG}").push()
+                    echo("Sorti push : ${pushResult}")
                 }
             }
         }
@@ -189,32 +192,31 @@ pipeline {
             }
             steps {
                 script {
+                    if (IMAGE_TAG != "") {
 
-                    // pull depuis preprod
-                    String pullResult = sshCommand remote: remote, command: "docker pull " +
-                            "${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION}"
+                        // pull depuis preprod
+                        String pullResult = sshCommand remote: remote, command: "docker pull ${IMAGE_TAG}"
+                        echo("Sorti pull : ${pullResult}")
 
-                    echo("Sorti pull : ${pullResult}")
+                        pullResult.contains("Status: Downloaded newer image") ?
+                                echo("Le pull de l'image sur le serveur prod a été réalisé avec succès.") :
+                                error("Erreur lors du pull de l'image.")
+                        try {
+                            def deployResult = sshCommand remote: remote, failOnError: false, sudo: false,
+                                    command: "cd ${PATH_HOME_SERVER}/ms-article && export \$(cat .env) && " +
+                                            "docker stack deploy -c ./docker-compose-swarm-${env.BRANCH_NAME}.yml ${env.STACK_NAME}"
 
-                    pullResult.contains("Status: Downloaded newer image") ?
-                            echo("Le pull de l'image sur le serveur Preprod a été réalisé avec succès.") :
-                            error("Erreur lors du pull de l'image.")
-                    try {
-                        def deployResult = sshCommand remote: remote, failOnError: false, sudo: false,
-                                command: "cd ${PATH_HOME_SERVER}/ms-article && export \$(cat .env) && " +
-                                        "docker stack deploy -c ./docker-compose-swarm-${env.BRANCH_NAME}.yml ${env.STACK_NAME}"
+                            echo("Sorti deployResult : ${deployResult}")
 
-                        echo("Sorti deployResult : ${deployResult}")
+                            if (deployResult == "Creating service ${NAME_SERVICE}") {
+                                echo("Le déployement à été réaliser avec succès : ${deployResult}")
+                            }
 
-                        if (deployResult == "Creating service ${NAME_SERVICE}") {
-                            echo("Le déployement à été réaliser avec succès : ${deployResult}")
+                        } catch (Exception e) {
+                            e.printStackTrace()
+                            error("Une erreur est survenu pendant le deployment")
                         }
-
-                    } catch (Exception e) {
-                        e.printStackTrace()
-                        error("Une erreur est survenu pendant le deployment")
                     }
-
                 }
 
             }
@@ -227,10 +229,9 @@ pipeline {
             }
             steps {
                 script {
-                    // Pull image in preprod and update with image
+                    // Pull image in prod and update with image
                     def deployResult = sshCommand remote: remote, failOnError: false, sudo: false,
-                            command: "docker pull ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION} && " +
-                                    "docker service update --image ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION} ${NAME_SERVICE}"
+                            command: "docker pull ${IMAGE_TAG} && docker service update --image ${IMAGE_TAG}"
                     env.ROLLBACK = true
 
                 }
@@ -271,14 +272,6 @@ pipeline {
     post {
         always {
             script {
-                echo "Fin de " + (env.DEPLOY ? "La mise en service " : "la mise en service")
-
-            }
-        }
-        success {
-
-            script {
-                echo('Réussite du build')
                 String loginResult = sshCommand remote: remote, failOnError: false, sudo: false,
                         command: "docker logout ${DOMAIN_REGISTRY}"
 
@@ -288,8 +281,12 @@ pipeline {
                     error("Echec de la deconnexion au dépot depuis le serveur Preprod")
                 }
             }
+        }
+        success {
 
-
+            script {
+                echo "Fin " + (env.DEPLOY ? "du déployement de la stack " : "de la mise à jour de la stack ")
+            }
         }
         failure {
             script {
@@ -302,17 +299,15 @@ pipeline {
                     String rollbackResult = sshCommand remote: remote, command: "docker service rollback ${NAME_SERVICE}"
                     echo("Sorti ROLLBACK : $rollbackResult")
 
-                }
+                    echo("Delete Images ${env.IMAGE_TAG} du serveur")
+                    sh("docker rmi ${env.IMAGE_TAG}")
 
-                // Logout du depot sur preprod
-                String loginResult = sshCommand remote: remote, command: "docker logout ${DOMAIN_REGISTRY}"
-                if (loginResult.contains("Removing login credentials")) {
-                    echo "La deconnection au dépôt depuis le serveur réussi"
                 } else {
-                    error("Echec de la deconnexion au dépot depuis le serveur Preprod")
+                    echo("Delete Images ${env.IMAGE_TAG} du serveur")
+                    sh("docker rmi ${env.IMAGE_TAG}")
+                    echo("Delete stack")
+                    sh("docker stack rm ${env.STACK_NAME}")
                 }
-
-
             }
 
 
