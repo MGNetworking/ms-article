@@ -187,18 +187,18 @@ Sans la mode debug
 
 ```shell
 # context devlocal
-clean test -Dspring.profiles.active=devlocal -DCONFIG_SERVICE_URI_host=http://192.168.1.68:8089 spring-boot:run "-Dspring-boot.run.jvmArguments=-Dspring.profiles.active=devlocal -DCONFIG_SERVICE_URI_host=http://192.168.1.68:8089"
+clean test -Dspring.profiles.active=devlocal -DSERVICE_CONFIG_DOCKER=http://192.168.1.68:8089 spring-boot:run "-Dspring-boot.run.jvmArguments=-Dspring.profiles.active=devlocal -DSERVICE_CONFIG_DOCKER=http://192.168.1.68:8089"
 # ancien context dev
-clean test -Dspring.profiles.active=dev -DCONFIG_SERVICE_URI_host=http://192.168.1.68:8089  spring-boot:run -Dspring-boot.run.jvmArguments="-Dspring.profiles.active=dev -DCONFIG_SERVICE_URI_host=http://192.168.1.68:8089" 
+clean test -Dspring.profiles.active=dev -DSERVICE_CONFIG_DOCKER=http://192.168.1.68:8089  spring-boot:run -Dspring-boot.run.jvmArguments="-Dspring.profiles.active=dev -DSERVICE_CONFIG_DOCKER=http://192.168.1.68:8089" 
 ```
 
 Avec mode debug
 
 ```shell
 # context devlocal
-clean test -Dspring.profiles.active=devlocal -DCONFIG_SERVICE_URI_host=http://192.168.1.68:8089 spring-boot:run -Dspring-boot.run.jvmArguments="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005 -DCONFIG_SERVICE_URI_host=http://192.168.1.68:8089 -Dspring.profiles.active=devlocal"
+clean test -Dspring.profiles.active=devlocal -DSERVICE_CONFIG_DOCKER=http://192.168.1.68:8089 spring-boot:run -Dspring-boot.run.jvmArguments="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005 -DSERVICE_CONFIG_DOCKER=http://192.168.1.68:8089 -Dspring.profiles.active=devlocal"
 # ancien context dev
-clean test -Dspring.profiles.active=dev -DCONFIG_SERVICE_URI_host=http://192.168.1.68:8089 spring-boot:run -Dspring-boot.run.jvmArguments="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005 -DCONFIG_SERVICE_URI_host=http://192.168.1.68:8089 -Dspring.profiles.active=dev"
+clean test -Dspring.profiles.active=dev -DSERVICE_CONFIG_DOCKER=http://192.168.1.68:8089 spring-boot:run -Dspring-boot.run.jvmArguments="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005 -DSERVICE_CONFIG_DOCKER=http://192.168.1.68:8089 -Dspring.profiles.active=dev"
 ```
 
 ```shell
