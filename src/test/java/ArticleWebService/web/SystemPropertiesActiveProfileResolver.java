@@ -43,10 +43,10 @@ public class SystemPropertiesActiveProfileResolver implements ActiveProfilesReso
                     }else if (input.contains("-Dspring.profiles.active=preprod")) {
 
                         log.info("*****************************");
-                        log.info("le profile pre-prod a était trouver ");
+                        log.info("le profile preprod a était trouver ");
                         log.info("*****************************");
 
-                        springPropertieProfile[0] = "pre-prod";
+                        springPropertieProfile[0] = "preprod";
 
                     } else if (input.contains("-Dspring.profiles.active=prod")) {
 
