@@ -9,7 +9,7 @@ services:
       - PROFILE_ACTIF_SPRING=dev
       - SERVICE_CONFIG_DOCKER=http://ms-configuration:8089
     deploy:
-      replicas: 2
+      replicas: 1
 #      resources:
 #        limits: # spécifie les limites de ressources pour le service
 #          cpus: '0.5'   # limite maximale (CPU) '0.5' signifierait 50% d'utilisation maximale du CPU
