@@ -51,7 +51,7 @@ pipeline {
                     env.BRANCH_NAME = "prod"
                     echo("Branche en cour ${env.BRANCH_NAME} ")
 
-                    remote = configurerServeur.config(env.BRANCH_NAME, '192.168.1.93', true)
+                    remote = configurerServeur.config(env.BRANCH_NAME, '192.168.1.92', true)
                     remote.user = env.Prod_CREDS_USR
                     remote.password = env.Prod_CREDS_PSW
                     SERVICE_CONFIG_URI = "http://${remote.host}:8089"
