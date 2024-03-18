@@ -10,8 +10,6 @@ pipeline {
     agent any
 
     environment {
-
-        DOMAIN_REGISTRY = "sonatype-nexus.backhole.ovh"
         SERVICE_CONFIG_URI = ""
         // Get credentials to connection serveur
         Preprod_CREDS = credentials('PREPROD')
