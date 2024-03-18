@@ -12,8 +12,6 @@ pipeline {
     environment {
 
         DOMAIN_REGISTRY = "sonatype-nexus.backhole.ovh"
-        DEPLOY = false
-        ROLLBACK = false
         SERVICE_CONFIG_URI = ""
         // Get credentials to connection serveur
         Preprod_CREDS = credentials('PREPROD')
@@ -185,9 +183,6 @@ pipeline {
 
         stage('Deploy ms-article') {
             agent any
-            when {
-                expression { return env.DEPLOY }
-            }
             steps {
                 script {
                     echo("Pull image and Deploy stack ")
