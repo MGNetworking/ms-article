@@ -2,6 +2,9 @@
 
 // Configurations des serveurs
 def remote
+def nexus
+def dockers
+def STATUS_STACK
 
 pipeline {
     agent any
