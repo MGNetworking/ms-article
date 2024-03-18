@@ -7,7 +7,6 @@ services:
       - .env
     environment: # Variable utilise dans le fichier wait_for_config.sh
       - PROFILE_ACTIF_SPRING=dev
-      - SERVICE_CONFIG_DOCKER=http://ms-configuration:8089
     deploy:
       replicas: 1
 #      resources:
