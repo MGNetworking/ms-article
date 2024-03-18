@@ -264,6 +264,9 @@ pipeline {
                     String rollbackResult = sshCommand remote: remote, command: "docker service rollback ${NAME_SERVICE}"
                     echo("Sorti ROLLBACK : ${rollbackResult}")
                 }
+
+                echo "Le temps que la stack soit remove, l'images sera supprimer dans 15 secondes..."
+                sleep time: 15, unit: 'SECONDS'
                 echo("Delete Images ${dockers.imgTag} du serveur preprod ")
                 utilsDocker.clsImageRemote(remote, dockers.imgTag, dockers.binDocker)
             }
