@@ -13,7 +13,7 @@ pipeline {
         ROLLBACK = false
         CONFIG_SERICE = ""
         // Get credentials to connection serveur
-        Preprod_CREDS = credentials('PREPROD')
+        Nas_CREDS = credentials('NAS')
         Nexus_CREDS = credentials('nexus-credentials')
     }
 
@@ -45,14 +45,14 @@ pipeline {
                     env.each { key, value -> echo "${key}=${value}"
                     }
 
-                    env.BRANCH_NAME = "preprod"
+                    env.BRANCH_NAME = "nas"
                     echo("Branche en cour $env.BRANCH_NAME ")
                     STATUS_STACK = false
 
                     // les données dockers projet
                     dockers = utilsServeur.docker("${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION}",
-                            "${env.DOCKER_IMAGE_NAME}-preprod:${env.IMAGE_VERSION}",
-                            "./docker-compose-swarm-preprod.yml",
+                            "${env.DOCKER_IMAGE_NAME}-nas:${env.IMAGE_VERSION}",
+                            "./docker-compose-swarm-nas.yml",
                             '/usr/bin',
                             '/home/max/docker_home/ms-article',
                             env.STACK_NAME)
@@ -62,11 +62,12 @@ pipeline {
                             '192.168.1.27',
                             true,
                             22,
-                            Preprod_CREDS_USR,
-                            Preprod_CREDS_PSW)
+                            Nas_CREDS_USR,
+                            Nas_CREDS_PSW)
 
                     // les données de connection au dépôt nexus
-                    nexus = utilsServeur.credentials(Nexus_CREDS_USR,
+                    nexus = utilsServeur.credentials(
+                            Nexus_CREDS_USR,
                             Nexus_CREDS_PSW,
                             'sonatype-nexus.backhole.ovh')
 
