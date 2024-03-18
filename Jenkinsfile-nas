@@ -56,7 +56,7 @@ pipeline {
                     dockers = utilsServeur.docker("${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION}",
                             "${env.DOCKER_IMAGE_NAME}-nas:${env.IMAGE_VERSION}",
                             "./docker-compose-swarm-nas.yml",
-                            '/usr/bin',
+                            '/usr/local/bin',
                             '/home/max/docker_home/ms-article',
                             env.STACK_NAME)
 
