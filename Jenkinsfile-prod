@@ -14,7 +14,7 @@ pipeline {
         DOMAIN_REGISTRY = "sonatype-nexus.backhole.ovh"
         DEPLOY = false
         ROLLBACK = false
-        CONFIG_SERICE = ""
+        SERVICE_CONFIG_URI = ""
         // Get credentials to connection serveur
         Prod_CREDS = credentials('PROD')
         Nexus_CREDS = credentials('nexus-credentials')
