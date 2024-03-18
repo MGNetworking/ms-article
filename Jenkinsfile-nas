@@ -57,7 +57,7 @@ pipeline {
                             "${env.DOCKER_IMAGE_NAME}-nas:${env.IMAGE_VERSION}",
                             "./docker-compose-swarm-nas.yml",
                             '/usr/local/bin',
-                            '/home/max/docker_home/ms-article',
+                            '/volume1/docker/ms-article',
                             env.STACK_NAME)
 
                     // les données de connection serveur
