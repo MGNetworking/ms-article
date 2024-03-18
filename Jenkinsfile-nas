@@ -62,9 +62,9 @@ pipeline {
 
                     // les données de connection serveur
                     remote = utilsServeur.config(env.BRANCH_NAME,
-                            '192.168.1.27',
+                            '192.168.1.56',
                             true,
-                            22,
+                            99,
                             Nas_CREDS_USR,
                             Nas_CREDS_PSW)
 
