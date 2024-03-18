@@ -90,8 +90,8 @@ pipeline {
                     status = false
                     for (int index = 0; index < 10; index++) {
 
-                        echo("Requet CURL n° $index du service : ms-configuration a l'adresse : http://${SERVICE_CONFIG_URI}/actuator/health ")
-                        String result = sh(script: "curl -s http://${SERVICE_CONFIG_URI}/actuator/health | jq -r '.status'"
+                        echo("Requet CURL n° $index du service : ms-configuration a l'adresse : ${SERVICE_CONFIG_URI}/actuator/health ")
+                        String result = sh(script: "curl -s ${SERVICE_CONFIG_URI}/actuator/health | jq -r '.status'"
                                 , returnStdout: true, returnStatus: false)
 
                         echo("result $result")
