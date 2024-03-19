@@ -28,7 +28,6 @@ echo "La variable SERVICE_CONFIG_DOCKER est maintenant initialiser => $SERVICE_C
     if [ -n "$response" ]; then
       echo "Le service est en cours d'exécution."
       echo "Lancement du service article ..."
-      #java -jar app.jar --spring.profiles.active=$PROFILE_ACTIF_SPRING -DIP=$IP
       java -jar app.jar --spring.profiles.active=$PROFILE_ACTIF_SPRING --IP=$IP
 
       break  # Sortir de la boucle si le service est opérationnel
