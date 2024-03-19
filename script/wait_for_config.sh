@@ -11,6 +11,8 @@ fi
 
 SERVICE_CONFIG_DOCKER=http://ms-configuration:8089
 
+ echo "valeur du $IP "
+
   while true; do
     response=$(curl -s $SERVICE_CONFIG_DOCKER/msarticle/$PROFILE_ACTIF_SPRING)
 
@@ -23,7 +25,7 @@ SERVICE_CONFIG_DOCKER=http://ms-configuration:8089
     if [ -n "$response" ]; then
       echo "Le service est en cours d'exécution."
       echo "Lancement du service article ..."
-      java -jar app.jar --spring.profiles.active=$PROFILE_ACTIF_SPRING
+      java -jar app.jar --spring.profiles.active=$PROFILE_ACTIF_SPRING -DIP=$IP
 
       break  # Sortir de la boucle si le service est opérationnel
     else
