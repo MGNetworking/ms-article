@@ -8,7 +8,7 @@ if [ -z "$PROFILE_ACTIF_SPRING" ]; then
   echo "La variable PROFILE_ACTIF_SPRING => $PROFILE_ACTIF_SPRING <= est absente "
   PROFILE_ACTIF_SPRING=nas
   echo "La variable PROFILE_ACTIF_SPRING est maintenant initialiser => $PROFILE_ACTIF_SPRING | "
-  IP="172.17.0.1"
+  IP=172.17.0.1
   echo "valeur de l'ip de connection a la base de données :  $IP "
 fi
 
@@ -28,7 +28,8 @@ echo "La variable SERVICE_CONFIG_DOCKER est maintenant initialiser => $SERVICE_C
     if [ -n "$response" ]; then
       echo "Le service est en cours d'exécution."
       echo "Lancement du service article ..."
-      java -jar app.jar --spring.profiles.active=$PROFILE_ACTIF_SPRING -DIP=$IP
+      #java -jar app.jar --spring.profiles.active=$PROFILE_ACTIF_SPRING -DIP=$IP
+      java -jar app.jar -Dspring-boot.run.jvmArguments="-Dspring.profiles.active=$PROFILE_ACTIF_SPRING -DIP=$IP"
 
       break  # Sortir de la boucle si le service est opérationnel
     else
