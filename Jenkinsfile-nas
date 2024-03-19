@@ -149,7 +149,7 @@ pipeline {
             steps {
                 script {
                     echo("Compilation du service ms-article")
-                    sh("mvn clean package -Dspring.profiles.active=preprod -DSERVICE_CONFIG_DOCKER=${SERVICE_CONFIG_URI}")
+                    sh("mvn clean package -Dspring.profiles.active=nas -DIP=192.168.1.56 -DSERVICE_CONFIG_DOCKER=${SERVICE_CONFIG_URI}")
                 }
             }
         }

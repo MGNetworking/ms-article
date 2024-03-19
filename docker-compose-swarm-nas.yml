@@ -7,6 +7,7 @@ services:
       - .env
     environment: # Variable utilise dans le fichier wait_for_config.sh
       - PROFILE_ACTIF_SPRING=nas
+      - IP=172.17.0.1             # Ip Docker0 pour la communication interne vers la BD postgres
     deploy:
       replicas: 2
 #      resources:
