@@ -39,10 +39,15 @@ services:
       - "${PORT}:9010"
     networks:
       - api
+      - keycloak_postgre
 
 networks:
   api:
     external: true
     name: spring-api
+
+  keycloak_postgre:
+      external: true
+      name: sso_bd
 
 # docker stack deploy -c ./docker-compose-swarm.yml ms-article
