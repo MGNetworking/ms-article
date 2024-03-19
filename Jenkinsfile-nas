@@ -51,7 +51,7 @@ pipeline {
                     // les données dockers projet
                     dockers = utilsServeur.docker("${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION}",
                             "${env.DOCKER_IMAGE_NAME}-nas:${env.IMAGE_VERSION}",
-                            "./docker-compose-swarm-nas.yml",
+                            "./docker-compose-swarm-preprod.yml",
                             '/usr/local/bin',
                             '/volume1/docker/ms-article',
                             env.STACK_NAME)
