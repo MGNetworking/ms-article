@@ -6,12 +6,12 @@ if [ -z "$PROFILE_ACTIF_SPRING" ]; then
 
   echo "La variable PROFILE_ACTIF_SPRING => $PROFILE_ACTIF_SPRING <= est absente "
   PROFILE_ACTIF_SPRING=nas
-  echo "La variable PROFILE_ACTIF_SPRING est maintenant initialiser => $PROFILE_ACTIF_SPRING <="
+  echo "La variable PROFILE_ACTIF_SPRING est maintenant initialiser => $PROFILE_ACTIF_SPRING | "
 fi
 
 SERVICE_CONFIG_DOCKER=http://ms-configuration:8089
-
- echo "valeur du $IP "
+echo "La variable SERVICE_CONFIG_DOCKER est maintenant initialiser => $SERVICE_CONFIG_DOCKER |"
+echo "valeur de l'ip de connection a la base de données :  $IP "
 
   while true; do
     response=$(curl -s $SERVICE_CONFIG_DOCKER/msarticle/$PROFILE_ACTIF_SPRING)
