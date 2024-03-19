@@ -8,7 +8,7 @@ if [ -z "$PROFILE_ACTIF_SPRING" ]; then
   echo "La variable PROFILE_ACTIF_SPRING => $PROFILE_ACTIF_SPRING <= est absente "
   PROFILE_ACTIF_SPRING=nas
   echo "La variable PROFILE_ACTIF_SPRING est maintenant initialiser => $PROFILE_ACTIF_SPRING | "
-  IP=172.17.0.1
+  IP="172.17.0.1"
   echo "valeur de l'ip de connection a la base de données :  $IP "
 fi
 
