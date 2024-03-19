@@ -9,7 +9,7 @@ d'articles sur votre site web.
 * [Configuration et dépendances](#configuration-requise)
     * [Étapes de Configuration](#étapes-de-configuration)
     * [Les dépendances externes](#les-dépendances-externes)
-* [La compilation](#)
+* [La compilation](#la-compilation)
 * [Intégration avec ms-gateway](#intégration-avec-ms-gateway)
     * [Accès via ms-gateway](#accès-via-ms-gateway)
     * [Accès Direct par Adresse IP](#accès-direct-par-adresse-ip)
@@ -71,17 +71,52 @@ possède comme ce projet son propre depôt.
 1. phase 1 :  
    Cette phase permet de compiler les sources en utilisant les Maven goals.
 
+Exemple de compilation pour le serveur Nas :
+
+```shell
+mvn clean package -Dspring.profiles.active=nas -DIP=192.168.1.56 -DSERVICE_CONFIG_DOCKER=${SERVICE_CONFIG_URI}
+```
+
+* `-Dspring.profiles.active=nas`
+  La spécification du profile permet au service de récupérer le fichier de properties en correspondance avec
+  son environnement. Il est indispensable a la création du build mes aussi dans le étapes du deployment.
+  Tout foi, pour le déployment, il lui aussi lui spécifier (voir cela dans 3 phase)
+* `-DSERVICE_CONFIG_DOCKER=${SERVICE_CONFIG_URI}`
+  Cette variable permet de localiser le service qui possède le fichier de properties. Sans cette adresse
+  il ne peut contacté le service pour récupérer son fichier de properties qui lui ai indispensable.
+
 
 2. phase 2 :  
-   Après la compilation, l'image et construite en utilisant le fichier docker compose dédier a cette effet. l'image
-   et construit en couches dans les quel sont copier les scripts d'exécution et le jar précédemment compiler.
+   Après la compilation, l'image et construite en utilisant le fichier docker compose dédier a cette effet.
+   Le docker compose référence le Dockerfile qui permet la construction de l'image. Si l'image est présent dans votre
+   environnement la construction ne sera pas réaliser. L'image est en suite construit en couches dans lesquels sont
+   copier les scripts d'exécution et le jar précédemment compiler.
 
+NB: Ce docker compose permet unique de build votre image docker avec la version et le port que vous aurais choisi
 
 3. phase 3 :  
    Après la construction de l'image, celle-ci peut être déployer dans stack. Un docker compose prévu a cette et
    configurer dans le but de paramètre sa mise jours (update_config) ainsi que la possible de retour en arriére (
    rollback_config). Aussi dans la configuration du docker compose un mécanisme de vérification de santé (healthcheck) y
    est configurer.
+
+Exemple de deployment :
+
+```shell
+export $(cat .env) && docker stack deploy -c ./docker-compose-swarm-nas.yml article
+```
+
+* `export $(cat .env)`
+  Permet export les variables contenu dans le fichier `.env`. Cela permet une souplesse dans le déployment de la stack
+  A noté que pour serveur Nas l'export des variables ne fonctionne pas, même le variable d'environnement du docker
+  compose ne fonctionne pas.
+  Cette spécificité est unique au Nas Synology. Par contre, les serveurs Ubuntu n'ont pas cette restriction.
+
+Le reste de la commande cible le docker compose en charge du déployment. Il contient la configuration Swarm permettent
+la gestion de la stack qui contient vos service.
+
+Les services contenu dans le stack `article` sont lancer via un script `wait_for_config.sh` qui comme son nom l'indique
+Attente que le service configuration soit en cours d'exécution avant de lancer le `Jar` exécutable.
 
 ## Intégration avec ms-gateway
 
@@ -150,10 +185,100 @@ manière plus simple et rapide.
 NB : Le service `ms-configuration` est aussi important pendant la phase de compilation. Sans son fichier de
 configuration, il ne peut n'y compiler n'y s'exécuter !!!
 
+voici le script :
+
+```shell
+#!/bin/bash
+
+echo  "Lancement du script wait_for_config en cours ... "
+
+# Dans le cas d'un deployment sur le nas
+if [ -z "$PROFILE_ACTIF_SPRING" ]; then
+
+  echo "La variable PROFILE_ACTIF_SPRING => $PROFILE_ACTIF_SPRING <= est absente "
+  PROFILE_ACTIF_SPRING=nas
+  echo "La variable PROFILE_ACTIF_SPRING est maintenant initialiser => $PROFILE_ACTIF_SPRING | "
+  IP=172.17.0.1
+  echo "valeur de l'ip de connection a la base de données :  $IP "
+fi
+
+echo "Initialisation de l'adresse Ip du service configuration sur le réseau Overlay"
+SERVICE_CONFIG_DOCKER=http://ms-configuration:8089
+echo "La variable SERVICE_CONFIG_DOCKER est maintenant initialiser => $SERVICE_CONFIG_DOCKER |"
+
+  while true; do
+    response=$(curl -s $SERVICE_CONFIG_DOCKER/msarticle/$PROFILE_ACTIF_SPRING)
+
+    echo "request vers : $SERVICE_CONFIG_DOCKER/msarticle/$PROFILE_ACTIF_SPRING"
+    echo "SERVICE_CONFIG_DOCKER : $SERVICE_CONFIG_DOCKER"
+    echo "PROFILE_ACTIF_SPRING: $PROFILE_ACTIF_SPRING"
+
+    env
+
+    if [ -n "$response" ]; then
+      echo "Le service est en cours d'exécution."
+      echo "Lancement du service article ..."
+      java -jar app.jar --spring.profiles.active=$PROFILE_ACTIF_SPRING --IP=$IP
+
+      break  # Sortir de la boucle si le service est opérationnel
+    else
+      echo "Le service ms-configuration n'est pas encore opérationnel !"
+      sleep 3
+    fi
+
+  done
+```
+
+On peut voir en debut de script, la gestion du cas spéciale Nas. En effet, comme dit précédemment, le Nas ne permet pas
+la récuperation des variables d'environnement. Donc, ce cas gérer en dure dans le script pour cette unique raison.
+
+Le reste du script permet d'attendre que le service configuration soit encours d'exécution. Cela est très utilise l'or
+de redémarrage du serveur. Pour rappeler si le service est lancer sans sa configuration il tombera en échec et restera
+bloquer dans cette état.
+
+A note que la variable `--IP=$IP` est uniquement utilise pour le serveur Nas. Elle est récupérer par le fichier de
+properties dédier au Nas uniquement est n'a aucun impacte sur les autres Workflow .
+
 * `healthcheck.sh` : Dans le fichier docker compose Swarm, responsable de la création de la stack, la gestion de la
   santé du service y est configuré. Ce script est utilisé dans ce but. Il exécute une requête curl via l'adresse Ip du
   service dans le context Swarm pour récupérer la santé de celui-ci. Un fichier de log y est disponible
   dans `/app/logs/healthcheck.log`
+
+voici le script :
+
+```shell
+#!/bin/sh
+
+## le fichier de log dans le conteneur ou service 
+logs="/app/logs/healthcheck.log"
+exec > "$logs" 2>&1
+
+## Récupérer l'adresse IP de l'interface eth1
+IP=$(ifconfig eth1 | awk '/inet / {gsub(/addr:/, "", $2); print $2}')
+
+echo  "script healthcheck en cours ... "
+tentative=0
+while [ $tentative -lt 5 ]; do
+
+  echo  "Adresse IP service : $IP "
+  echo  "request : http://$IP:9010/actuator/health "
+
+  status=$(curl -s -m 5 http://$IP:9010/actuator/health | jq -r '.status' )
+  echo " Résultat de la requête curl : $status"
+
+  if [ "$status" = "UP" ]; then
+    echo  "success du script de santé : $status"
+    exit 0  # Succès
+  elif [ "$status" = "DOWN" ]; then
+    echo  "Échec du script de santé : $status"
+    exit 1  # Échec 1
+  else
+    echo  "tentative : $tentative"
+    tentative=$((tentative + 1))
+    sleep 3
+  fi
+done
+```
 
 ## Mode Débogage
 
@@ -201,6 +326,14 @@ clean test -Dspring.profiles.active=devlocal -DSERVICE_CONFIG_DOCKER=http://192.
 clean test -Dspring.profiles.active=dev -DSERVICE_CONFIG_DOCKER=http://192.168.1.68:8089 spring-boot:run -Dspring-boot.run.jvmArguments="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005 -DSERVICE_CONFIG_DOCKER=http://192.168.1.68:8089 -Dspring.profiles.active=dev"
 ```
 
+Note que le profile est `devlocal`. cette environnement correspond votre environnement locale. c'est dire qu'il
+que le fichier de properties en correspondance contient la localisation de keycloak et postgres dans votre sur votre
+machine.
+
+Il n'appartient pas au context docker n'y même docker Swarm. Pour testé l'environnement Docker Swarm, les
+scripts `run.sh` et `down.sh` sont dédier a cette effet et aucun configuration n'est nécessaire puis qu'il embarque les
+3 phase. La création de l'artefact ou l'archive Jar et la création de l'image et le déployment en locale de la stack.
+
 ```shell
 # commande de base 
 mvn spring-boot:run -Dspring-boot.run.jvmArguments="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005"
@@ -219,15 +352,16 @@ Détail de la commande :
    Cette partie de la commande correspond à la configuration du débogueur Java (Java Debugger Wire Protocol - JDWP) pour
    une application Spring Boot.
 
-    * `-Xdebug` : Active le support du débogueur Java.
-    * `-Xrunjdwptransport=dt_socket,server=y,suspend=y,address=5005`:
-        * `transport=dt_socket`: Spécifie le mode de transport pour la communication entre le débogueur et
+    * **-Xdebug** : Active le support du débogueur Java.
+    * **-Xrunjdwptransport=dt_socket,server=y,suspend=y,address=5005**:
+        * **transport=dt_socket**: Spécifie le mode de transport pour la communication entre le débogueur et
           l'application. Dans ce cas, il utilise le socket (dt_socket).
-        * `server=y`: Indique que l'application doit agir en tant que serveur pour le débogueur, ce qui signifie qu'elle
+        * **server=y**: Indique que l'application doit agir en tant que serveur pour le débogueur, ce qui signifie
+          qu'elle
           attendra une connexion du débogueur.
-        * `suspend=y`: Indique que l'application doit être suspendue jusqu'à ce qu'une connexion de débogage soit
+        * **suspend=y**: Indique que l'application doit être suspendue jusqu'à ce qu'une connexion de débogage soit
           établie. Cela signifie que l'application attendra le débogueur avant de commencer à s'exécuter.
-        * `address=5005`: Spécifie le port sur lequel l'application écoutera les connexions du débogueur. Dans ce cas,
+        * **address=5005**: Spécifie le port sur lequel l'application écoutera les connexions du débogueur. Dans ce cas,
           le port est 5005.
 
 5. `-Dspring.profiles.active=devlocal` :  
@@ -254,6 +388,8 @@ Cette API regroupe deux scenarios lier a leur environnement :
 ```yaml
 eureka.client.service-url.defaultZone=http://192.168.1.68:8099/eureka
 ```
+
+L'adresse ip d'Eureka sur votre machine
 
 * Indiqué au serveur Eureka registre de privilégier l'utilisation de l'adresse IP lors de l'enregistrement :
 
