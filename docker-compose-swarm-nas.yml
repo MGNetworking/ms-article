@@ -47,7 +47,7 @@ networks:
     name: spring-api
 
   keycloak_postgre:
-      external: true
       name: sso_bd
+      driver: bridge
 
 # docker stack deploy -c ./docker-compose-swarm.yml ms-article
