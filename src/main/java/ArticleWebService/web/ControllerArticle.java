@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +26,10 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import ArticleWebService.tools.Authentification;
 
@@ -197,7 +201,7 @@ public class ControllerArticle {
 
             log.info("L'article n° " + articleUpdate.getIdArticle() + " va être mise à jour ");
             return ResponseHandler.generateResponse(
-                    "L'article n° " +articleUpdate.getIdArticle() + " à été mise à jour ",
+                    "L'article n° " + articleUpdate.getIdArticle() + " à été mise à jour ",
                     HttpStatus.CREATED,
                     article);
         }
@@ -244,21 +248,33 @@ public class ControllerArticle {
      * @return
      */
     @PostMapping(path = "/saveImages")
-    public ResponseEntity saveImage(@RequestParam(value = "images", required = true)
-                                    @NotNull MultipartFile fileImages) {
+    public ResponseEntity saveImage(@RequestParam(value = "UploadFiles", required = true)
+                                    @NotNull MultipartFile uploadFiles) {
 
-        if (fileImages.isEmpty()) {
+        if (uploadFiles.isEmpty()) {
 
             return ResponseHandler.generateResponse(
                     "Fichier non présent",
                     HttpStatus.NOT_FOUND,
-                    fileImages);
+                    uploadFiles);
         }
+
+//        Testing code for Front end
+//        HttpHeaders responseHeaders = new HttpHeaders();
+//        responseHeaders.set("MyResponseHeader", "MyValue");
+//        String[] imgSource = {"http://test.com", "NameTeste"};
+//
+//        Map<String, String> imgSrc = new HashMap<>();
+//        imgSrc.put("data", "http://test.com");
+//        imgSrc.put("name", "NameTeste");
+
+
+//        return new ResponseEntity<Map<String, String>>(imgSrc, responseHeaders, HttpStatus.CREATED);
 
         try {
 
-            log.info("Images recptionnée :" + fileImages.getOriginalFilename());
-            String[] newIpImages = this.fsssI.storeImage(fileImages);
+            log.info("Images recptionnée :" + uploadFiles.getOriginalFilename());
+            String[] newIpImages = this.fsssI.storeImage(uploadFiles);
             log.info("Ip images : " + newIpImages[0]);
             log.info("name image : " + newIpImages[1]);
 
@@ -276,8 +292,20 @@ public class ControllerArticle {
             return ResponseHandler.generateResponse(
                     "Un problème technique est survenu ",
                     HttpStatus.INTERNAL_SERVER_ERROR,
-                    fileImages);
+                    uploadFiles);
 
+        }
+    }
+
+    @PostMapping("/upload")
+    public String handleImageUpload(@RequestBody byte[] imageData) {
+        // Votre logique pour gérer les données de l'image
+        if (imageData != null && imageData.length > 0) {
+            // Traitez les données de l'image ici, par exemple, enregistrez-les sur le serveur
+            // Assurez-vous de gérer les exceptions et les erreurs potentielles
+            return "Les données de l'image ont été téléchargées avec succès.";
+        } else {
+            return "Aucune donnée d'image reçue.";
         }
     }
 
