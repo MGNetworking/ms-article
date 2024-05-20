@@ -12,9 +12,12 @@ if [ -z "$PROFILE_ACTIF_SPRING" ]; then
   echo "valeur de l'ip de connection a la base de données :  $IP "
 fi
 
-echo "Initialisation de l'adresse Ip du service configuration sur le réseau Overlay"
-SERVICE_CONFIG_DOCKER=http://ms-configuration:8089
-echo "La variable SERVICE_CONFIG_DOCKER est maintenant initialiser => $SERVICE_CONFIG_DOCKER |"
+# En cas d'absence de la d'environnment SERVICE_CONFIG_DOCKER
+if [ -z "$SERVICE_CONFIG_DOCKER"]; then
+  echo "Initialisation de l'adresse Ip du service configuration sur le réseau Overlay"
+  SERVICE_CONFIG_DOCKER=http://ms-configuration:8089
+  echo "La variable SERVICE_CONFIG_DOCKER est maintenant initialiser => $SERVICE_CONFIG_DOCKER |"
+fi
 
   while true; do
     response=$(curl -s $SERVICE_CONFIG_DOCKER/msarticle/$PROFILE_ACTIF_SPRING)
@@ -26,8 +29,8 @@ echo "La variable SERVICE_CONFIG_DOCKER est maintenant initialiser => $SERVICE_C
     env
 
     if [ -n "$response" ]; then
-      echo "Le service est en cours d'exécution."
-      echo "Lancement du service article ..."
+      echo "Le service ms-configuration est en cours d'exécution."
+      echo "Lancement du service ms-article ..."
       java -jar app.jar --spring.profiles.active=$PROFILE_ACTIF_SPRING --IP=$IP
 
       break  # Sortir de la boucle si le service est opérationnel
