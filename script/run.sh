@@ -49,13 +49,12 @@ compilation_Maven(){
     # Variable d'environnement
     export SERVICE_CONFIG_DOCKER="http://192.168.1.68:8089"
     export PROFILES=dev
-    mvn clean package -Dspring-boot.run.jvmArguments="-Dspring.profiles.active=$PROFILES"
+    mvn clean package -Dspring.profiles.active=$PROFILES
 
     echo "Création de l'images : $STACK_NAME"
     docker compose -f docker-compose.yml build --no-cache
 
-    echo "deploy de la stack du service : $STACK_NAME"
-    #docker stack deploy -c ./docker-compose-swarm.yml $STACK_NAME
+    echo "déploiement de la stack du service : $STACK_NAME"
     ./script/deploy.sh
 
     echo "Liste des stack"

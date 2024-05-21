@@ -3,30 +3,34 @@
 echo  "Lancement du script wait_for_config en cours ... "
 
 # Dans le cas d'un déployement sur le nas
-if [ -z "$PROFILE_ACTIF_SPRING" ]; then
+if [ -z "$PROFILE_ACTIF_SPRING" ] || [ -z "$SERVICE_CONFIG_DOCKER" ] || [ -z "$IP"  ]; then
 
-  echo "La variable PROFILE_ACTIF_SPRING => $PROFILE_ACTIF_SPRING <= est absente "
+  echo  "Les variables de configuration sont absente, initialisation Nas lancer"
+
+  echo "La variable PROFILE_ACTIF_SPRING => $PROFILE_ACTIF_SPRING <="
+  echo "L'adresse IP du service configuration sur le réseau Overlay: $SERVICE_CONFIG_DOCKER <="
+  echo "valeur de l'adresse IP de connection à la base de données  $IP <="
+
   PROFILE_ACTIF_SPRING=nas
-  echo "La variable PROFILE_ACTIF_SPRING est maintenant initialiser => $PROFILE_ACTIF_SPRING | "
   IP=172.17.0.1
-  echo "valeur de l'ip de connection a la base de données :  $IP "
+  SERVICE_CONFIG_DOCKER=http://ms-configuration:8089
+
+  echo  "Les variables de configuration sont initialiser"
+  echo "La variable PROFILE_ACTIF_SPRING => $PROFILE_ACTIF_SPRING <="
+  echo "L'adresse IP du service configuration sur le réseau Overlay: $SERVICE_CONFIG_DOCKER <="
+  echo "valeur de l'adresse IP de connection à la base de données  $IP <="
 fi
 
-# En cas d'absence de la d'environnment SERVICE_CONFIG_DOCKER
-if [ -z "$SERVICE_CONFIG_DOCKER"]; then
-  echo "Initialisation de l'adresse Ip du service configuration sur le réseau Overlay"
-  SERVICE_CONFIG_DOCKER=http://ms-configuration:8089
-  echo "La variable SERVICE_CONFIG_DOCKER est maintenant initialiser => $SERVICE_CONFIG_DOCKER |"
-fi
 
   while true; do
     response=$(curl -s $SERVICE_CONFIG_DOCKER/msarticle/$PROFILE_ACTIF_SPRING)
 
     echo "request vers : $SERVICE_CONFIG_DOCKER/msarticle/$PROFILE_ACTIF_SPRING"
-    echo "SERVICE_CONFIG_DOCKER : $SERVICE_CONFIG_DOCKER"
-    echo "PROFILE_ACTIF_SPRING: $PROFILE_ACTIF_SPRING"
 
+    echo "**********************************"
+    echo "Liste des variables d'environnment"
     env
+    echo "**********************************"
 
     if [ -n "$response" ]; then
       echo "Le service ms-configuration est en cours d'exécution."
