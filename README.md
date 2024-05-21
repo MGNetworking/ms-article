@@ -9,14 +9,16 @@ d'articles sur votre site web.
 * [Configuration et dépendances](#configuration-requise)
     * [Étapes de Configuration](#étapes-de-configuration)
     * [Les dépendances externes](#les-dépendances-externes)
-* [La compilation](#la-compilation)
+* [Compilation et déploiement](#compilation-et-déploiement)
+  * [Les Phases de compilation](#les-phases-de-compilation)
+  * [Les Scripts](#les-scripts)
+  * [Scenarios de deployment](#scenarios-de-deployment)
 * [Intégration avec ms-gateway](#intégration-avec-ms-gateway)
     * [Accès via ms-gateway](#accès-via-ms-gateway)
     * [Accès Direct par Adresse IP](#accès-direct-par-adresse-ip)
     * [Postman](#postman)
-* [Les Scripts](#les-scripts)
 * [Mode Débogage](#mode-débogage)
-* [Scenarios de deployment](#scenarios-de-deployment)
+
 
 ## Documentation
 
@@ -66,7 +68,9 @@ ms-article.
 projet principal [back-end](https://github.com/MGNetworking/back-end) qui regroupe toutes les API de ce projet, il
 possède comme ce projet son propre depôt.
 
-## La compilation
+## Compilation et déploiement
+
+### Les Phases de compilation
 
 1. phase 1 :  
    Cette phase permet de compiler les sources en utilisant les Maven goals.
@@ -77,13 +81,25 @@ Exemple de compilation pour le serveur Nas :
 mvn clean package -Dspring.profiles.active=nas -DIP=192.168.1.56 -DSERVICE_CONFIG_DOCKER=${SERVICE_CONFIG_URI}
 ```
 
-* `-Dspring.profiles.active=nas`
+* `-Dspring.profiles.active=nas`  
   La spécification du profile permet au service de récupérer le fichier de properties en correspondance avec
   son environnement. Il est indispensable a la création du build mes aussi dans le étapes du deployment.
   Tout foi, pour le déployment, il lui aussi lui spécifier (voir cela dans 3 phase)
-* `-DSERVICE_CONFIG_DOCKER=${SERVICE_CONFIG_URI}`
+
+
+* `-DSERVICE_CONFIG_DOCKER=${SERVICE_CONFIG_URI}`  
   Cette variable permet de localiser le service qui possède le fichier de properties. Sans cette adresse
   il ne peut contacté le service pour récupérer son fichier de properties qui lui ai indispensable.
+
+
+* `-DIP=192.168.1.56`  
+  Cette variable permet de définir l'adresse IP la base de données. Cette données est récupérer puis ajouté au variable
+  d'environnement pour être données au fichier de `.properties`
+
+NB: La variable `-DIP` est nécessaire uniquement pour :   
+    _ La phase de compilation `Maven` dans le context Nas par l'intermédiaire du fichier `msarticle-nas.properties`  
+    _ Le déploiement `Swarm` dans le context Nas par l'intermédiaire du fichier `docker-compose-swarm.yml` 
+
 
 
 2. phase 2 :  
@@ -167,6 +183,7 @@ manière plus simple et rapide.
       créé la stack. Cela permet de gagner du temps quand vous testez l'application est que vous supprimez la stack
       uniquement
 
+
 * `down.sh` : Au lancement de ce script, vous avez 2 choix possible :
 
     * Supprimer la stack : Si vous avez besoin de supprimer la stack uniquement.
@@ -174,6 +191,33 @@ manière plus simple et rapide.
     * Supprimer la stack et l'image : Si vous avez besoin de supprimer la stack et l'image du système. Avec cela vous
       aurai aussi la suppression des images sans étiquette.
 
+
+* `deploy.sh` : Ce script est utilise pour déployer le service. Il est utilise dans le script
+  `run.sh` mais aussi et surtout dans le `Jenkinsfile`.
+
+Voici le script :
+
+```shell
+#!/bin/bash
+
+echo "export des variables "
+export $(cat .env)
+
+echo "déploiement / update de la stack : $STACK_NAME"
+echo "PROFILES : $PROFILES"
+
+# le déploiement sur le nas
+if [ "$PROFILES" == "nas" ]; then
+  echo "deploy with PROFILES : nas"
+  /usr/local/bin/docker stack deploy -c ./docker-compose-swarm.yml $STACK_NAME
+else
+  echo "deploy with PROFILES : $PROFILES"
+  docker stack deploy -c ./docker-compose-swarm.yml $STACK_NAME
+fi
+```
+
+La vairable `PROFILES` est binder vers le docker compose pour utilisé en tant que variable d'environnement.
+Cela permet de lancer l'API avec le profile utilisateur recherché.
 
 * `wait_for_config.sh` : Ce script est utilisé dans le context Swarm docker. Il permet de vérifier que le service
   `ms-configuration` soit bien en cours d'exécution. En effet, ce service contient les fichiers `.properties`
@@ -192,32 +236,39 @@ voici le script :
 
 echo  "Lancement du script wait_for_config en cours ... "
 
-# Dans le cas d'un deployment sur le nas
-if [ -z "$PROFILE_ACTIF_SPRING" ]; then
+# Dans le cas d'un déployement sur le nas
+if [ -z "$PROFILE_ACTIF_SPRING" ] || [ -z "$SERVICE_CONFIG_DOCKER" ] || [ -z "$IP"  ]; then
 
-  echo "La variable PROFILE_ACTIF_SPRING => $PROFILE_ACTIF_SPRING <= est absente "
+  echo  "Les variables de configuration sont absente, initialisation Nas lancer"
+
+  echo "La variable PROFILE_ACTIF_SPRING => $PROFILE_ACTIF_SPRING <="
+  echo "L'adresse IP du service configuration sur le réseau Overlay: $SERVICE_CONFIG_DOCKER <="
+  echo "valeur de l'adresse IP de connection à la base de données  $IP <="
+
   PROFILE_ACTIF_SPRING=nas
-  echo "La variable PROFILE_ACTIF_SPRING est maintenant initialiser => $PROFILE_ACTIF_SPRING | "
   IP=172.17.0.1
-  echo "valeur de l'ip de connection a la base de données :  $IP "
+  SERVICE_CONFIG_DOCKER=http://ms-configuration:8089
+
+  echo  "Les variables de configuration sont initialiser"
+  echo "La variable PROFILE_ACTIF_SPRING => $PROFILE_ACTIF_SPRING <="
+  echo "L'adresse IP du service configuration sur le réseau Overlay: $SERVICE_CONFIG_DOCKER <="
+  echo "valeur de l'adresse IP de connection à la base de données  $IP <="
 fi
 
-echo "Initialisation de l'adresse Ip du service configuration sur le réseau Overlay"
-SERVICE_CONFIG_DOCKER=http://ms-configuration:8089
-echo "La variable SERVICE_CONFIG_DOCKER est maintenant initialiser => $SERVICE_CONFIG_DOCKER |"
 
   while true; do
     response=$(curl -s $SERVICE_CONFIG_DOCKER/msarticle/$PROFILE_ACTIF_SPRING)
 
     echo "request vers : $SERVICE_CONFIG_DOCKER/msarticle/$PROFILE_ACTIF_SPRING"
-    echo "SERVICE_CONFIG_DOCKER : $SERVICE_CONFIG_DOCKER"
-    echo "PROFILE_ACTIF_SPRING: $PROFILE_ACTIF_SPRING"
 
+    echo "**********************************"
+    echo "Liste des variables d'environnment"
     env
+    echo "**********************************"
 
     if [ -n "$response" ]; then
-      echo "Le service est en cours d'exécution."
-      echo "Lancement du service article ..."
+      echo "Le service ms-configuration est en cours d'exécution."
+      echo "Lancement du service ms-article ..."
       java -jar app.jar --spring.profiles.active=$PROFILE_ACTIF_SPRING --IP=$IP
 
       break  # Sortir de la boucle si le service est opérationnel
