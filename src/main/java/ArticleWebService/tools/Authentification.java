@@ -1,11 +1,15 @@
 package ArticleWebService.tools;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+
 import org.springframework.stereotype.Component;
+
+import org.springframework.security.oauth2.jwt.Jwt;
 
 @Component
 @Slf4j
@@ -16,12 +20,13 @@ public class Authentification {
     }
 
     /**
-     * Vérifier si l'utilisateur est le créateur ou si non si il possède les droits ADMIN.
+     * Permet de comparait l'id utilisateur passé en paramêtre avec l'id
+     * utilisteur contenu dans le token présent dans le requête.
      *
-     * @param userId l'identifiant utiliseur
-     * @return un boolean qui données une autorization d'accès.
+     * @param userId l'identifiant utilisateur
+     * @return un boolean qui données une authorization d'accès.
      */
-    public boolean isAutorization(String userId) {
+    public boolean isAuthorization(String userId) {
 
         boolean identity = false;
         SecurityContext securityContext = SecurityContextHolder.getContext();
@@ -34,39 +39,26 @@ public class Authentification {
 
         log.info("User id  : " + userId);
 
-        // recherche si l'utiliseur et le créateur
-        if (userId.equals(authentication.getPrincipal().toString())) {
+
+        String userIdFromToken = null;
+
+        // Extraction de l'IO utilisateur du token
+        if (authentication.getPrincipal() instanceof Jwt) {
+            Jwt jwt = (Jwt) authentication.getPrincipal();
+            userIdFromToken = jwt.getClaimAsString("sub");
+            log.info("instance jwt is  : " + userIdFromToken);
+        } else {
+            userIdFromToken = authentication.getPrincipal().toString();
+            log.info("instance is not jwt : " + userIdFromToken);
+        }
+
+        // Vérification de l'identité utilisateur
+        if (userId.equals(userIdFromToken)) {
             log.info("User créateur : Accès autorisé ...");
-            identity = true;
+            return true;
         }
 
-        // recherche si l'utilisateur a le Role ADMIN
-        if (isRole(securityContext.getAuthentication())) {
-            log.info("ADMIN rôle : Accès autorisé ...");
-            identity = true;
-        }
-
-        return identity;
-    }
-
-
-    /**
-     * Recherche le droit ADMIN
-     *
-     * @return true si le droits ADMIN et trouvé.
-     */
-    public static boolean isRole(Authentication authority) {
-
-
-        for (GrantedAuthority autority : authority.getAuthorities()) {
-            log.info("Autority : " + autority.getAuthority());
-            if (autority.getAuthority().equals("ADMIN")) {
-                return true;
-            }
-        }
-
+        log.info("User créateur : Accès refusé ...");
         return false;
-
     }
-
 }

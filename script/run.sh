@@ -35,6 +35,7 @@ run_stack(){
     fi
 
     echo "deploy de la stack : $STACK_NAME"
+    export PROFILES=dev
     docker stack deploy -c ./docker-compose-swarm.yml $STACK_NAME
 
     echo "Liste des stack"

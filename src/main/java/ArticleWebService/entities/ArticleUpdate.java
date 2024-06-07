@@ -35,7 +35,7 @@ public class ArticleUpdate {
     @NotNull(message = "La section de l'article est obligatoire ")
     private Section section;
 
-    @NotNull(message = "Cette article possédé un titre" )
+    @NotNull(message = "Cette article possédé un titre")
     @NotEmpty(message = "l'article doit avoir un titre ")
     @Size(min = 3, max = 100, message = "Le titre ne doit pas dépasser 100 caractères")
     private String titre;
@@ -59,7 +59,7 @@ public class ArticleUpdate {
     @NotNull(message = "Vous devezz faire un choix concernant la visiblité de l'article : true ou false")
     private boolean visibiliter;
 
-    public boolean getVisibiliter(){
+    public boolean getVisibiliter() {
         return this.visibiliter;
     }
 
@@ -68,4 +68,14 @@ public class ArticleUpdate {
      * Cette Attribut n'est pas obligatoire
      */
     private List<String> source;
+
+
+    /**
+     * Permet la vérification l'existence d'un article par la précence de son ID
+     *
+     * @return Si L'id existe , return false.
+     */
+    public boolean statusArticle() {
+        return this.idArticle == null;
+    }
 }

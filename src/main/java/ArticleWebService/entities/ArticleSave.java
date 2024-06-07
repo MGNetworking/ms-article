@@ -13,8 +13,7 @@ import java.sql.Timestamp;
 import java.util.List;
 
 /**
- * Cette classe est utilisé pour la création d'article
- * Elle posséde tous les attributs indispensable pour la
+ * Cette classe est utilisé pour la création d'article. Elle possède tous les attributs indispensable pour la
  * création d'un article et la vérification des valeurs attendu.
  */
 @Data
@@ -24,9 +23,8 @@ public class ArticleSave {
 
 
     /**
-     * Doit être null a la création d'un article
-     * Cette attribut et utilisé pour distinguer
-     * les ancien article des nouveaux
+     * Doit être null a la création d'un article.
+     * Cette attribut et utilisé pour distinguer les ancien article des nouveaux
      */
     private Integer idArticle;
 
@@ -57,8 +55,18 @@ public class ArticleSave {
     private String article;
 
     /**
-     * La liste des soruces de l'article, si l'article en posséde.
+     * La liste des sources de l'article, si l'article en possède.
      * Cette Attribut n'est pas obligatoire
      */
     private List<String> source;
+
+    /**
+     * Permet la vérification l'existence d'un article par la précence de son ID
+     *
+     * @return Si L'id existe, return true.
+     */
+    public boolean statusArticle() {
+
+        return this.idArticle != null;
+    }
 }

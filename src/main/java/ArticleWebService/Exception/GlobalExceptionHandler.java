@@ -33,22 +33,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
      * @return
      */
     @ExceptionHandler(ArticleException.class)
-    //@ResponseStatus(HttpStatus.NOT_FOUND)
     public ResponseEntity<Object> handleArticleException(ArticleException ex,
-                                                         WebRequest request,
-                                                         HttpServletRequest servletRequest,
-                                                         HttpServletResponse httpServletResponse) {
-
-        return ResponseHandler.generateResponse(new CustomerResponse(
-                ex.getStatus(),
-                ex.getStatus().getReasonPhrase(),
-                ex.getMessage(),
-                servletRequest.getRequestURI()));
-
-    }
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<Object> handleException(ArticleException ex,
                                                          WebRequest request,
                                                          HttpServletRequest servletRequest,
                                                          HttpServletResponse httpServletResponse) {

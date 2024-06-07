@@ -20,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -43,9 +44,6 @@ public class ControllerArticle {
     private ArticleService articleService;
     @Autowired
     private FileSystemStorageServiceImplementation fsssI;
-
-    @Autowired
-    private Authentification auth;
 
     public ControllerArticle() {
     }
@@ -121,9 +119,7 @@ public class ControllerArticle {
 
 
     /**
-     * Permet la sauvegarde d'un article.
-     * Ne permet pas la mise a jour d'un article appartire
-     * de ce point de terminaison.
+     * Permet uniquement la sauvegarde d'un article.
      *
      * @param articleSave classe de gestion du formulaire.
      * @return ResponseEntity<ArticleDto> l'article
@@ -132,11 +128,12 @@ public class ControllerArticle {
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     @ApiOperation(value = "Sauvegarde ou met a jour les données d'un article", response = Article.class)
+    @PreAuthorize("@authentification.isAuthorization(#articleSave.idUser)")
     public ResponseEntity<Object> saveArticle(@Valid @RequestBody ArticleSave articleSave)
             throws Exception {
 
-        log.info("Sauvegarde d'un article ");
-        if (articleSave.getIdArticle() != null) {
+        // vérification de la nouveauté d'un article par son ID
+        if (articleSave.statusArticle()) {
 
             log.info("la mise à jour d'un article ne doit pas être excuté appartir de ce endpoint");
             return ResponseHandler.generateResponse(new CustomerResponse(
@@ -157,30 +154,44 @@ public class ControllerArticle {
                             HttpStatus.NOT_FOUND
                     ));
 
-            return new ResponseEntity<Object>(
-                    this.articleService.saveArticle(articleSave)
-                    , HttpStatus.CREATED);
+//            return new ResponseEntity<Object>(
+//                    this.articleService.saveArticle(articleSave)
+//                    , HttpStatus.CREATED);
+
+            log.info("L'article n° " + article.getIdArticle() + " va être mise à jour ");
+            return ResponseHandler.generateResponse(
+                    "L'article n° " + article.getIdArticle() + " à été mise à jour ",
+                    HttpStatus.CREATED,
+                    article);
         }
 
 
     }
 
     /**
-     * Permet la mise à jour d'un article.
+     * Met à jour les données d'un article dans le système.
+     * Seuls les utilisateurs autorisés sont autorisés à effectuer cette opération.
      *
-     * @param articleSave
-     * @return
+     * @param articleUpdate Les données de l'article à mettre à jour.
+     *                      Les champs modifiables incluent le titre, le contenu et toute autre information pertinente.
+     *                      L'identifiant de l'utilisateur doit être fourni pour des raisons de sécurité.
+     *
+     * @return ResponseEntity<Object> Un objet ResponseEntity contenant le résultat de la mise à jour.
+     *                                En cas de succès, le statut sera HttpStatus.OK et l'article mis à jour sera retourné.
+     *                                En cas d'erreur, le statut correspondant à l'erreur sera retourné avec un message d'erreur approprié.
+     *
      * @throws Exception
      */
     @PutMapping(path = "/updateArticle",
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     @ApiOperation(value = "Met à jour les données d'un article", response = Article.class)
-    public ResponseEntity<Object> updateArticle(@Valid @RequestBody ArticleUpdate articleUpdate)
+    @PreAuthorize("@authentification.isAuthorization(#articleUpdate.idUser)")
+    public ResponseEntity<?> updateArticle(@Valid @RequestBody ArticleUpdate articleUpdate)
             throws Exception {
 
-        log.info("La mise à jour d'un article ");
-        if (articleUpdate.getIdArticle() == null) {
+        // vérification de l'ancienneté de l'article par la précence de son ID
+        if (articleUpdate.statusArticle()) {
 
             log.info("la création d'un article ne doit pas être excuter a partir de ce endpoint ");
             return ResponseHandler.generateResponse(new CustomerResponse(
@@ -205,10 +216,6 @@ public class ControllerArticle {
                     HttpStatus.CREATED,
                     article);
         }
-
-
-/*            return new ResponseEntity<Object>(
-                        article , HttpStatus.CREATED);*/
 
     }
 
