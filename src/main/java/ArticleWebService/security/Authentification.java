@@ -1,16 +1,11 @@
-package ArticleWebService.tools;
+package ArticleWebService.security;
 
-import ArticleWebService.Exception.ArticleException;
 import ArticleWebService.entities.Article;
 import ArticleWebService.service.ArticleService;
-import jdk.nashorn.internal.runtime.options.Option;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.KeycloakPrincipal;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -18,7 +13,6 @@ import org.springframework.stereotype.Component;
 
 import org.springframework.security.oauth2.jwt.Jwt;
 
-import java.util.Collection;
 import java.util.Optional;
 
 @Component

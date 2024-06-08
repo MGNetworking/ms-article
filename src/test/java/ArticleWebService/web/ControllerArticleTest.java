@@ -2,29 +2,25 @@ package ArticleWebService.web;
 
 import ArticleWebService.Exception.ArticleException;
 import ArticleWebService.entities.Article;
-import ArticleWebService.entities.ArticleSave;
-import ArticleWebService.entities.ArticleUpdate;
-import ArticleWebService.entities.Section;
-import ArticleWebService.service.FileSystemStorageServiceImplementation;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.jayway.jsonpath.JsonPath;
 import lombok.extern.slf4j.Slf4j;
-import org.hamcrest.core.IsNull;
+
 import org.junit.jupiter.api.*;
-import org.modelmapper.ModelMapper;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.env.Environment;
 import org.springframework.http.*;
-import org.springframework.mock.web.MockMultipartFile;
+
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.ResultMatcher;
+
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -33,13 +29,6 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.WebApplicationContext;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
 
 /**
  * Le service de configuration doit être en cours d'exécution
@@ -58,8 +47,7 @@ public class ControllerArticleTest {
     private MockMvc mockMvc;
     @Autowired
     private WebApplicationContext webApplicationContext;
-    @Autowired
-    private FileSystemStorageServiceImplementation fsssi;
+
 
     @Autowired
     private Environment environment;

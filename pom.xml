@@ -16,7 +16,7 @@
     <groupId>org.ghoverblog.ovh</groupId>
     <artifactId>ms-article</artifactId>
     <version>1.0.0</version>
-    <description>Micro service article to blog</description>
+    <description>Micro service article</description>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -39,27 +39,19 @@
     <!--============================= -->
     <dependencies>
 
-        <!-- allows updating of data contained in the properties file  -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
-        <!--  use to easily create REST representations -->
-        <!--  HATEOAS is an acronym for Hypermedia As The Engine Of Application State -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-hateoas</artifactId>
-        </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-bootstrap</artifactId>
         </dependency>
 
         <!-- Eureka Client  -->
@@ -68,24 +60,19 @@
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>
 
-        <!-- configuration service  -->
+        <!-- actuator  -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- configuration service -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-config</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-bootstrap</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-openfeign</artifactId>
-        </dependency>
-
-        <!-- Data Base -->
-        <!-- https://mvnrepository.com/artifact/org.postgresql/postgresql -->
+        <!-- Data Base https://mvnrepository.com/artifact/org.postgresql/postgresql -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
@@ -107,19 +94,20 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-validation -->
+        <!-- Spring validation
+         https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-validation -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
             <version>3.0.2</version>
         </dependency>
 
-
-        <!-- dependence to testing for Spring -->
+        <!-- Spring starter Test (unitaire) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
+
             <!-- exclude junit 4 -->
             <exclusions>
                 <exclusion>
@@ -129,12 +117,14 @@
             </exclusions>
         </dependency>
 
-        <!-- junit 5 -->
+        <!-- inclue junit 5 -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- le moteur d'ex -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
@@ -160,7 +150,7 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
-           <!-- <version>3.3.0</version>-->
+            <!-- <version>3.3.0</version>-->
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.modelmapper/modelmapper -->
@@ -169,22 +159,18 @@
             <artifactId>modelmapper</artifactId>
             <version>2.4.4</version>
         </dependency>
+
         <dependency>
             <groupId>io.swagger</groupId>
             <artifactId>swagger-annotations</artifactId>
             <version>1.5.14</version>
         </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-test</artifactId>
-            <version>5.3.9</version>
-        </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>org.ghoverblog</groupId>-->
-<!--            <artifactId>JenkinsLib_Shared</artifactId>-->
-<!--            <version>1.0.4-RELEASES</version>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.ghoverblog</groupId>-->
+        <!--            <artifactId>JenkinsLib_Shared</artifactId>-->
+        <!--            <version>1.0.4-RELEASES</version>-->
+        <!--        </dependency>-->
 
     </dependencies>
 
@@ -225,13 +211,13 @@
         </plugins>
     </build>
 
+    <!-- Mon dépôt privet -->
     <repositories>
 
         <repository>
             <id>maven-central</id>
             <url>https://sonatype-nexus.backhole.ovh/repository/maven-central/</url>
         </repository>
-
 
         <repository>
             <id>maven-private</id>
@@ -244,6 +230,5 @@
             </snapshots>
         </repository>
     </repositories>
-
 
 </project>

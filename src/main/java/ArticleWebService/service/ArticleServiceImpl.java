@@ -6,7 +6,6 @@ import ArticleWebService.entities.Article;
 import ArticleWebService.entities.ArticleSave;
 import ArticleWebService.entities.ArticleUpdate;
 import ArticleWebService.entities.Domain;
-import ArticleWebService.feign.StorageRestClient;
 import ArticleWebService.repository.ArticleRepository;
 import ArticleWebService.repository.DomainRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 
 import javax.persistence.EntityManager;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -30,9 +31,7 @@ import java.util.stream.Collectors;
 public class ArticleServiceImpl implements ArticleService {
 
     private ArticleRepository articleRepository;
-    private StorageRestClient storageRestClient;
     private DomainRepository domainRepository;
-    private FileSystemStorageServiceImplementation fsssI;
     private ModelMapper modelMapper;
 
 
@@ -41,14 +40,11 @@ public class ArticleServiceImpl implements ArticleService {
 
     @Autowired
     public ArticleServiceImpl(ArticleRepository articleRepository,
-                              StorageRestClient storageRestClient,
-                              FileSystemStorageServiceImplementation fileSyStorSServiceImp,
+
                               DomainRepository domainRepository) {
 
         this.articleRepository = articleRepository;
-        this.storageRestClient = storageRestClient;
         this.domainRepository = domainRepository;
-        this.fsssI = fileSyStorSServiceImp;
         this.modelMapper = new ModelMapper();
     }
 
@@ -123,6 +119,7 @@ public class ArticleServiceImpl implements ArticleService {
             art.setDescription(articleUpdate.getDescription());
             art.setImgDescription(articleUpdate.getImgDescription());
             art.setVisibiliter(articleUpdate.getVisibiliter());
+            art.setDateMaj(Timestamp.valueOf(LocalDateTime.now()));
 
             // met à jour l'article en base de données
             Article updateArt = this.articleRepository.save(art);
