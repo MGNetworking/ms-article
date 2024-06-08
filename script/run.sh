@@ -41,6 +41,10 @@ run_stack(){
     echo "Liste des stack"
     docker service ls
 
+    echo "***************"
+    echo "Lancement du service article_ms-article"
+    docker service logs -f article_ms-article
+
 }
 
 compilation_Maven(){
@@ -61,6 +65,9 @@ compilation_Maven(){
     echo "Liste des stack"
     docker service ls
 
+    echo "***************"
+    echo "Lancement du service article_ms-article"
+    docker service logs -f article_ms-article
 }
 
 docker info >/dev/null 2>&1
