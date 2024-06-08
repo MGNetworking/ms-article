@@ -42,6 +42,7 @@ public class ControllerArticle {
 
     @Autowired
     private ArticleService articleService;
+
     @Autowired
     private FileSystemStorageServiceImplementation fsssI;
 
@@ -154,13 +155,11 @@ public class ControllerArticle {
                             HttpStatus.NOT_FOUND
                     ));
 
-//            return new ResponseEntity<Object>(
-//                    this.articleService.saveArticle(articleSave)
-//                    , HttpStatus.CREATED);
+            String message = "L'article n° " + article.getIdArticle() + " à été créer avec succès ";
+            log.info(message);
 
-            log.info("L'article n° " + article.getIdArticle() + " va être mise à jour ");
             return ResponseHandler.generateResponse(
-                    "L'article n° " + article.getIdArticle() + " à été mise à jour ",
+                    message,
                     HttpStatus.CREATED,
                     article);
         }
@@ -175,11 +174,9 @@ public class ControllerArticle {
      * @param articleUpdate Les données de l'article à mettre à jour.
      *                      Les champs modifiables incluent le titre, le contenu et toute autre information pertinente.
      *                      L'identifiant de l'utilisateur doit être fourni pour des raisons de sécurité.
-     *
      * @return ResponseEntity<Object> Un objet ResponseEntity contenant le résultat de la mise à jour.
-     *                                En cas de succès, le statut sera HttpStatus.OK et l'article mis à jour sera retourné.
-     *                                En cas d'erreur, le statut correspondant à l'erreur sera retourné avec un message d'erreur approprié.
-     *
+     * En cas de succès, le statut sera HttpStatus.OK et l'article mis à jour sera retourné.
+     * En cas d'erreur, le statut correspondant à l'erreur sera retourné avec un message d'erreur approprié.
      * @throws Exception
      */
     @PutMapping(path = "/updateArticle",
@@ -210,9 +207,11 @@ public class ControllerArticle {
                             HttpStatus.NOT_FOUND
                     ));
 
-            log.info("L'article n° " + articleUpdate.getIdArticle() + " va être mise à jour ");
+            String message = "L'article n° " + articleUpdate.getIdArticle() + " va être mise à jour avec succès";
+            log.info(message);
+
             return ResponseHandler.generateResponse(
-                    "L'article n° " + articleUpdate.getIdArticle() + " à été mise à jour ",
+                    message,
                     HttpStatus.CREATED,
                     article);
         }
@@ -225,24 +224,25 @@ public class ControllerArticle {
      * @param id
      * @return
      */
-    @DeleteMapping(path = "/deleteArticle/{id}")
-    public ResponseEntity deteleArticle(@PathVariable @NotNull @Min(1) Integer id) {
+    @DeleteMapping(path = "/deleteArticle/{idArticle}")
+    @PreAuthorize("@authentification.deleteArticle(#idArticle)")
+    public ResponseEntity deteleArticle(@PathVariable @NotNull @Min(1) Integer idArticle) {
 
         try {
 
-            this.articleService.deleteArticleById(id);
+            this.articleService.deleteArticleById(idArticle);
             return ResponseHandler.generateResponse(
                     "La suppression de l'article a été réaliser avec succès "
                     , HttpStatus.OK
-                    , id);
+                    , idArticle);
 
         } catch (Exception ex) {
 
             log.error(ex.getMessage());
             return ResponseHandler.generateResponse(
-                    "impossible de trouver l'élément correspondant "
+                    "Impossible de trouver l'élément correspondant "
                     , HttpStatus.NOT_FOUND
-                    , id);
+                    , idArticle);
 
         }
     }
