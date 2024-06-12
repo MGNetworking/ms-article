@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RefreshScope
 @RequestMapping("/article-config")
-public class ControllerArticleService {
+public class ControllerArticleConfig {
 
     @Autowired
     ConfigurationArticle configurationArticle;
