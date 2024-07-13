@@ -19,6 +19,7 @@ public class ArticleDto {
     private String idUser;
     private Section section ;
     private String titre;
+    private String imgUrl;
     private String imgDescription;
     private String description;
     private boolean visibiliter;

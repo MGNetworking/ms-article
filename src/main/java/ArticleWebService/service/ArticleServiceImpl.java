@@ -2,10 +2,7 @@ package ArticleWebService.service;
 
 import ArticleWebService.Exception.ArticleException;
 import ArticleWebService.dto.ArticleDto;
-import ArticleWebService.entities.Article;
-import ArticleWebService.entities.ArticleSave;
-import ArticleWebService.entities.ArticleUpdate;
-import ArticleWebService.entities.Domain;
+import ArticleWebService.entities.*;
 import ArticleWebService.repository.ArticleRepository;
 import ArticleWebService.repository.DomainRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -34,13 +31,11 @@ public class ArticleServiceImpl implements ArticleService {
     private DomainRepository domainRepository;
     private ModelMapper modelMapper;
 
-
     @Autowired
     private EntityManager entityManager;
 
     @Autowired
     public ArticleServiceImpl(ArticleRepository articleRepository,
-
                               DomainRepository domainRepository) {
 
         this.articleRepository = articleRepository;
@@ -59,6 +54,18 @@ public class ArticleServiceImpl implements ArticleService {
 
         return articleDtoPage;
 
+    }
+
+    @Override
+    public Page<ArticleDto> findAllArticlePageOrderBy(int page, int size) {
+
+        Page<Article> article = this.articleRepository
+                .findAllArticlePageOrderBy(PageRequest.of(page, size));
+
+        // Mapping de chaque article dans la page vers articleDTO
+        Page<ArticleDto> articleDtoPage = article.map(art -> this.modelMapper.map(art, ArticleDto.class));
+
+        return articleDtoPage;
     }
 
     @Override
@@ -147,5 +154,6 @@ public class ArticleServiceImpl implements ArticleService {
     public List<Domain> getAllDomainWithSection() {
         return this.domainRepository.findAll();
     }
+
 
 }

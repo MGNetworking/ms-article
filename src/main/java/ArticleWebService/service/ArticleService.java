@@ -1,10 +1,7 @@
 package ArticleWebService.service;
 
 import ArticleWebService.dto.ArticleDto;
-import ArticleWebService.entities.Article;
-import ArticleWebService.entities.ArticleSave;
-import ArticleWebService.entities.ArticleUpdate;
-import ArticleWebService.entities.Domain;
+import ArticleWebService.entities.*;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -22,6 +19,15 @@ public interface ArticleService {
     Page<ArticleDto> findArticlesPagination(int page, int size);
 
     /**
+     * Fait une recherche tous les articles
+     *
+     * @param page le numéro de la page
+     * @param size le nombre d'article
+     * @return une pagination d'article dans l'ordre des ID
+     */
+    Page<ArticleDto> findAllArticlePageOrderBy(int page, int size);
+
+    /**
      * Fait une recherche d'article par leur section.
      *
      * @param page      le numéro de la page
@@ -31,7 +37,7 @@ public interface ArticleService {
      */
     Page<ArticleDto> findArticlesPaginationSection(int page, int size, Integer sectionId);
 
-    Optional<Article> findArticleById(Integer id) ;
+    Optional<Article> findArticleById(Integer id);
 
     /**
      * Sauvegarde d'un article
@@ -44,7 +50,7 @@ public interface ArticleService {
 
     Optional<Article> updateArticle(ArticleUpdate articleUpdate) throws Exception;
 
-    void deleteArticleById(Integer idArticle)  throws IllegalArgumentException ;
+    void deleteArticleById(Integer idArticle) throws IllegalArgumentException;
 
     public List<Domain> getAllDomainWithSection();
 

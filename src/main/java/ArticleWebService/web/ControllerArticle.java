@@ -1,12 +1,9 @@
 package ArticleWebService.web;
 
 import ArticleWebService.Exception.ArticleException;
-import ArticleWebService.entities.ArticleUpdate;
+import ArticleWebService.entities.*;
 import ArticleWebService.response.CustomerResponse;
 import ArticleWebService.dto.ArticleDto;
-import ArticleWebService.entities.Article;
-import ArticleWebService.entities.ArticleSave;
-import ArticleWebService.entities.Domain;
 import ArticleWebService.response.ResponseHandler;
 import ArticleWebService.service.ArticleService;
 import io.swagger.annotations.ApiOperation;
@@ -83,6 +80,22 @@ public class ControllerArticle {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(this.articleService.findArticlesPagination(page, size));
+    }
+
+    @GetMapping(path = "/getAllArticlesOrderBy")
+    @ApiOperation(value = "Get articles list with pagable ")
+    public ResponseEntity<Page<ArticleDto>> getlistArticlePaginationOrdreBy(
+            @RequestParam(defaultValue = "0", name = "page", required = true) Integer page,
+            @RequestParam(defaultValue = "10", name = "size", required = true) Integer size)
+            throws Exception {
+
+        // Validation des paramètres minimal
+        page = page < 0 ? 0 : page;
+        size = size < 1 ? 10 : size;
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(this.articleService.findAllArticlePageOrderBy(page, size));
     }
 
     /**

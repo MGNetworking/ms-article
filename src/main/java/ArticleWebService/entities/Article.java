@@ -57,6 +57,8 @@ public class Article implements Serializable {
     @Column(name = "article", nullable = false)
     private String article;
 
+    @Column(name = "img_url", nullable = true)
+    private String imgUrl;
 
     @Column(name = "imgdescription", nullable = true)
     private String imgDescription;
