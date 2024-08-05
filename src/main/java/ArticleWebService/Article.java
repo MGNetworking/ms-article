@@ -12,7 +12,7 @@ import org.springframework.core.env.Environment;
 @SpringBootApplication
 @EnableDiscoveryClient
 @Slf4j
-public class BlogArticleApplication {
+public class Article {
 
     @Autowired
     private ArticleService articleService;
@@ -20,6 +20,6 @@ public class BlogArticleApplication {
     private Environment environment;
 
     public static void main(String[] args) {
-        SpringApplication.run(BlogArticleApplication.class, args);
+        SpringApplication.run(Article.class, args);
     }
 }

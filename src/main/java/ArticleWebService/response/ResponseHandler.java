@@ -14,7 +14,7 @@ import java.util.Map;
 public class ResponseHandler {
 
     /**
-     * Permet de générer une reponse formater
+     * Permet de générer une response formater
      *
      * @param message        le contenu du message
      * @param status         le status code
@@ -35,7 +35,7 @@ public class ResponseHandler {
     }
 
     /**
-     * Permet de générer une reponse formater
+     * Permet de générer une response formater
      *
      * @param message        le contenu du message
      * @param status         le status code
@@ -57,7 +57,7 @@ public class ResponseHandler {
     }
 
     /**
-     * Permet de générer une reponse formater
+     * Permet de générer une response formater
      *
      * @param message        le contenu du message
      * @param status         le status code
@@ -84,7 +84,7 @@ public class ResponseHandler {
 
 
     /**
-     * Permet de générer une reponse formater
+     * Permet de générer une response formater
      *
      * @param message        le contenu du message
      * @param status         le status code
@@ -112,10 +112,10 @@ public class ResponseHandler {
 
 
     /**
-     * Permet de générer une reponse formater
+     * Permet de générer une response formater
      *
      * @param customerResponse le contenu de la réponse
-     * @return le status http et le contenu de la réponse dasn un format Customer le tous
+     * @return le status http et le contenu de la réponse dans un format Customer le tous
      * structuré au format JSON
      */
     public static ResponseEntity<Object> generateResponse(CustomerResponse customerResponse) {

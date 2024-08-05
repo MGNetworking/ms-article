@@ -23,7 +23,6 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
-//@CrossOrigin(origins = "*")
 @RestController
 @Slf4j
 @RequestMapping("/article")
