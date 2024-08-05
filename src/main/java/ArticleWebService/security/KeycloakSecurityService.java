@@ -1,19 +1,29 @@
 package ArticleWebService.security;
 
+import ArticleWebService.filter.PostApiFilter;
+import ArticleWebService.filter.PreApiFilter;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.adapters.springsecurity.KeycloakConfiguration;
 import org.keycloak.adapters.springsecurity.config.KeycloakWebSecurityConfigurerAdapter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.web.authentication.session.RegisterSessionAuthenticationStrategy;
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 @KeycloakConfiguration
 @Slf4j
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class KeycloakSecurityService extends KeycloakWebSecurityConfigurerAdapter {
+
+    @Autowired
+    private PreApiFilter preApiFilter;
+
+    @Autowired
+    private PostApiFilter postApiFilter;
 
     /**
      * Permet la stratégie de la gestion de session. Elle utilise implementation classic
@@ -46,31 +56,25 @@ public class KeycloakSecurityService extends KeycloakWebSecurityConfigurerAdapte
      */
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-
         // configure plusieurs éléments essentiels pour l'intégration de Keycloak avec Spring Security
         super.configure(http);
 
-        // Utilise keycloak pour la sécurité donc désactive
-        http.csrf().disable();
-
-        // Gestion des accès au ressources
-        http.authorizeRequests()
+        http
+                .csrf().disable()
+                .authorizeRequests()
                 .antMatchers("/article/getAllArticles",
                         "/article/saveImages",
                         "/article/upload",
                         "/article/getAllArticlesSection",
                         "/article/getAllDomain")
-                .permitAll();
-
-        // role authorisé sur les endpoint user
-        http.authorizeRequests()
+                .permitAll()
                 .antMatchers("/article/saveArticle")
-                .hasAuthority("user");
-
-        // role authorisé sur les endpoint user et admin
-        http.authorizeRequests()
+                .hasAuthority("user")
                 .antMatchers("/article/updateArticle", "/article/deleteArticle/* ")
-                .hasAnyAuthority("admin", "user");
+                .hasAnyAuthority("admin", "user")
+                .and()
+                .addFilterBefore(preApiFilter, BasicAuthenticationFilter.class)
+                .addFilterAfter(postApiFilter, BasicAuthenticationFilter.class);
     }
 
 
