@@ -60,6 +60,7 @@ public class KeycloakSecurityService extends KeycloakWebSecurityConfigurerAdapte
         super.configure(http);
 
         http
+                .cors().disable()
                 .csrf().disable()
                 .authorizeRequests()
                 .antMatchers("/article/getAllArticles",
