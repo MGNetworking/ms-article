@@ -107,8 +107,9 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     public Optional<Article> updateArticle(ArticleUpdate articleUpdate) throws ArticleException {
 
-        log.info("Titre de l'article : " + articleUpdate.getTitre());
-        log.info("Identifiant user : " + articleUpdate.getIdUser());
+        log.info("Titre de l'article : {}", articleUpdate.getTitre());
+        log.info("Identifiant user : {}", articleUpdate.getIdUser());
+        log.info("Article url image : {}", articleUpdate.getImgUrl());
 
         //Article article = this.modelMapper.map(articleUpdate, Article.class);
 
@@ -124,6 +125,7 @@ public class ArticleServiceImpl implements ArticleService {
             art.setTitre(articleUpdate.getTitre());
             art.setArticle(articleUpdate.getArticle());
             art.setDescription(articleUpdate.getDescription());
+            art.setImgUrl(articleUpdate.getImgUrl());
             art.setImgDescription(articleUpdate.getImgDescription());
             art.setVisibiliter(articleUpdate.getVisibiliter());
             art.setDateMaj(Timestamp.valueOf(LocalDateTime.now()));

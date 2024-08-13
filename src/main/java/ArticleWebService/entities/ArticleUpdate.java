@@ -40,6 +40,8 @@ public class ArticleUpdate {
     @Size(min = 3, max = 100, message = "Le titre ne doit pas dépasser 100 caractères")
     private String titre;
 
+    private String imgUrl;
+
     //@NotEmpty(message = "L'article doit avoir des images d'en-tête ")
     private String imgDescription;
 
