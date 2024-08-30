@@ -88,7 +88,7 @@ pipeline {
                     dockers = utilsServeur.dockers(
                             "${VERSION_Docker}",                                        // img
                             '/usr/local/bin',                                           // binDocker
-                            '/volume1/docker/Blog-Frontend',                            // pathProjet
+                            '/volume1/docker/ms-article',                            // pathProjet
                             env.STACK_NAME                                              // stackName
                     )
 
@@ -241,6 +241,7 @@ pipeline {
                     sh("mvn clean package -Dspring.profiles.active=${env.BRANCH_NAME} " +
                             "-DIP=192.168.1.56 " +                              // uniquement pour le nas
                             "-DSERVICE_CONFIG_DOCKER=${SERVICE_CONFIG_URI}")    // le service config
+
                 }
             }
         }

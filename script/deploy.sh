@@ -32,3 +32,6 @@ else
   echo "docker stack deploy -c ./docker-compose-swarm.yml $STACK_NAME"
   docker stack deploy -c ./docker-compose-swarm.yml $STACK_NAME
 fi
+
+echo "Fin du script de déploiement"
+exit 0
