@@ -370,7 +370,7 @@ pipeline {
                     echo(LINE)
 
                     def TAGE_NAME = "${env.IMAGE_VERSION}-${params.BUILD}"
-                    def REPO_NAME = "MGNetworking/ms-eureka"
+                    def REPO_NAME = "MGNetworking/ms-article"
 
                     try {
                         if (params.BUILD == 'beta') {
