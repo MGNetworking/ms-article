@@ -34,4 +34,3 @@ else
 fi
 
 echo "Fin du script de déploiement"
-exit 0
