@@ -26,6 +26,7 @@ if [ "$PROFILES" == "nas" ]; then
   echo "Deploiement avec le PROFILES: NAS !"
   echo "Commande de déploiement sur le serveur Nas"
   echo "/usr/local/bin/docker stack deploy -c ./docker-compose-swarm.yml $STACK_NAME"
+  /usr/local/bin/docker stack deploy -c ./docker-compose-swarm.yml $STACK_NAME
 else
   echo "Deploiement avec le PROFILES: $PROFILES"
   echo "Commande de déploiement sur le serveur $PROFILES"
