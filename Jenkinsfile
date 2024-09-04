@@ -412,7 +412,7 @@ pipeline {
                     utilsDocker.clsImage(this, "docker rmi ${dockers.img}")
 
                 } catch (Exception e) {
-                    step.error("Une erreur est survenu dans POST always , message : ${e.message}")
+                    error("Une erreur est survenu dans POST always , message : ${e.message}")
                 }
             }
         }
@@ -427,28 +427,23 @@ pipeline {
         failure {
             script {
                 echo(LINE)
-                // Si le déploiement a échoué
-                if (!currentResult) {
-                    echo("Échec du déploiement. Effectuer un rollback.")
+                echo("Échec du déploiement. Effectuer un rollback.")
 
-                    if (!STATUS_STACK) {
-                        echo("Échec du déploiement de la stack ${dockers.stackName}")
-                        echo("Suppression de la stack ${dockers.stackName} sur le serveur distant")
-                        String deleteStack = sshCommand remote: remote, command: "${dockers.binDocker}/docker stack rm ${dockers.stackName}"
-                        echo("Sortie Delete stack: ${deleteStack}")
-                    } else {
-                        echo("Échec de la mise à jour de la stack ${dockers.stackName}")
-                        echo("ROLLBACK de la stack ${dockers.stackName}")
-                        String rollbackResult = sshCommand remote: remote, command: "docker service rollback ${NAME_SERVICE}"
-                        echo("Sortie ROLLBACK : ${rollbackResult}")
-                    }
-                    def time = 15
-                    echo "Suppression de l'image en échec ${dockers.img} sur le serveur dans ${time} secondes ..."
-                    sleep time: time, unit: 'SECONDS'
-                    utilsDocker.clsImageSsh(this, remote, "${dockers.binDocker}/docker rmi ${dockers.img}")
+                if (!STATUS_STACK) {
+                    echo("Échec du déploiement de la stack ${dockers.stackName}")
+                    echo("Suppression de la stack ${dockers.stackName} sur le serveur distant")
+                    String deleteStack = sshCommand remote: remote, command: "${dockers.binDocker}/docker stack rm ${dockers.stackName}"
+                    echo("Sortie Delete stack: ${deleteStack}")
                 } else {
-                    echo("Le déploiement a réussi. Pas de rollback nécessaire.")
+                    echo("Échec de la mise à jour de la stack ${dockers.stackName}")
+                    echo("ROLLBACK de la stack ${dockers.stackName}")
+                    String rollbackResult = sshCommand remote: remote, command: "docker service rollback ${NAME_SERVICE}"
+                    echo("Sortie ROLLBACK : ${rollbackResult}")
                 }
+                def time = 15
+                echo "Suppression de l'image en échec ${dockers.img} sur le serveur dans ${time} secondes ..."
+                sleep time: time, unit: 'SECONDS'
+                utilsDocker.clsImageSsh(this, remote, "${dockers.binDocker}/docker rmi ${dockers.img}")
             }
         }
     }
