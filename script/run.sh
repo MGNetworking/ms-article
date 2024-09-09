@@ -1,113 +1,122 @@
 #!/bin/bash
 
-# export des variable d'environnement (pour la compilation via Maven)
+handle_error() {
+  echo "Une erreur et survenu lors de l'exécution de la commande : $1"
+  echo "Fin du script"
+  exit 1
+}
+
+
+echo "---------------------------"
 export $(cat .env)
+export SERVICE_CONFIG_DOCKER="http://192.168.1.98:8089"
+export PROFILES=dev
+version_beta="$DOCKER_IMAGE_NAME:$IMAGE_VERSION-beta"
 
-env=("Run stack $STACK_NAME" "Compilation / build and Run stack $STACK_NAME" )
-echo "Lancement de la compilation (Mode Dev) "
-echo "Choisissez votre type de compilation :"
+while true; do
+  env=("Exit" "Run stack" "Build and Run stack" "Down stack" "status stack" )
+  echo "Lancement de la compilation (Mode Dev) "
+  echo "Choisissez votre type de compilation :"
 
-affichage=""
-for i in "${!env[@]}"; do
-  affichage+="[$i] ${env[$i]} \n"
-done
+  affichage=""
+  for i in "${!env[@]}"; do
+    affichage+="[$i] ${env[$i]} \n"
+  done
 
-# Affiche a l'utilisateur tout des options disponibles
-echo -e "$affichage"
-read choix
+  # Affiche a l'utilisateur tout des options disponibles
+  echo -e "$affichage"
+  read choix
 
-trouver=false
-selection=""
+  # recherche du choix sélectionné
+  if [ -n "${env[$choix]}" ]; then
+    echo "-------------[ ${env[$choix]} ]--------------"
 
-# recherche du choix sélectionné
-if [ -n "${env[$choix]}" ]; then
-  echo "Vous avez choisi : ${env[$choix]}"
-  selection=${env[$choix]}
-  trouver=true
-fi
-
-run_stack(){
-
-    if [[ -z $(docker images --filter "reference=$DOCKER_IMAGE_NAME"  | grep "$DOCKER_IMAGE_NAME" ) ]]; then
-
-    echo "l'images n'a pas etait trouver vous ne pouvez pas créer la stack"
-    exit 1
-    fi
-
-    echo "deploy de la stack : $STACK_NAME"
-    export PROFILES=dev
-    docker stack deploy -c ./docker-compose-swarm.yml $STACK_NAME
-
-    echo "Liste des stack"
-    docker service ls
-
-    echo "***************"
-    echo "Lancement du service article_ms-article"
-    docker service logs -f article_ms-article
-
-}
-
-compilation_Maven(){
-
-    echo "Compilation du projet $STACK_NAME via Maven"
-
-    # Variable d'environnement
-    export SERVICE_CONFIG_DOCKER="http://192.168.1.68:8089"
-    export PROFILES=dev
-    mvn clean package -Dspring.profiles.active=$PROFILES
-
-    echo "Création de l'images : $STACK_NAME"
-    docker compose -f docker-compose.yml build --no-cache
-
-    echo "déploiement de la stack du service : $STACK_NAME"
-    ./script/deploy.sh
-
-    echo "Liste des stack"
-    docker service ls
-
-    echo "***************"
-    echo "Lancement du service article_ms-article"
-    docker service logs -f article_ms-article
-}
-
-docker info >/dev/null 2>&1
-DOCKER_STATUS=$?
-
-
-if [ $DOCKER_STATUS -eq 0 ]; then
-  echo "Docker est en cours d'exécution."
-
-  status=$(docker inspect --format='{{.State.Status}}' $STACK_NAME >/dev/null 2>&1)
-
-  # Vérifie l'états du service
-  if [[ $status == "running" ]]; then
-
-    timeUTC=$(docker inspect --format='{{.State.StartedAt}}' $STACK_NAME)
-    conversion=$(date -d $timeUTC)
-
-    # Si il est toujours en cours d'exécution
-    echo "************************************"
-    echo "Le conteneur $STACK_NAME est en cour d'exécution depuis : $conversion"
-    echo "Suppression du conteneur $STACK_NAME"
-    docker compose -f docker-compose.yml logs -f
-
-  elif [[ $status == "exited" ]]; then
-
-    # Si il est toujours en cours d'exécution
-    echo "************************************"
-    echo "le conteneur $STACK_NAME à été stoppé, mais et toujours actif"
-    echo "Suppression du conteneur $STACK_NAME"
-    docker container start $STACK_NAME
-
-  else
-      if [ $choix -eq 0 ]; then
-        run_stack
-
-      elif [ $choix -eq 1  ]; then
-        compilation_Maven
-      fi
   fi
 
-else
-  echo "Docker n'est pas en cours d'exécution."
-fi
+  run_stack(){
+
+      if [[ -z $(docker images --filter "reference=$DOCKER_IMAGE_NAME"  | grep "$DOCKER_IMAGE_NAME" ) ]]; then
+
+        echo "L'images docker est absente, vous ne pouvez pas créer la stack sans image docker !!!"
+
+        else
+          echo "deploy de la stack : $STACK_NAME"
+          export IMAGE_VERSION="$DOCKER_IMAGE_NAME:$IMAGE_VERSION-beta"
+          ./script/deploy.sh beta || handle_error "Exécution du script de Déploiement en version $version_beta"
+      fi
+
+  }
+
+  compilation_Maven(){
+
+      echo "Compilation du projet $STACK_NAME via Maven"
+      mvn clean package "-Dspring-boot.run.jvmArguments=-Dspring.profiles.active=$PROFILES -DSERVICE_CONFIG_DOCKER=$SERVICE_CONFIG_DOCKER"
+
+      echo "Création de l'images : $STACK_NAME"
+      docker compose -f docker-compose.yml build --no-cache || handle_error "Construction de l'image Docker"
+
+      echo "---------------------------"
+      echo "tage de l'image $DOCKER_IMAGE_NAME:$IMAGE_VERSION vers $version_beta"
+      docker tag "$DOCKER_IMAGE_NAME:$IMAGE_VERSION" "$version_beta" || handle_error "Tag de l'image Docker"
+
+      echo "---------------------------"
+      echo "deploiement de la stack: $STACK_NAME en version beta"
+      ./script/deploy.sh beta || handle_error "Exécution du script de Déploiement en version $version_beta"
+
+  }
+
+  status(){
+
+    echo "docker service ls"
+    docker service ls
+
+    echo "---------------------------"
+    echo "docker service ps $NAME_SERVICE "
+    docker service ps $NAME_SERVICE
+  }
+
+  docker info >/dev/null 2>&1
+  DOCKER_STATUS=$?
+
+
+  if [ $DOCKER_STATUS -eq 0 ]; then
+
+    status=$(docker inspect --format='{{.State.Status}}' $STACK_NAME >/dev/null 2>&1)
+
+    # Si le conteneur est déjà en cours d'exécution
+    if [[ $status == "running" ]]; then
+
+      timeUTC=$(docker inspect --format='{{.State.StartedAt}}' $STACK_NAME)
+      conversion=$(date -d $timeUTC)
+
+      echo "---------------------------"
+      echo "Le conteneur $STACK_NAME est en cour d'exécution depuis : $conversion"
+      echo "Suppression du conteneur $STACK_NAME"
+      docker compose -f docker-compose.yml logs -f || handle_error "Affichage des logs du conteneur $STACK_NAME"
+
+    elif [[ $status == "exited" ]]; then
+
+      echo "---------------------------"
+      echo "le conteneur $STACK_NAME à été stoppé, mais et toujours actif"
+      echo "Suppression du conteneur $STACK_NAME"
+      docker container start $STACK_NAME || handle_error "Redémarrage du conteneur $STACK_NAME"
+
+    else
+
+        if [ $choix -eq 0 ]; then
+          exit 0
+        elif [ $choix -eq 1  ]; then
+          run_stack
+        elif [ $choix -eq 2  ]; then
+          compilation_Maven
+        elif [ $choix -eq 3  ]; then
+          ./script/down.sh
+        elif [ $choix -eq 4  ]; then
+          status
+        fi
+    fi
+
+  else
+    echo "Docker n'est pas en cours d'exécution !"
+  fi
+done
