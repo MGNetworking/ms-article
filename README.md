@@ -1,43 +1,54 @@
 # API de Gestion d'Articles
 
-Bienvenue dans l'API de Gestion d'Articles, une solution puissante pour la création, la modification et la mise à jour
-d'articles sur votre site web.
-
-## Table des matières
+## Sommaire
 
 * [Fonctionnalités principales](#fonctionnalités-principales)
-* [Configuration et dépendances](#configuration-requise)
+* [Configuration Requise](#configuration-requise)
     * [Étapes de Configuration](#étapes-de-configuration)
     * [Les dépendances externes](#les-dépendances-externes)
 * [Compilation et déploiement](#compilation-et-déploiement)
-  * [Les Phases de compilation](#les-phases-de-compilation)
-  * [Les Scripts](#les-scripts)
-  * [Scenarios de deployment](#scenarios-de-deployment)
-* [Intégration avec ms-gateway](#intégration-avec-ms-gateway)
+    * [Les Phases de compilation](#les-phases-de-compilation)
+    * [Intégration avec ms-gateway](#intégration-avec-ms-gateway)
     * [Accès via ms-gateway](#accès-via-ms-gateway)
     * [Accès Direct par Adresse IP](#accès-direct-par-adresse-ip)
     * [Postman](#postman)
-* [Mode Débogage](#mode-débogage)
+* [Les Scripts](#les-scripts)
+* [Configuration de développement](#configuration-de-développement)
+    * [Maven](#maven)
+    * [Docker](#docker)
+* [Scenarios de deploiement](#scenarios-de-deploiement)
 
+## Objectif
 
-## Documentation
+Cette API a pour objectif de fournir une solution complète pour la gestion des articles
+de [mon site web](https://ghoverblog.ovh/). Elle permet aux utilisateurs d'enregistrer, de modifier et de supprimer des
+articles de manière sécurisée et efficace.
 
-La documentation complète de l'API est disponible dans le dossier [docs](/docs TODO). Vous y trouverez des informations
-détaillées sur l'installation, les points d'extrémité, des exemples pratiques, et bien plus encore.
+L'API intègre Keycloak pour assurer l'authentification des utilisateurs et gérer l'accès aux différents points de
+terminaison. Les règles d'autorisation ont été configurées de manière à ce que chaque utilisateur puisse modifier ou
+supprimer uniquement ses propres articles. De plus, les utilisateurs disposant du rôle ADMIN bénéficient de droits
+supplémentaires leur permettant de gérer les articles de tous les utilisateurs.
+
+Cette configuration garantit à la fois la sécurité des données et la flexibilité nécessaire pour une gestion adaptée des
+contenus par les différents types d'utilisateurs.
 
 ## Fonctionnalités principales
 
-`Création d'Articles `: Permet aux utilisateurs d'ajouter de nouveaux articles via le site web en utilisant des requêtes
-simples.
+* `Création d'Articles `  
+  Permet aux utilisateurs d'ajouter de nouveaux articles via le site web en utilisant des requêtes
+  simples.
 
-`Modification d'Articles` : Offre la flexibilité nécessaire pour mettre à jour le contenu des articles existants en
-fonction des besoins des utilisateurs.
+* `Modification d'Articles`  
+  Offre la flexibilité nécessaire pour mettre à jour le contenu des articles existants en
+  fonction des besoins des utilisateurs.
 
-`Mise à Jour d'Articles` : Fournit des mécanismes pour mettre à jour les informations des articles, garantissant une
-gestion précise et à jour du contenu.
+* `Mise à Jour d'Articles`  
+  Fournit des mécanismes pour mettre à jour les informations des articles, garantissant une
+  gestion précise et à jour du contenu.
 
-`Affichage d'Articles` : Permet aux sites web d'afficher facilement les articles stockés dans la base de données,
-offrant ainsi une expérience utilisateur fluide.
+* `Affichage d'Articles`  
+  Permet aux sites web d'afficher facilement les articles stockés dans la base de données,
+  offrant ainsi une expérience utilisateur fluide.
 
 ## Configuration Requise
 
@@ -82,25 +93,24 @@ mvn clean package -Dspring.profiles.active=nas -DIP=192.168.1.56 -DSERVICE_CONFI
 ```
 
 * `-Dspring.profiles.active=nas`  
-  La spécification du profile permet au service de récupérer le fichier de properties en correspondance avec
-  son environnement. Il est indispensable a la création du build mes aussi dans le étapes du deployment.
-  Tout foi, pour le déployment, il lui aussi lui spécifier (voir cela dans 3 phase)
+  La spécification du profil permet au service, de récupérer son fichier de properties en correspondance avec son
+  environnement. Il est indispensable a la création du build mes aussi dans les étapes du deployment.
+  Cependant, pour le déployment, il lui aussi lui spécifier (voir cela dans 3 phase)
 
 
 * `-DSERVICE_CONFIG_DOCKER=${SERVICE_CONFIG_URI}`  
-  Cette variable permet de localiser le service qui possède le fichier de properties. Sans cette adresse
-  il ne peut contacté le service pour récupérer son fichier de properties qui lui ai indispensable.
+  Cette variable permet de localiser le service qui possède le fichier de properties. Sans cette adresse, il ne peut
+  contacter le service pour récupérer son fichier de properties qui lui ai indispensable.
 
 
 * `-DIP=192.168.1.56`  
-  Cette variable permet de définir l'adresse IP la base de données. Cette données est récupérer puis ajouté au variable
+  Cette variable permet de définir l'adresse IP la base de données. Cette donnée est récupéré puis ajouté aux variables
   d'environnement pour être données au fichier de `.properties`
 
-NB: La variable `-DIP` est nécessaire uniquement pour :   
-    _ La phase de compilation `Maven` dans le context Nas par l'intermédiaire du fichier `msarticle-nas.properties`  
-    _ Le déploiement `Swarm` dans le context Nas par l'intermédiaire du fichier `docker-compose-swarm.yml` 
+NB: La variable `-DIP` est nécessaire uniquement pour :
 
-
+- La phase de compilation `Maven` dans le context Nas par l'intermédiaire du fichier `msarticle-nas.properties`
+- Le déploiement `Swarm` dans le context Nas par l'intermédiaire du fichier `docker-compose-swarm.yml`
 
 2. phase 2 :  
    Après la compilation, l'image et construite en utilisant le fichier docker compose dédier a cette effet.
@@ -157,185 +167,36 @@ Pour simplifier l'interaction avec l'API pour le test en développement, dans le
 trouverez le fichier `REST API  ms-article.postman_collection.json`. Vous pouvez l'importé dans votre environnement
 Postman.
 
-Il contient une description d'utilisation et des exemples de requêtes pour les principaux points de terminaison de l'
-API `ms-article`.
+Il contient une description d'utilisation et des exemples de requêtes pour les principaux points de terminaison de
+l'API `ms-article`.
 
 ## Les Scripts
 
-Les scripts `run.sh` et `down.sh` ont été créer dans le but de facilité l'exécution du projet en environment Swarm DEV,
-mais pas pour le mode debug. Ils ont pour objectif de test l'exécution de l'API dans l'infrastructure Docker Swarm de
-manière plus simple et rapide.
+Les scripts `run.sh` et `down.sh` été conçu dans le but de facilité l'exécution du projet en environment Swarm. Ils ont
+pour objectif de test l'exécution de l'API dans l'infrastructure Docker Swarm de manière plus simple et rapide.
 
-* `run.sh` : Au lancement de ce script, vous avez 2 choix possible :
+Le script `deploy.sh` a été conçu pour automatiser le déploiement de l'API conteneurisée dans un environnement Docker
+Swarm. En exécutant ce script, l'API est déployée de manière efficace, garantissant une orchestration optimale des
+services au sein du cluster Docker Swarm. Ce script est utilisé aussi bien utilisé pour le développement via le script
+`run.sh` que dans les pipelines Jenkins pour le déploiement sur les serveurs.
 
-    * La Compilation complète puis le Run de la stack :  
-      Pour la compilation complète, vous devez avoir Maven dans votre environnement est le JDK 1.8 de Java.
-      le script lancera la compilation via Maven et votre JDK avec les variables d'environnement nécessaire son
-      exécution.
-      Après la création du Jar, le docker compose responsable de la création de l'image, copiera les fichiers scripts
-      ainsi que le Jar nouvellement créer dans les couches de l'image Docker. Cela permet d'avoir une image d'API plus
-      légère et donc optimisée.
-      Après la création de l'image Docker, le docker compose Swarm, reasonable de la création de la stack, lancera la
-      création de la stack.
+Le script `wait_for_config.sh` est utilisé dans le context Swarm docker. Il permet d'attendre d'attendre que le service
+`ms-configuration` soit en cours d'exécution. En effet, le service `ms-configuration` permet de récupérer les fichiers
+`.properties` nécessaires a execution de l'application. Sans ce service, l'API ne pourra récupérer ses properties en
+lien avec son profile. Ce script est ajouté pendant la phase de construction de l'image Docker avec d'autre script.
 
-    * Le Run de la stack :  
-      Cette possibilité est à utiliser dans le cas ou vous avez déjà créé l'image et donc que vous n'avez plus qu'a
-      créé la stack. Cela permet de gagner du temps quand vous testez l'application est que vous supprimez la stack
-      uniquement
+Le script `healthcheck.sh` est responsable de la création de la stack et permet surveiller l'état de santé du
+microservice au sein du cluster Docker Swarm.
+Il est automatiquement exécuté via la configuration `healthcheck` définie dans le fichier `docker-compose-swarm.yml`.
+Grâce à cette configuration, le script vérifie régulièrement le bon fonctionnement du microservice, avec un intervalle,
+un délai, ainsi qu'un nombre de tentatives défini dans ce docker compose.
 
+## Configuration de développement
 
-* `down.sh` : Au lancement de ce script, vous avez 2 choix possible :
+### Maven
 
-    * Supprimer la stack : Si vous avez besoin de supprimer la stack uniquement.
-
-    * Supprimer la stack et l'image : Si vous avez besoin de supprimer la stack et l'image du système. Avec cela vous
-      aurai aussi la suppression des images sans étiquette.
-
-
-* `deploy.sh` : Ce script est utilise pour déployer le service. Il est utilise dans le script
-  `run.sh` mais aussi et surtout dans le `Jenkinsfile`.
-
-Voici le script :
-
-```shell
-#!/bin/bash
-
-echo "export des variables "
-export $(cat .env)
-
-echo "déploiement / update de la stack : $STACK_NAME"
-echo "PROFILES : $PROFILES"
-
-# le déploiement sur le nas
-if [ "$PROFILES" == "nas" ]; then
-  echo "deploy with PROFILES : nas"
-  /usr/local/bin/docker stack deploy -c ./docker-compose-swarm.yml $STACK_NAME
-else
-  echo "deploy with PROFILES : $PROFILES"
-  docker stack deploy -c ./docker-compose-swarm.yml $STACK_NAME
-fi
-```
-
-La vairable `PROFILES` est binder vers le docker compose pour utilisé en tant que variable d'environnement.
-Cela permet de lancer l'API avec le profile utilisateur recherché.
-
-* `wait_for_config.sh` : Ce script est utilisé dans le context Swarm docker. Il permet de vérifier que le service
-  `ms-configuration` soit bien en cours d'exécution. En effet, ce service contient les fichiers `.properties`
-  nécessaires a execution de l'application. Sans ce service, l'API ne peut être lancer. Ce script est ajouté pendant la
-  phase de construction de l'image Docker avec d'autre script.
-  Son objectif est d'attendre que le service `ms-configuration` soit en cours d'exécution. Tant qu'il n'est pas en cours
-  d'exécution, pas de RUN de l'API.
-
-NB : Le service `ms-configuration` est aussi important pendant la phase de compilation. Sans son fichier de
-configuration, il ne peut n'y compiler n'y s'exécuter !!!
-
-voici le script :
-
-```shell
-#!/bin/bash
-
-echo  "Lancement du script wait_for_config en cours ... "
-
-# Dans le cas d'un déployement sur le nas
-if [ -z "$PROFILE_ACTIF_SPRING" ] || [ -z "$SERVICE_CONFIG_DOCKER" ] || [ -z "$IP"  ]; then
-
-  echo  "Les variables de configuration sont absente, initialisation Nas lancer"
-
-  echo "La variable PROFILE_ACTIF_SPRING => $PROFILE_ACTIF_SPRING <="
-  echo "L'adresse IP du service configuration sur le réseau Overlay: $SERVICE_CONFIG_DOCKER <="
-  echo "valeur de l'adresse IP de connection à la base de données  $IP <="
-
-  PROFILE_ACTIF_SPRING=nas
-  IP=172.17.0.1
-  SERVICE_CONFIG_DOCKER=http://ms-configuration:8089
-
-  echo  "Les variables de configuration sont initialiser"
-  echo "La variable PROFILE_ACTIF_SPRING => $PROFILE_ACTIF_SPRING <="
-  echo "L'adresse IP du service configuration sur le réseau Overlay: $SERVICE_CONFIG_DOCKER <="
-  echo "valeur de l'adresse IP de connection à la base de données  $IP <="
-fi
-
-
-  while true; do
-    response=$(curl -s $SERVICE_CONFIG_DOCKER/msarticle/$PROFILE_ACTIF_SPRING)
-
-    echo "request vers : $SERVICE_CONFIG_DOCKER/msarticle/$PROFILE_ACTIF_SPRING"
-
-    echo "**********************************"
-    echo "Liste des variables d'environnment"
-    env
-    echo "**********************************"
-
-    if [ -n "$response" ]; then
-      echo "Le service ms-configuration est en cours d'exécution."
-      echo "Lancement du service ms-article ..."
-      java -jar app.jar --spring.profiles.active=$PROFILE_ACTIF_SPRING --IP=$IP
-
-      break  # Sortir de la boucle si le service est opérationnel
-    else
-      echo "Le service ms-configuration n'est pas encore opérationnel !"
-      sleep 3
-    fi
-
-  done
-```
-
-On peut voir en debut de script, la gestion du cas spéciale Nas. En effet, comme dit précédemment, le Nas ne permet pas
-la récuperation des variables d'environnement. Donc, ce cas gérer en dure dans le script pour cette unique raison.
-
-Le reste du script permet d'attendre que le service configuration soit encours d'exécution. Cela est très utilise l'or
-de redémarrage du serveur. Pour rappeler si le service est lancer sans sa configuration il tombera en échec et restera
-bloquer dans cette état.
-
-A note que la variable `--IP=$IP` est uniquement utilise pour le serveur Nas. Elle est récupérer par le fichier de
-properties dédier au Nas uniquement est n'a aucun impacte sur les autres Workflow .
-
-* `healthcheck.sh` : Dans le fichier docker compose Swarm, responsable de la création de la stack, la gestion de la
-  santé du service y est configuré. Ce script est utilisé dans ce but. Il exécute une requête curl via l'adresse Ip du
-  service dans le context Swarm pour récupérer la santé de celui-ci. Un fichier de log y est disponible
-  dans `/app/logs/healthcheck.log`
-
-voici le script :
-
-```shell
-#!/bin/sh
-
-## le fichier de log dans le conteneur ou service 
-logs="/app/logs/healthcheck.log"
-exec > "$logs" 2>&1
-
-## Récupérer l'adresse IP de l'interface eth1
-IP=$(ifconfig eth1 | awk '/inet / {gsub(/addr:/, "", $2); print $2}')
-
-echo  "script healthcheck en cours ... "
-tentative=0
-while [ $tentative -lt 5 ]; do
-
-  echo  "Adresse IP service : $IP "
-  echo  "request : http://$IP:9010/actuator/health "
-
-  status=$(curl -s -m 5 http://$IP:9010/actuator/health | jq -r '.status' )
-  echo " Résultat de la requête curl : $status"
-
-  if [ "$status" = "UP" ]; then
-    echo  "success du script de santé : $status"
-    exit 0  # Succès
-  elif [ "$status" = "DOWN" ]; then
-    echo  "Échec du script de santé : $status"
-    exit 1  # Échec 1
-  else
-    echo  "tentative : $tentative"
-    tentative=$((tentative + 1))
-    sleep 3
-  fi
-done
-```
-
-## Mode Débogage
-
-Si vous avez besoin de déboguer l'API, suivez ces étapes pour configurer un environnement de débogage :
-
-Dans intellij, aller vers éditer une configuration, puis ajoute avec le plus et sélectionner Maven
+Si vous avez besoin de déboguer l'API, suivez ces étapes pour configurer un environnement de débogage. Dans intellij,
+aller vers éditer une configuration, puis ajoute avec le plus et sélectionner Maven
 
 ![maven-debug.png](images/edit-configuration.png)
 
@@ -377,13 +238,15 @@ clean test -Dspring.profiles.active=devlocal -DSERVICE_CONFIG_DOCKER=http://192.
 clean test -Dspring.profiles.active=dev -DSERVICE_CONFIG_DOCKER=http://192.168.1.68:8089 spring-boot:run -Dspring-boot.run.jvmArguments="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005 -DSERVICE_CONFIG_DOCKER=http://192.168.1.68:8089 -Dspring.profiles.active=dev"
 ```
 
-Note que le profile est `devlocal`. cette environnement correspond votre environnement locale. c'est dire qu'il
-que le fichier de properties en correspondance contient la localisation de keycloak et postgres dans votre sur votre
-machine.
+Le profile `devlocal` permet l'exécution de l'API de manière autonome. Cependant, cette API fonction conjointement avec
+l'api `Gateway`. Et donc, ces deux API doit se trouver dans le type d'environnement, pour cause de configuration réseau.
+En effet, dans un environnement docker swarm, la communication s'exécute au traver du réseau overlay, qui un réseau
+spécifique interne docker. Alors, si par exemple la Gateway se trouve dans ce réseau docker, elle ne pourra pas
+communiquer avec l'API Article. Ces deux API doivent impérativement ce trouve sur le même réseau. Donc le réseau de la
+machine locale soit le réseau overlay docker.
 
-Il n'appartient pas au context docker n'y même docker Swarm. Pour testé l'environnement Docker Swarm, les
-scripts `run.sh` et `down.sh` sont dédier a cette effet et aucun configuration n'est nécessaire puis qu'il embarque les
-3 phase. La création de l'artefact ou l'archive Jar et la création de l'image et le déployment en locale de la stack.
+Note que le profile `devlocal` et conçut spécifiquement a cet effet, c'est-à-dire le développement local de l'API
+appelé autonome ou local.
 
 ```shell
 # commande de base 
@@ -422,67 +285,78 @@ Détail de la commande :
 
 Working directory : Cible le dossier projet (l'API ms-article)
 
-### Scenarios de deployment
+### Docker
 
-Les scenarios permet de mettre en place l'environnement de connection principalement au tour de la communication entre
-le `service ms-article` est le service `registre Eureka`.  
-Cette API regroupe deux scenarios lier a leur environnement :
+Pour utiliser le script `run.sh` qui utilise le`down.sh` et aussi `deploy.sh` , il vous faut un exécuté bash. Sous
+Windows, vous pouvez utiliser wsl qui un sous système linux dans Windows. Voici un exemple de configuration qui utilise
+le script `run.sh`
 
-* local
-* Swarm
+La partie importante est de localiser le Bash de wsl qui reste à vérifier sur votre machine
 
-1. Dans le `scenarios local`, l'API ou le service ms-article est déployer sur le système host. Il nécessite les
-   configurations suivant :
+````bash
+\\wsl.localhost\Ubuntu-22.04\usr\bin\bash
+````
 
-* La localisation du serveur :
+![script-run-config.png](images/script-run-config.png)
+
+### Scenarios de deploiement
+
+Les scenarios de deploiement permettent de mettre en place l'environnement au tour de la communication entre les
+services.
+
+On distingue deux scenarios,
+
+* `scenarios local` qui utilise l'environnement de l'host
+* `scenarios Swarm` qui utilise le réseau virtuel docker et orchestrateur Swarm
+
+1. Dans le `scenarios local`, l'API ou le service ms-article est déployé sur le système host de manière autonome. Il
+   nécessite les configurations suivantes :
+
+* La localisation du micro service Eureka:
 
 ```yaml
 eureka.client.service-url.defaultZone=http://192.168.1.68:8099/eureka
 ```
 
-L'adresse ip d'Eureka sur votre machine
-
-* Indiqué au serveur Eureka registre de privilégier l'utilisation de l'adresse IP lors de l'enregistrement :
+* L'adresse ip d'Eureka sur votre machine, qui indiqué au serveur Eureka registre de privilégier l'utilisation de
+  l'adresse IP lors de l'enregistrement avec une valeur à `true`
 
 ```yaml
 eureka.instance.preferIpAddress=true
 ```
 
-* Spécifie un identifiant unique pour l'enregistrement dans Eureka Serveur en utilisant sont nom d'application :
+* Spécifie un identifiant unique pour l'enregistrement dans Eureka Serveur en utilisant son nom d'application puis créer
+  un identifiant pour le service registre.
 
 ```yaml
 spring.application.name=ms-article
 eureka.instance.instance-id=${spring.application.name}:${server.port}:${random.value}
 ```
 
-Ces properties vont permettre au service ms-article de ce connecter au service registre en utilisent l'adresse IP du
-service registre Eureka et d'enregistre le service en privilégient l'IP du service ms-article et de créer en identifiant
-dans le service registre en ce basent sur nom sont port de connexion et une valeur aléatoire permettent de le distinguer
-des autres services ms-article.
+2. Dans le `scenarios swarm`, Les API sont déployées au sein de ce cluster Docker Swarm et sont intégrées dans le même
+   réseau overlay. Ce réseau virtuel permet aux services de communiquer entre eux de manière sécurisée et efficace, même
+   lorsqu'ils sont répartis sur différents nœuds du cluster. Ce scenario nécessite les configurations suivantes :
 
-2. Dans le `scenarios swarm`, l'API ou le service ms-article est déployer dans un cluster docker Swarm. Il déployer a
-   partir d'une image docker. Tous les services deployer au sein de ce cluster peuvent communiqué entre eux par le
-   réseau overlay attribuer. Ce scenario nécessite les configurations suivant :
-
-
-* La localisation du serveur :
+* La localisation de l'API Eureka      
+  Dans notre cas `ms-eureka` représente le nom du service registre dans le réseau docker Overlay. Il sera localisé par
+  son
+  nom via la résolution DNS au sien du réseau Overlay dans lequel il est déployé.
 
 ```yaml
 eureka.client.service-url.defaultZone=http://ms-eureka:8099/eureka
 ```
 
-Dans notre cas `ms-eureka` représente le nom du service registre. Il sera retrouve par la résolution DNS au sien du
-réseau Overlay dans lequel il est déployer.
-
-* Les gestion des interfaces réseau du service. Nous devons privilégier l'interface `eth1` pour connection dans le
-  réseau Overlay et aussi ignorer l'interface `eth0` qui est la connection externe du service.
+* La gestion de la connexion des services en utilisant les interfaces réseau overlay. Nous devons privilégier
+  l'interface `eth1` pour connection dans le réseau Overlay et aussi ignorer l'interface `eth0` qui est la connection
+  externe du service. Sans cette configuration l'API Article ne pourra s'enregistrer auprès de l'API Eureka et donc
+  l'API gateway ne pourra localiser l'API Article afin de lui acheminer les requêtes.
 
 ```yaml
 spring.cloud.inetutils.ignoredInterfaces=eth0
 eureka.instance.network-interface-name=eth1
 ```
 
-Voici une explication des interfaces réseau couramment présentes dans un conteneur Docker :
+Voici une explication concernant les interfaces réseau couramment présentes dans un conteneur Docker :
 
 `eth0` : C'est l'interface réseau principale du conteneur. Elle est utilisée pour la communication avec d'autres
 conteneurs sur le même réseau overlay et avec le monde extérieur.
@@ -505,17 +379,14 @@ eureka.instance.preferIpAddress=true
 eureka.instance.hostName=ms-article
 ```
 
-* Spécifie un identifiant unique pour l'enregistrement dans Eureka Serveur en utilisant sont nom d'application qui
-  provient de manière accéssoire au nom d'hote :
+* Spécifie un identifiant unique pour l'enregistrement dans Eureka Serveur en utilisant son nom d'application :
 
 ```yaml
 spring.application.name=${eureka.instance.hostName}
 eureka.instance.instance-id=${eureka.instance.hostName}:${server.port}:${spring.application.instance_id:${random.value}}
 ```
 
-Un identifiant unique sera créer a partir des informations donnée dans le but de l'identifier de manière unique au sein
-de stack.
-
-Résumer :
-Cette configuration permet le `load balancing` via le service Gateway de manière optimum sur chaque instance de service
-`ms-article` créer dans le cluster Swarm.
+Résumer :  
+Cette configuration permet à l'API Article de s'enregistrer auprès de l'API Eureka. L'API Gateway récupérer, auprès
+d'Eureka la liste des API auquel elle doit redistribuer les requêtes. L'API gateway fait office de passerelle pour les
+requêtes et aussi de `load balancing` entre les API des stacks déployé dans le cluster Swarm.
