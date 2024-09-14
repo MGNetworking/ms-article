@@ -9,7 +9,7 @@ handle_error() {
 
 echo "---------------------------"
 export $(cat .env)
-export SERVICE_CONFIG_DOCKER="http://192.168.1.98:8089"
+export SERVICE_CONFIG_DOCKER="http://localhost:8089"
 export PROFILES=dev
 version_beta="$DOCKER_IMAGE_NAME:$IMAGE_VERSION-beta"
 
