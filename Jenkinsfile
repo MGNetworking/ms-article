@@ -147,7 +147,7 @@ pipeline {
                     version = "${env.IMAGE_VERSION}-${params.BUILD}"  // La version recherché exemple: 1.0.25-release
                     version_beta = "${env.IMAGE_VERSION}-beta"        // Version de recherche
                     version_release = "${env.IMAGE_VERSION}-release"  // Version de recherche
-                    path = "ms-article-service"                                     // Référence au dossier projet
+                    path = "blog"                                     // Référence au dossier projet
 
                     def http_status_beta = sh(script: """
                         curl -s -o /dev/null -w "%{http_code}" -u ${nexus.user}:${nexus.pass} \
