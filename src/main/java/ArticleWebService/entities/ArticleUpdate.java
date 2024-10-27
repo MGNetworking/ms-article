@@ -17,9 +17,9 @@ import java.util.List;
 
 /**
  * Cette classe est utilisé pour la mise à jour des articles
- * Elle posséde tous les attributs indispensable pour la mise
+ * Elle possède tous les attributs indispensables pour la mise
  * à jour d'un article avec la gestion des valeurs attendu
- * pour chaqu'un des ses attribut.
+ * pour chacun de ses attributes.
  */
 @Data
 @NoArgsConstructor
@@ -53,12 +53,12 @@ public class ArticleUpdate {
     @NotEmpty(message = "Vous n'avais pas créer de contenu d'article")
     private String article;
 
-    @NotNull(message = "L'article à déjà été créer et doit donc posséde une date de création")
+    @NotNull(message = "L'article à déjà été créer et doit donc possède une date de création")
     @JsonSerialize(using = DateSerialisation.class)
     @JsonDeserialize(using = DateDeserializer.class)
     private Timestamp dateCreation;
 
-    @NotNull(message = "Vous devezz faire un choix concernant la visiblité de l'article : true ou false")
+    @NotNull(message = "Vous devez faire un choix concernant la visibilité de l'article : true ou false")
     private boolean visibiliter;
 
     public boolean getVisibiliter() {
@@ -66,8 +66,8 @@ public class ArticleUpdate {
     }
 
     /**
-     * La liste des soruces de l'article, si l'article en posséde.
-     * Cette Attribut n'est pas obligatoire
+     * La liste des sources de l'article, si l'article en possède.
+     * Cet Attribut n'est pas obligatoire
      */
     private List<String> source;
 

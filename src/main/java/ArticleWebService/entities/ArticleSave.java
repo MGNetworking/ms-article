@@ -5,10 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.Column;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Null;
-import javax.validation.constraints.Size;
+import javax.validation.constraints.*;
 import java.sql.Timestamp;
 import java.util.List;
 
@@ -23,8 +20,8 @@ public class ArticleSave {
 
 
     /**
-     * Doit être null a la création d'un article.
-     * Cette attribut et utilisé pour distinguer les ancien article des nouveaux
+     * Doit être null à la création d'un article.
+     * Cet attribut est utilisé pour distinguer les anciens article des nouveaux
      */
     private Integer idArticle;
 
@@ -39,7 +36,7 @@ public class ArticleSave {
     @Size(min = 3, max = 100, message = "Le titre ne doit pas dépasser 100 caractères")
     private String titre;
 
-    //@NotNull(message = "l'article doit avoir une images de description")
+    //@NotNull(message = "l'article doit avoir une image de description")
     //@NotEmpty(message = "Vous devez avoir une images d'en-tête")
     private String imgDescription;
 
@@ -47,7 +44,7 @@ public class ArticleSave {
     @NotEmpty(message = "Vous devez décrire votre article")
     private String description;
 
-    @NotNull(message = "Vous devezz faire un choix concernant la visiblité de l'article : true ou false")
+    @NotNull(message = "Vous devez faire un choix concernant la visibilité de l'article : true ou false")
     private boolean visibiliter;
 
     @NotNull(message = "L'article ne doit pas être null")
@@ -56,7 +53,7 @@ public class ArticleSave {
 
     /**
      * La liste des sources de l'article, si l'article en possède.
-     * Cette Attribut n'est pas obligatoire
+     * Cet Attribut n'est pas obligatoire
      */
     private List<String> source;
 

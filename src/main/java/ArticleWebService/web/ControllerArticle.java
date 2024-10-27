@@ -130,7 +130,7 @@ public class ControllerArticle {
      * Sauvegarde les données d'un article dans le système.
      * Seuls les utilisateurs autorisés sont autorisés à effectuer cette opération.
      *
-     * @param articleSave Les données de l'article à sauvegarder .
+     * @param articleSave Les données de l'article à sauvegarder.
      *                    Les champs incluent le titre, le contenu et toute autre information pertinente.
      *                    L'identifiant de l'utilisateur doit être fourni pour des raisons de sécurité.
      * @return ResponseEntity<?> Un objet ResponseEntity contenant le résultat de la sauvegarde.
@@ -150,7 +150,7 @@ public class ControllerArticle {
         // vérification de la nouveauté d'un article par son ID
         if (articleSave.statusArticle()) {
 
-            log.info("la mise à jour d'un article ne doit pas être excuté appartir de ce endpoint");
+            log.info("la mise à jour d'un article ne doit pas être exécute à partir de ce endpoint");
             return ResponseHandler.generateResponse(new CustomerResponse(
                     HttpStatus.FORBIDDEN,
                     "Accès interdit",
@@ -201,10 +201,10 @@ public class ControllerArticle {
     public ResponseEntity<?> updateArticle(@Valid @RequestBody ArticleUpdate articleUpdate)
             throws Exception {
 
-        // vérification de l'ancienneté de l'article par la précence de son ID
+        // vérification de l'ancienneté de l'article par la presence de son ID
         if (articleUpdate.statusArticle()) {
 
-            log.info("la création d'un article ne doit pas être excuter a partir de ce endpoint ");
+            log.info("la création d'un article ne doit pas être exécuter à partir de ce endpoint ");
             return ResponseHandler.generateResponse(new CustomerResponse(
                     HttpStatus.FORBIDDEN,
                     "Accès interdit",

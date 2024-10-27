@@ -95,8 +95,8 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     public Optional<Article> saveArticle(ArticleSave articleSave) throws Exception {
 
-        log.info("Tire de l'article : " + articleSave.getTitre());
-        log.info("Identifiant user : " + articleSave.getIdUser());
+        log.info("Tire de l'article : {}" , articleSave.getTitre());
+        log.info("Identifiant user : {}" , articleSave.getIdUser());
 
         Article article = this.modelMapper.map(articleSave, Article.class);
 
@@ -121,7 +121,7 @@ public class ArticleServiceImpl implements ArticleService {
 
             Article art = optionalArticle.get();
 
-            // Modification des valeur de l'objet
+            // Modification des valeurs de l'objet
             art.setTitre(articleUpdate.getTitre());
             art.setArticle(articleUpdate.getArticle());
             art.setDescription(articleUpdate.getDescription());
@@ -129,6 +129,7 @@ public class ArticleServiceImpl implements ArticleService {
             art.setImgDescription(articleUpdate.getImgDescription());
             art.setVisibiliter(articleUpdate.getVisibiliter());
             art.setDateMaj(Timestamp.valueOf(LocalDateTime.now()));
+            art.setSection(articleUpdate.getSection());
 
             // met à jour l'article en base de données
             Article updateArt = this.articleRepository.save(art);
