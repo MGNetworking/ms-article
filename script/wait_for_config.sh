@@ -2,7 +2,7 @@
 
 echo  "Lancement du script wait_for_config en cours ... "
 
-# Dans le cas d'un déployement sur le nas
+# Dans le cas d'un déploiement sur le nas
 if [ -z "$PROFILE_ACTIF_SPRING" ] || [ -z "$SERVICE_CONFIG_DOCKER" ] || [ -z "$IP"  ]; then
 
   echo  "Les variables de configuration sont absente, initialisation Nas lancer"
@@ -15,7 +15,7 @@ if [ -z "$PROFILE_ACTIF_SPRING" ] || [ -z "$SERVICE_CONFIG_DOCKER" ] || [ -z "$I
   IP=172.17.0.1
   SERVICE_CONFIG_DOCKER=http://ms-configuration:8089
 
-  echo  "Les variables de configuration sont initialiser"
+  echo "Les variables de configuration sont initialiser"
   echo "La variable PROFILE_ACTIF_SPRING => $PROFILE_ACTIF_SPRING <="
   echo "L'adresse IP du service configuration sur le réseau Overlay: $SERVICE_CONFIG_DOCKER <="
   echo "valeur de l'adresse IP de connection à la base de données  $IP <="
@@ -28,7 +28,7 @@ fi
     echo "request vers : $SERVICE_CONFIG_DOCKER/msarticle/$PROFILE_ACTIF_SPRING"
 
     echo "**********************************"
-    echo "Liste des variables d'environnment"
+    echo "Liste des variables d'environnement"
     env
     echo "**********************************"
 
