@@ -1,5 +1,4 @@
-########## Localisation du fichier de configuration
-# exemple : http://localhost:8089/msarticle/dev
+########## Configuration par défaut ##########
 spring:
   application:
     name: msarticle
@@ -7,3 +6,34 @@ spring:
     config:
       uri:
         - ${SERVICE_CONFIG_DOCKER:http://ms-configuration:8089}
+      enabled: true # Par défaut activé
+
+
+########## Configuration spécifique au profil devDocker pour docker ##########
+---
+spring:
+  config:
+    activate:
+      on-profile: devDocker # Activer pour le profil
+  cloud:
+    config:
+      enabled: false # Désactiver Spring Cloud Config
+eureka:
+  client:
+    service-url:
+      # NB: il y a le context Build sans docker et deployer avec Docker + résolution DNS
+      defaultZone: ${EUREKA_DEFAULTZONE:http://ms-eureka:8099/eureka }
+
+########## Configuration pour le profil dev en local ##########
+---
+spring:
+  config:
+    activate:
+      on-profile: dev # Activer pour le profil
+  cloud:
+    config:
+      enabled: false # Désactiver Spring Cloud Config
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8099/eureka # URL pour le contexte local
