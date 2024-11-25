@@ -10,7 +10,7 @@ handle_error() {
 echo "---------------------------"
 export $(cat .env)
 export SERVICE_CONFIG_DOCKER="http://localhost:8089"
-export PROFILES=dev
+export PROFILES=devDocker
 version_beta="$DOCKER_IMAGE_NAME:$IMAGE_VERSION-beta"
 
 while true; do
@@ -50,8 +50,7 @@ while true; do
   compilation_Maven(){
 
       echo "Compilation du projet $STACK_NAME via Maven"
-      #mvn clean package "-Dspring-boot.run.jvmArguments=-Dspring.profiles.active=$PROFILES -DSERVICE_CONFIG_DOCKER=$SERVICE_CONFIG_DOCKER"
-      mvn clean package "-Dspring.profiles.active="$PROFILES "-DSERVICE_CONFIG_DOCKER="$SERVICE_CONFIG_DOCKER
+      mvn clean package "-Dspring.profiles.active="$PROFILES "-DEUREKA_DEFAULTZONE="http://localhost:8099/eureka "-DSERVICE_CONFIG_DOCKER="$SERVICE_CONFIG_DOCKER
 
       echo "Création de l'images : $STACK_NAME"
       docker compose -f docker-compose.yml build --no-cache || handle_error "Construction de l'image Docker"
