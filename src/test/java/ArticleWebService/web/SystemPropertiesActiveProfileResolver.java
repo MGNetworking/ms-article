@@ -4,76 +4,28 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.test.context.ActiveProfilesResolver;
 import org.springframework.test.context.support.DefaultActiveProfilesResolver;
 
-import java.util.regex.Pattern;
-
 /**
- * Permet la résolution du profile actif au lancement de l'application.
+ * Permet la résolution du profil actif au lancement de l'application.
  */
 @Slf4j
 public class SystemPropertiesActiveProfileResolver implements ActiveProfilesResolver {
 
     private final DefaultActiveProfilesResolver defaultActiveProfilesResolver = new DefaultActiveProfilesResolver();
 
-    @Override
-    public String[] resolve(Class<?> testClass) {
+        @Override
+        public String[] resolve(Class<?> testClass) {
+            String activeProfile = System.getProperty("spring.profiles.active");
 
-        String[] springPropertieProfile = new String[1];
+            if (activeProfile != null && !activeProfile.isEmpty()) {
+                log.info("------------------------");
+                log.info("Profil actif : {}", activeProfile);
+                log.info("------------------------");
+                return new String[]{activeProfile};
+            }
 
-        log.info("Les listes et recherche des propriétés environment Java du projet ms-article");
-        System.getProperties().values().forEach(
-                ele -> {
-                    log.info(ele.toString());
-
-                    String input = ele.toString();
-
-                    if (input.contains("-Dspring.profiles.active=devlocal")) {
-                        log.info("*****************************");
-                        log.info("le profile devlocal a était trouver ");
-                        log.info("*****************************");
-                        springPropertieProfile[0] = "devlocal";
-
-                    } else if (input.contains("-Dspring.profiles.active=dev")) {
-
-                        log.info("*****************************");
-                        log.info("le profile dev a était trouver ");
-                        log.info("*****************************");
-
-                        springPropertieProfile[0] = "dev";
-
-                    }else if (input.contains("-Dspring.profiles.active=preprod")) {
-
-                        log.info("*****************************");
-                        log.info("le profile preprod a était trouver ");
-                        log.info("*****************************");
-
-                        springPropertieProfile[0] = "preprod";
-
-                    } else if (input.contains("-Dspring.profiles.active=prod")) {
-
-                        log.info("*****************************");
-                        log.info("le profile prod a était trouver ");
-                        log.info("*****************************");
-
-                        springPropertieProfile[0] = "prod";
-
-                    }
-                }
-        );
-
-        if (springPropertieProfile[0] == null) {
-
-            log.error("*****************************");
-            log.error("Le profile n'a pas était trouver dans les variables d'environnement ");
-            log.error("C'est donc le profile (dev) présent dans les tests d'intégration qui sera activé");
-            log.error("*****************************");
-
+            log.info("------------------------");
+            log.warn("Aucun profil trouvé dans les propriétés système. Utilisation du profil par défaut.");
+            log.info("------------------------");
             return this.defaultActiveProfilesResolver.resolve(testClass);
-        } else {
-
-            return springPropertieProfile;
         }
-
-    }
-
-
 }
