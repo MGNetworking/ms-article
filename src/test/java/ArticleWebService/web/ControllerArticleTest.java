@@ -133,9 +133,6 @@ public class ControllerArticleTest {
 
     }
 
-    /**
-     * @throws Exception
-     */
     @Test
     @DisplayName("Get All Article with section and Pagination")
     public void getArticleSection() throws Exception {
