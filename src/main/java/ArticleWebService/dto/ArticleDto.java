@@ -8,7 +8,7 @@ import java.sql.Timestamp;
 import java.util.Date;
 
 /**
- * Cette Classe permet de limité les objet de type Article.
+ * Cette Classe permet de limiter les objets de type Article.
  */
 @Data
 @NoArgsConstructor
@@ -24,7 +24,7 @@ public class ArticleDto {
     private String description;
     private boolean visibiliter;
 
-    // Serialisation de l'ojet date au format => yyyy-MM-dd HH:mm:ss
+    // Serialisation de l'objet date au format => yyyy-MM-dd HH:mm:ss
     @JsonSerialize(using = DateSerialisation.class)
     private Timestamp dateCreation;
     @JsonSerialize(using = DateSerialisation.class)

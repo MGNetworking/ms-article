@@ -11,7 +11,7 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 
 /**
- * Cette permet la serialisation des l'objet courant
+ * Cette class permet la serialisation des l'objets courants
  */
 @Slf4j
 public class DateSerialisation extends JsonSerializer {
@@ -23,19 +23,19 @@ public class DateSerialisation extends JsonSerializer {
                           JsonGenerator jsonGenerator,
                           SerializerProvider serializerProvider) throws IOException {
 
-        log.info("Demande Serialisation d'objet : " + objet.toString());
+        log.info("Demande Serialisation d'objet : {}", objet.toString());
 
         if (objet instanceof Timestamp) {
 
             try {
 
-                log.info("Serialisation de l'objet : " + objet.toString());
+                log.info("Serialisation de l'objet : {}", objet.toString());
                 String formatDate = dateFormat.format(objet);
                 jsonGenerator.writeString(formatDate);
 
             } catch (IllegalArgumentException e) {
 
-                log.error("impossible d'analyser la date : " + e.getLocalizedMessage());
+                log.error("impossible d'analyser la date : {}", e.getLocalizedMessage());
                 throw new IOException("impossible d'analyser la date ", e);
 
             }

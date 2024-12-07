@@ -22,14 +22,14 @@ public class DateDeserializer extends JsonDeserializer<Timestamp> {
                                  DeserializationContext deserializationContext)
             throws IOException, JsonProcessingException {
 
-        log.info("Demande Deserializer de data d'objet : " + jsonParser );
-        log.info("Context de Deserialization : " + deserializationContext );
+        log.info("Demande Deserializer de data d'objet : {}", jsonParser);
+        log.info("Context de Deserialization : {}", deserializationContext);
 
         // récupération de la chain de caractère représentant la date
         String date = jsonParser.getText();
 
         try {
-            log.info("Deserializer de la date : " + date );
+            log.info("Deserializer de la date : {}", date);
             // parse de la date et retour de la date au format Timestamp
             return new Timestamp(dateFormat.parse(date).getTime());
 
