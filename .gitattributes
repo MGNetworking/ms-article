@@ -1,6 +1,7 @@
-# Utiliser LF pour les fichiers déjà au format LF
+# Maintenir LF pour les fichiers suivant
 *.txt text eol=lf
 *.sh text eol=lf
+*.env text eol=lf
 
 # Exclure les images du traitement "text"
 *.png -text
