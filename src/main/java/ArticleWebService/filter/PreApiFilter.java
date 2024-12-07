@@ -17,7 +17,6 @@ import java.io.IOException;
  * Filtre des requêtes entrantes
  */
 @Slf4j
-@Component
 public class PreApiFilter extends HttpFilter {
 
     @Override
