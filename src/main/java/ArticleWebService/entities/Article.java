@@ -23,7 +23,7 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-@Cacheable(false) // déactive le cache de 2eme niveau
+@Cacheable(false) // déactive le cache de 2ᵉ niveau
 @Table(name = "article", schema = "ms_article")
 public class Article implements Serializable {
 

@@ -73,7 +73,7 @@ public class ArticleUpdate {
 
 
     /**
-     * Permet la vérification l'existence d'un article par la précence de son ID
+     * Permet la vérification l'existence d'un article par la présence de son ID
      *
      * @return Si L'id existe , return false.
      */

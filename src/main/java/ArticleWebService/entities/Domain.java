@@ -31,10 +31,6 @@ public class Domain implements Serializable {
     @Column(name = "description")
     private String description;
 
-/*    @OneToMany(mappedBy = "domain", fetch = FetchType.EAGER)
-    @JsonBackReference
-    private Collection<Section> sections;*/
-
     @OneToMany( fetch = FetchType.EAGER)
     @JoinColumn(name="id_domain")
     private Collection<Section> sections = new ArrayList<>();
