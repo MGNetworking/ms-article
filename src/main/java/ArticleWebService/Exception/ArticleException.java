@@ -1,34 +1,15 @@
 package ArticleWebService.Exception;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.http.HttpStatus;
 
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
 public class ArticleException extends RuntimeException {
 
     private String message;
     private HttpStatus status;
-
-    public ArticleException(){
-
-    }
-
-    public ArticleException(String message, HttpStatus status) {
-        super(message);
-        this.message = message;
-        this.status = status;
-    }
-
-    public String getMessage() {
-        return this.message;
-    }
-    public HttpStatus getStatus(){
-        return this.status;
-    }
-
-    public void setMessage(String message){
-        this.message = message;
-    }
-
-    public void setHttpStatus(HttpStatus httpStatus){
-        this.status = httpStatus;
-    }
 }
