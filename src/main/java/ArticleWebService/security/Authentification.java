@@ -8,11 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-
 import org.springframework.stereotype.Component;
-
 import org.springframework.security.oauth2.jwt.Jwt;
-
 import java.util.Optional;
 
 @Component
@@ -99,9 +96,6 @@ public class Authentification {
 
     /**
      * Permet de vérifier les droits d'accès Admin de l'utilisateur
-     *
-     * @param authentication
-     * @return
      */
     private boolean hasRole(Authentication authentication, String roleName) {
 
@@ -110,7 +104,7 @@ public class Authentification {
 
         // Vérifie si l'utilisateur possède les droits admin
         if (hasAdminRole) {
-            log.info(roleName + " authority : Accès autorisé ...");
+            log.info("{} authority : Accès autorisé ...", roleName);
             return true;
         }
 
@@ -122,7 +116,7 @@ public class Authentification {
     /**
      * Permet d'extraire l'ID utilisateur du token.
      *
-     * @param authentication
+     * @param authentication Objet provenant de Spring Security
      * @return user Id From Token
      */
     private String getUserIdFromToken(Authentication authentication) {
