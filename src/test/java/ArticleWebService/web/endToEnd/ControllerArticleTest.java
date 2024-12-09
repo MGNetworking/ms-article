@@ -3,6 +3,8 @@ package ArticleWebService.web;
 import ArticleWebService.Exception.ArticleException;
 import ArticleWebService.entities.Article;
 
+import ArticleWebService.entities.ArticleSave;
+import ArticleWebService.entities.Section;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -29,6 +31,16 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.Arrays;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 
 /**
  * Le service de configuration doit être en cours d'exécution
@@ -36,30 +48,51 @@ import org.springframework.web.context.WebApplicationContext;
  */
 @SpringBootTest
 @AutoConfigureMockMvc
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-//@ActiveProfiles(value = "preprod", resolver = SystemPropertiesActiveProfileResolver.class)
 @ActiveProfiles(resolver = SystemPropertiesActiveProfileResolver.class)
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Slf4j
 public class ControllerArticleTest {
 
     @Autowired
     private MockMvc mockMvc;
-    @Autowired
-    private WebApplicationContext webApplicationContext;
-
 
     @Autowired
     private Environment environment;
 
-
-    private String nameImages;
-    private String idArticleForDelete;
+    @Autowired
+    private ObjectMapper objectMapper;
 
     // permet la sérialisation et la désérialisation JSON en Java
     private ObjectMapper mapper = new ObjectMapper();
 
+    private static String token;
+    private static String tokenForbidden;
+    private static ArticleSave articleSave;
 
+
+    /**
+     * Cette méthode s'exécute avant tous les tests pour initialiser les tokens et l'article
+     */
+    @BeforeAll
+    static void setupToken() throws Exception {
+
+        // Obtenez un token valide pour un utilisateur autorisé
+        token = getAccessToken("max", "aAA5MbezUxN5V3BHVLH4"); // Obtenez le token une fois pour toutes les méthodes
+        tokenForbidden = getAccessToken("maximus", "jao81Qt89oRva2jBoa5o"); // Obtenez le token une fois pour toutes les méthodes
+
+        // Préparation des données d'entrée
+        articleSave = new ArticleSave(
+                null,
+                "user123",
+                new Section(1, "Java"),
+                "Nouvel Article",
+                "image.png",
+                "Ceci est une description",
+                true,
+                "Ceci est le contenu de l'article",
+                Arrays.asList("source1", "source2")
+        );
+
+    }
 
     /**
      * Test le retour avec status 200 et vérifier qu'il n'est pas vide.
@@ -87,12 +120,10 @@ public class ControllerArticleTest {
      */
     @Test
     @DisplayName("Get Article by Id not found")
-    public void getArticle_NotFound() throws Exception {
-
-        int id = 5000;
+    public void getArticle_ById_NotFound() throws Exception {
 
         mockMvc.perform(MockMvcRequestBuilders
-                        .get("/article/getArticle/{id}", id))
+                        .get("/article/getArticle/{id}", 5000))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isNotFound())
                 .andExpect(result -> {
@@ -159,5 +190,78 @@ public class ControllerArticleTest {
                         .get("/article/getAllDomain"))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isOk());
+    }
+
+    /**
+     * Test pour vérifier qu'un nouvel article est créé avec succès.
+     */
+    @Test
+    @DisplayName("should Create Article When Valid Request")
+    void shouldCreateArticleWhenValidRequest() throws Exception {
+
+        // Appel le end point
+        mockMvc.perform(post("/article/saveArticle")
+                        .header("Authorization", "Bearer " + token) // Ajout du token
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(articleSave)))
+                .andExpect(status().isCreated())
+                .andDo(print()); // Affiche la réponse dans la console
+    }
+
+    /**
+     * Test pour vérifier que la mise à jour d’un article existant est interdite.
+     */
+    @Test
+    @DisplayName("should Return Forbidden When Updating Article")
+    void shouldReturnForbiddenWhenUpdatingArticle() throws Exception {
+
+        // Appel le end point
+        mockMvc.perform(post("/article/saveArticle")
+                        .header("Authorization", "Bearer " + tokenForbidden)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(articleSave)))
+                .andExpect(status().isForbidden())
+                .andDo(print()); // Affiche la réponse dans la console
+    }
+
+    /**
+     * Méthode utilitaire pour obtenir un token JWT valide.
+     */
+    private static String getAccessToken(String username, String password) throws Exception {
+        // Appel à Keycloak pour obtenir un token
+        String keycloakUrl = "http://localhost:8999/realms/ghoverblog/protocol/openid-connect/token";
+        URL url = new URL(keycloakUrl);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+
+        // Configuration de la requête POST
+        connection.setRequestMethod("POST");
+        connection.setDoOutput(true);
+        connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+
+        // Corps de la requête
+        String body = String.format(
+                "grant_type=password&client_id=overblog_DEV&username=%s&password=%s",
+                username,
+                password
+        );
+        connection.getOutputStream().write(body.getBytes());
+
+        // Lecture de la réponse
+        int responseCode = connection.getResponseCode();
+        if (responseCode != HttpURLConnection.HTTP_OK) {
+            throw new RuntimeException("Failed to fetch access token: " + responseCode);
+        }
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+        StringBuilder response = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            response.append(line);
+        }
+
+        // Extraction du token depuis la réponse JSON
+        String jsonResponse = response.toString();
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.readTree(jsonResponse).get("access_token").asText();
     }
 }
