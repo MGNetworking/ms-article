@@ -22,6 +22,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @Slf4j
@@ -39,7 +40,7 @@ public class ControllerArticle {
     /**
      * Récupère un article par son identifiant.
      *
-     * @param id L'identifiant de l'article à récupérer. Ne doit pas être null, si non retourn un status 404.
+     * @param id L'identifiant de l'article à récupérer. Ne dois pas être null, sinon retourne un status 404.
      * @return Article L'article correspondant à l'identifiant spécifié.
      * @throws ArticleException Si l'article correspondant à l'identifiant n'est pas trouvé.
      */
@@ -144,7 +145,7 @@ public class ControllerArticle {
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     @ApiOperation(value = "Sauvegarde ou met a jour les données d'un article", response = Article.class)
     @PreAuthorize("@authentification.isAuthorization(#articleSave.idUser)")
-    public ResponseEntity<Object> saveArticle(@Valid @RequestBody ArticleSave articleSave)
+    public ResponseEntity<Map<String, Object>> saveArticle(@Valid @RequestBody ArticleSave articleSave)
             throws Exception {
 
         // vérification de la nouveauté d'un article par son ID
@@ -186,7 +187,8 @@ public class ControllerArticle {
      * @param articleUpdate Les données de l'article à mettre à jour.
      *                      Les champs modifiables incluent le titre, le contenu et toute autre information pertinente.
      *                      L'identifiant de l'utilisateur doit être fourni pour des raisons de sécurité.
-     * @return ResponseEntity<?> Un objet ResponseEntity contenant le résultat de la mise à jour.
+     * @return ResponseEntity<Map < String, Object>> Une Map de String et objet ResponseEntity contenant le résultat
+     * de la mise à jour.
      * En cas de succès, le statut sera 200 et l'article mis à jour sera retourné.
      * En cas d'erreur, le statut correspondant à l'erreur sera retourné avec un message d'erreur approprié.
      * Si la création d'un article est détectée via ce endpoint, le statut sera 403.
@@ -198,7 +200,7 @@ public class ControllerArticle {
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     @ApiOperation(value = "Met à jour les données d'un article", response = Article.class)
     @PreAuthorize("@authentification.isAuthorization(#articleUpdate.idUser)")
-    public ResponseEntity<?> updateArticle(@Valid @RequestBody ArticleUpdate articleUpdate)
+    public ResponseEntity<Map<String, Object>> updateArticle(@Valid @RequestBody ArticleUpdate articleUpdate)
             throws Exception {
 
         // vérification de l'ancienneté de l'article par la presence de son ID
