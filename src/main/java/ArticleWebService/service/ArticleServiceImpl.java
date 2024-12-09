@@ -93,7 +93,7 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    public Optional<Article> saveArticle(ArticleSave articleSave) throws Exception {
+    public Optional<Article> saveArticle(ArticleSave articleSave) throws ArticleException {
 
         log.info("Tire de l'article : {}" , articleSave.getTitre());
         log.info("Identifiant user : {}" , articleSave.getIdUser());
