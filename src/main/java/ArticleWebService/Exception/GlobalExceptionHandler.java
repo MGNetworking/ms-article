@@ -44,7 +44,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
      * @return Un objet {@link ResponseEntity} contenant les informations sur l'erreur et le statut HTTP.
      */
     @ExceptionHandler(ArticleException.class)
-    public ResponseEntity<Object> handleArticleException(ArticleException ex,
+    public ResponseEntity<Map<String, Object>> handleArticleException(ArticleException ex,
                                                          WebRequest request,
                                                          HttpServletRequest servletRequest,
                                                          HttpServletResponse httpServletResponse) {
