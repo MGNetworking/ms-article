@@ -1,6 +1,7 @@
 package ArticleWebService.web;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.env.StandardEnvironment;
 import org.springframework.test.context.ActiveProfilesResolver;
 import org.springframework.test.context.support.DefaultActiveProfilesResolver;
 
@@ -23,8 +24,20 @@ public class SystemPropertiesActiveProfileResolver implements ActiveProfilesReso
                 return new String[]{activeProfile};
             }
 
+            // Récupérer les profils définis dans application.properties
+            StandardEnvironment environment = new StandardEnvironment();
+            String profileFromProperties = environment.getProperty("spring.profiles.active");
+
+            if (profileFromProperties != null && !profileFromProperties.isEmpty()) {
+                log.info("------------------------");
+                log.info("Profil actif trouvé dans application.properties : {}", profileFromProperties);
+                log.info("------------------------");
+                return new String[]{profileFromProperties};
+            }
+
+            // Profil par défaut
             log.info("------------------------");
-            log.warn("Aucun profil trouvé dans les propriétés système. Utilisation du profil par défaut.");
+            log.warn("Aucun profil actif trouvé. Utilisation du profil par défaut.");
             log.info("------------------------");
             return this.defaultActiveProfilesResolver.resolve(testClass);
         }

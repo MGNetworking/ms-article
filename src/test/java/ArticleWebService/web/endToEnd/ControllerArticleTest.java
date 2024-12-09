@@ -1,10 +1,13 @@
-package ArticleWebService.web;
+package ArticleWebService.web.endToEnd;
 
 import ArticleWebService.Exception.ArticleException;
 import ArticleWebService.entities.Article;
 
 import ArticleWebService.entities.ArticleSave;
+import ArticleWebService.entities.ArticleUpdate;
 import ArticleWebService.entities.Section;
+import ArticleWebService.web.ControllerArticle;
+import ArticleWebService.web.SystemPropertiesActiveProfileResolver;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -19,6 +22,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.env.Environment;
 import org.springframework.http.*;
 
+
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -26,29 +30,36 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.context.WebApplicationContext;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.sql.Timestamp;
 import java.util.Arrays;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
 /**
- * Le service de configuration doit être en cours d'exécution
+ * Cette Classe test le control Article.
+ * <p>
+ * NB: Le service de configuration doit être en cours d'exécution
  * afin d'obtenir les properties nécessaires au fonctionnement du service.
+ * Le Service Keycloak et la base de données associé doivent être en cours
+ * d'exécution
  */
 @SpringBootTest
 @AutoConfigureMockMvc
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ActiveProfiles(resolver = SystemPropertiesActiveProfileResolver.class)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Slf4j
 public class ControllerArticleTest {
 
@@ -61,23 +72,35 @@ public class ControllerArticleTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    // permet la sérialisation et la désérialisation JSON en Java
-    private ObjectMapper mapper = new ObjectMapper();
+    @Value("${keycloak.auth-server-url}")
+    private String keycloakURL;
 
-    private static String token;
-    private static String tokenForbidden;
-    private static ArticleSave articleSave;
+    @Value("${keycloak.resource}")
+    private String keycloakResource;
 
+    private ObjectMapper mapper = new ObjectMapper(); // permet la sérialisation et la désérialisation JSON en Java
+    private String token;
+    private String tokenForbidden;
+    private ArticleSave articleSave;
+    private ArticleUpdate articleUpdate;
+
+    private Integer articleId;
+    private Timestamp dateCreation;
 
     /**
      * Cette méthode s'exécute avant tous les tests pour initialiser les tokens et l'article
      */
     @BeforeAll
-    static void setupToken() throws Exception {
+    void setupToken() throws Exception {
 
-        // Obtenez un token valide pour un utilisateur autorisé
-        token = getAccessToken("max", "aAA5MbezUxN5V3BHVLH4"); // Obtenez le token une fois pour toutes les méthodes
-        tokenForbidden = getAccessToken("maximus", "jao81Qt89oRva2jBoa5o"); // Obtenez le token une fois pour toutes les méthodes
+/*        System.out.println("Keycloak URL from Environment: " + environment.getProperty("keycloak.auth-server-url"));
+        System.out.println("Keycloak Resource from Environment: " + environment.getProperty("keycloak.resource"));*/
+
+
+
+        // Obtenez un token valide pour les utilisateurs de test
+        token = this.getAccessToken("max", "aAA5MbezUxN5V3BHVLH4");
+        tokenForbidden = this.getAccessToken("maximus", "jao81Qt89oRva2jBoa5o");
 
         // Préparation des données d'entrée
         articleSave = new ArticleSave(
@@ -93,6 +116,7 @@ public class ControllerArticleTest {
         );
 
     }
+
 
     /**
      * Test le retour avec status 200 et vérifier qu'il n'est pas vide.
@@ -111,7 +135,7 @@ public class ControllerArticleTest {
         String responseJson = result.getResponse().getContentAsString();
         Article articles = this.mapper.readValue(responseJson, Article.class);
 
-        Assertions.assertNotNull(articles);
+        assertNotNull(articles);
 
     }
 
@@ -145,22 +169,19 @@ public class ControllerArticleTest {
     @DisplayName("Get All Article with Pagination IsEmpty")
     public void getAllArticles_IsEmpty() throws Exception {
 
-        Integer page = 99;
-        Integer size = 66;
-
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/article/getAllArticles")
-                        .param("page", Integer.toString(page))
-                        .param("size", Integer.toString(size))
+                        .param("page", Integer.toString(99))
+                        .param("size", Integer.toString(66))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.content")
                         .isEmpty())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.pageable.pageNumber")
-                        .value(page))
+                        .value(99))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.pageable.pageSize")
-                        .value(size));
+                        .value(66));
 
     }
 
@@ -192,27 +213,45 @@ public class ControllerArticleTest {
                 .andExpect(MockMvcResultMatchers.status().isOk());
     }
 
+    // END POINT => /article/saveArticle
+
     /**
-     * Test pour vérifier qu'un nouvel article est créé avec succès.
+     * La création d'un article via un utilisateur authorisé
      */
     @Test
-    @DisplayName("should Create Article When Valid Request")
+    @Order(1)
+    @DisplayName("should Create Article When save Article")
     void shouldCreateArticleWhenValidRequest() throws Exception {
 
-        // Appel le end point
-        mockMvc.perform(post("/article/saveArticle")
+        // Exécuter l'appel à l'API et capturer la réponse
+        MvcResult mvcResult = mockMvc.perform(post("/article/saveArticle")
                         .header("Authorization", "Bearer " + token) // Ajout du token
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(articleSave)))
-                .andExpect(status().isCreated())
-                .andDo(print()); // Affiche la réponse dans la console
+                .andExpect(status().isCreated()) // Vérifier le statut HTTP
+                .andDo(print()) // Affiche la réponse dans la console
+                .andReturn(); // Récupère le résultat
+
+        // Extraire le contenu de la réponse
+        String jsonResponse = mvcResult.getResponse().getContentAsString();
+
+        // Convertir la réponse en objet ou récupérer l'ID directement
+        JsonNode responseJson = objectMapper.readTree(jsonResponse);
+        this.articleId = responseJson.get("data").get("idArticle").asInt();
+        String date = responseJson.get("data").get("dateCreation").asText();
+        this.dateCreation = Timestamp.valueOf(date);
+
+        // Assertion pour vérifier que l'ID est correct
+        assertNotNull(articleId, "L'ID de l'article ne doit pas être null");
+        System.out.println("Article créé avec ID : " + this.articleId);
+        System.out.println("Date de création : " + this.dateCreation);
     }
 
     /**
-     * Test pour vérifier que la mise à jour d’un article existant est interdite.
+     * La création d'un article via un utilisateur non authorisé.
      */
     @Test
-    @DisplayName("should Return Forbidden When Updating Article")
+    @DisplayName("should Return Forbidden(403) When save Article")
     void shouldReturnForbiddenWhenUpdatingArticle() throws Exception {
 
         // Appel le end point
@@ -225,12 +264,87 @@ public class ControllerArticleTest {
     }
 
     /**
+     * Test un utilisateur non authorisé.
+     */
+    @Test
+    @DisplayName("should Return Unauthorized(401) When save Article")
+    void shouldReturnUnauthorizedWhenUpdatingArticle() throws Exception {
+
+        // Appel le end point
+        mockMvc.perform(post("/article/saveArticle")
+                        .header("Authorization", "Bearer token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(articleSave)))
+                .andExpect(status().isUnauthorized())
+                .andDo(print()); // Affiche la réponse dans la console
+    }
+
+    // END POINT => /article/updateArticle
+
+    @Test
+    @Order(2)
+    @DisplayName("should Return Create(201) When Updating Article")
+    void shouldReturnCreateWhenUpdatingArticle() throws Exception {
+
+        articleUpdate = new ArticleUpdate(
+                this.articleId,
+                "user123",
+                new Section(1, "Python"),
+                "Update Article",
+                "image.png",
+                "description de l'image",
+                "Ceci est une description",
+                "Ceci est le contenu de l'article",
+                this.dateCreation,
+                true,
+                Arrays.asList("source1", "source2")
+        );
+
+        // Appel le end point
+        mockMvc.perform(put("/article/updateArticle")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(articleUpdate)))
+                .andExpect(status().isCreated())
+                .andDo(print()); // Affiche la réponse dans la console
+    }
+
+    /**
+     * Permet la déconnexion de l'utilisateur à la fin du test d'intégration.
+     *
+     * @param token String
+     */
+    private void logout(String token) {
+
+        if (token != null) {
+
+            // Preparation de la requête pour la déconnexion
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(token);
+            HttpEntity<String> request = new HttpEntity<>(headers);
+
+            // Envoi de la requête
+            ResponseEntity<String> response = new RestTemplate().exchange(
+                    this.keycloakURL,
+                    HttpMethod.POST,
+                    request,
+                    String.class);
+
+            log.info("déconnexion {}", response.getStatusCode());
+            // Le status 200 indique que la déconnexion a réussi
+            Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
+
+        }
+
+    }
+
+
+    /**
      * Méthode utilitaire pour obtenir un token JWT valide.
      */
-    private static String getAccessToken(String username, String password) throws Exception {
+    private String getAccessToken(String username, String password) throws Exception {
         // Appel à Keycloak pour obtenir un token
-        String keycloakUrl = "http://localhost:8999/realms/ghoverblog/protocol/openid-connect/token";
-        URL url = new URL(keycloakUrl);
+        URL url = new URL(String.format("%s/realms/ghoverblog/protocol/openid-connect/token", keycloakURL));
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
         // Configuration de la requête POST
@@ -240,7 +354,8 @@ public class ControllerArticleTest {
 
         // Corps de la requête
         String body = String.format(
-                "grant_type=password&client_id=overblog_DEV&username=%s&password=%s",
+                "grant_type=password&client_id=%s&username=%s&password=%s",
+                keycloakResource,
                 username,
                 password
         );
