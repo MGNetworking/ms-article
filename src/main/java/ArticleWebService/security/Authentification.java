@@ -10,6 +10,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.security.oauth2.jwt.Jwt;
+
 import java.util.Optional;
 
 @Component
@@ -58,8 +59,11 @@ public class Authentification {
     }
 
     /**
-     * Recherche le créateur de l'article par son id et vérifie son authenticité ou check si possède les droites admin.
-     * Si l'auteur et bien le créateur de l'article ou possède les droits admin, il sera authorisé à supprimer cet article.
+     * Recherche le créateur de l'article par son id et vérifie son authenticité
+     * ou vérifie si l'utilisateur possède le rôle admin.
+     * <p>
+     * Si l'auteur et bien le créateur de l'article ou possède le rôle admin,
+     * il sera authorisé à supprimer cet article.
      *
      * @param idArticle L'ID de l'article.
      * @return true si l'utilisateur est authorisé à supprimer l'article
