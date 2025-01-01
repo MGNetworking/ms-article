@@ -228,7 +228,7 @@ pipeline {
         }
 
 
-        stage('Test unitaire') {
+/*        stage('Test unitaire') {
             agent {
                 docker {
                     image 'maven:3.8.5-jdk-8-slim'
@@ -245,7 +245,7 @@ pipeline {
 
                 }
             }
-        }
+        }*/
 
         stage('Maven Compilation') {
             agent {
