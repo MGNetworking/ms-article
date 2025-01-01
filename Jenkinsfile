@@ -227,6 +227,26 @@ pipeline {
             }
         }
 
+
+        stage('Test unitaire') {
+            agent {
+                docker {
+                    image 'maven:3.8.5-jdk-8-slim'
+                    args '-v /var/jenkins_home/maven/.m2:/root/.m2' +
+                            ' -v /var/run/docker.sock:/var/run/docker.sock'
+                }
+            }
+            steps {
+                script {
+                    echo("Gestion des tests unitaire sous le profile : ${env.BRANCH_NAME}")
+                    sh("mvn clean test -Dspring.profiles.active=${env.BRANCH_NAME}")
+                    sh("mvn clean verify -P e2e -Dspring.profiles.active=${env.BRANCH_NAME}")
+
+
+                }
+            }
+        }
+
         stage('Maven Compilation') {
             agent {
                 docker {
