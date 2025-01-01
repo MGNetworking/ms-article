@@ -7,6 +7,7 @@
     * [Étapes de Configuration](#étapes-de-configuration)
     * [Les dépendances externes](#les-dépendances-externes)
 * [Compilation et déploiement](#compilation-et-déploiement)
+    * [Les types de tests](#les-types-de-tests)
     * [Les Phases de compilation](#les-phases-de-compilation)
     * [Intégration avec ms-gateway](#intégration-avec-ms-gateway)
     * [Accès via ms-gateway](#accès-via-ms-gateway)
@@ -81,6 +82,114 @@ possède comme ce projet son propre depôt.
 
 ## Compilation et déploiement
 
+### Les types de tests
+
+1. Tests unitaires :
+
+* Vérifient un composant isolé (une méthode ou une classe) sans dépendances externes.
+* Utilisent des mocks pour simuler les dépendances (comme une base de données ou d'autres services).
+
+2. Tests d'intégration :
+
+* Vérifient l'interaction entre plusieurs composants du système (par exemple, un service avec une base de données
+  réelle).
+* Chargent une partie ou la totalité du contexte Spring.
+
+3. Tests End-to-End (E2E) :
+
+* Vérifient tout le flux de bout en bout, du point d'entrée (souvent un contrôleur) jusqu'à la base de données et les
+  autres systèmes connectés.
+* Simulent des appels HTTP et testent les résultats complets.
+
+### Tests d'intégration vs Tests End-to-End (E2E)
+
+Dans ce projet, nous avons deux types de tests distincts pour assurer la qualité et la fiabilité de l'application :
+tests `d'intégration` et tests `end-to-end`. Voici une explication des deux concepts pour clarifier leurs objectifs,
+leurs configurations, et leurs utilisations.
+
+* Liste de commande rapide :
+
+Tests unitaires uniquement :
+
+````bash
+mvn test -Dspring.profiles.active=<profiles>
+````
+
+Tests d'intégration uniquement :
+
+````bash
+mvn verify -Pintegration -Dspring.profiles.active=<profiles>
+````
+
+Tests E2E uniquement :
+
+````bash
+mvn verify -Pe2e -Dspring.profiles.active=<profiles>
+````
+
+Exécuter les Testes unitaire et les deux (intégration + E2E) :
+
+````bash
+mvn verify -Pintegration,e2e -Dspring.profiles.active=<profiles>
+````
+
+1. Tests d'intégration
+   Les tests d'intégration valident que différentes parties de l'application fonctionnent correctement ensemble, sans
+   inclure de dépendances externes réelles. Ces tests utilisent des bases de données en mémoire ou des dépendances
+   simulées (mocks).
+
+* Objectif :  
+  Vérifier que les composants internes (contrôleurs, services, DAO, etc.) fonctionnent bien ensemble.
+  Tester la logique métier avec des dépendances simulées (par exemple, une base H2 en mémoire ou un Keycloak mocké).
+
+
+* Configuration :
+* Base de données : Utilisation de H2 pour simuler une base de données sans affecter les données réelles.
+* Mocking : Les dépendances externes comme Keycloak, API tierces, ou queues de messages sont simulées à l’aide de
+  bibliothèques comme Mockito.
+
+* Exécution des tests d'intégration :
+  Les fichiers de test suivent la convention : *IT.java.
+  Les tests d'intégration sont exécutés avec le profil integration :
+
+````bash
+mvn verify -Pintegration -Dspring.profiles.active=integration
+````
+
+2. Tests End-to-End (E2E)
+   Les tests end-to-end valident le système entier dans un environnement aussi proche que possible de la production. Ces
+   tests incluent toutes les dépendances réelles, telles que la base de données PostgreSQL, Keycloak, et tout autre
+   service externe.
+
+`Objectif`
+Vérifier le fonctionnement complet de l'application, de bout en bout, dans des conditions réelles.
+Simuler des scénarios utilisateur complets pour valider l’intégration globale.
+
+* `Configuration`
+
+    * Base de données : Utilisation de PostgreSQL (ou la base de données réelle configurée pour l'environnement).
+    * Keycloak : Utilisation du service Keycloak réel avec une configuration spécifique pour les tests.
+      Dépendances externes : Toutes les dépendances externes sont utilisées telles qu'elles sont en production.
+
+
+* Exécution des tests E2E :
+  Les fichiers de test suivent la convention : *E2ETest.java.
+  Les tests E2E sont exécutés avec le profil e2e :
+
+````bash
+mvn verify -Pe2e -Dspring.profiles.active=e2e
+````
+
+4. Quand utiliser quel type de test ?
+
+* Tests d'intégration :
+    * Pendant le développement pour vérifier que les composants fonctionnent ensemble.
+    * Plus rapides et isolés, car ils utilisent des dépendances simulées.
+
+* Tests End-to-End :
+    * Pour valider l’application complète avant le déploiement.
+    * Plus lents et nécessitent un environnement complet (base de données réelle, Keycloak, etc.).
+
 ### Les Phases de compilation
 
 1. phase 1 :  
@@ -88,7 +197,7 @@ possède comme ce projet son propre depôt.
 
 Exemple de compilation pour le serveur Nas :
 
-```shell
+```bash
 mvn clean package -Dspring.profiles.active=nas -DIP=192.168.1.56 -DSERVICE_CONFIG_DOCKER=${SERVICE_CONFIG_URI}
 ```
 

@@ -2,6 +2,7 @@ package ArticleWebService.security;
 
 import ArticleWebService.filter.PostApiFilter;
 import ArticleWebService.filter.PreApiFilter;
+import ArticleWebService.handler.security.CustomAccessDeniedHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.adapters.springsecurity.KeycloakConfiguration;
 import org.keycloak.adapters.springsecurity.config.KeycloakWebSecurityConfigurerAdapter;
@@ -18,6 +19,9 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 @Slf4j
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class KeycloakSecurityService extends KeycloakWebSecurityConfigurerAdapter {
+
+    @Autowired
+    private CustomAccessDeniedHandler accessDeniedHandler;
 
     /**
      * Permet la stratégie de la gestion de session. Elle utilise implementation classic
@@ -96,11 +100,14 @@ public class KeycloakSecurityService extends KeycloakWebSecurityConfigurerAdapte
                 .permitAll()
                 .antMatchers("/article/saveArticle")
                 .hasAuthority("user")
-                .antMatchers("/article/updateArticle", "/article/deleteArticle/* ")
+                .antMatchers("/article/updateArticle", "/article/deleteArticle/*")
                 .hasAnyAuthority("admin", "user")
                 .and()
                 .addFilterBefore(new PreApiFilter(), BasicAuthenticationFilter.class)
-                .addFilterAfter(new PostApiFilter(), BasicAuthenticationFilter.class);
+                .addFilterAfter(new PostApiFilter(), BasicAuthenticationFilter.class)
+                .exceptionHandling().accessDeniedHandler(this.accessDeniedHandler);
+
+
     }
 
 

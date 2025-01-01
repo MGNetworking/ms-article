@@ -1,14 +1,17 @@
 package ArticleWebService.service;
 
-import ArticleWebService.Exception.ArticleException;
+import ArticleWebService.handler.Exception.ArticleException;
 import ArticleWebService.dto.ArticleDto;
+import ArticleWebService.dto.ArticleDtoSave;
+import ArticleWebService.dto.ArticleDtoUpdate;
 import ArticleWebService.entities.*;
+import ArticleWebService.handler.response.ResponseHandler;
 import ArticleWebService.repository.ArticleRepository;
 import ArticleWebService.repository.DomainRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -17,10 +20,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 
 import javax.persistence.EntityManager;
+import javax.swing.text.html.Option;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -45,39 +48,61 @@ public class ArticleServiceImpl implements ArticleService {
 
     @Override
     public Page<ArticleDto> findArticlesPagination(int page, int size) {
+        try {
+            Page<Article> article = this.articleRepository
+                    .findAll(PageRequest.of(page, size));
 
-        Page<Article> article = this.articleRepository
-                .findAll(PageRequest.of(page, size));
+            // Mapping de chaque article en articleDTO dans la pagination
+            return article.map(art -> this.modelMapper.map(art, ArticleDto.class));
 
-        // Mapping de chaque article dans la page vers articleDTO
-        Page<ArticleDto> articleDtoPage = article.map(art -> this.modelMapper.map(art, ArticleDto.class));
+        } catch (DataAccessException ex) {
+            String message = String
+                    .format("Erreur lors de la récupération sans Ordre de la page %d élément %d  message %s",
+                            page, size, ex.getMessage());
 
-        return articleDtoPage;
+            log.error(message);
+            throw new ArticleException(String.format(message), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
 
     }
 
     @Override
     public Page<ArticleDto> findAllArticlePageOrderBy(int page, int size) {
+        try {
+            Page<Article> articleData = this.articleRepository
+                    .findAllArticlePageOrderBy(PageRequest.of(page, size));
 
-        Page<Article> article = this.articleRepository
-                .findAllArticlePageOrderBy(PageRequest.of(page, size));
+            return articleData.map(article -> this.modelMapper.map(article, ArticleDto.class));
+        } catch (DataAccessException ex) {
+            String message = String
+                    .format("Erreur lors de la récupération par Ordre de la page %d élément %d  message %s",
+                            page, size, ex.getMessage());
 
-        // Mapping de chaque article dans la page vers articleDTO
-        Page<ArticleDto> articleDtoPage = article.map(art -> this.modelMapper.map(art, ArticleDto.class));
+            log.error(message);
+            throw new ArticleException(String.format(message), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
 
-        return articleDtoPage;
+
     }
 
     @Override
     public Page<ArticleDto> findArticlesPaginationSection(int page, int size, Integer sectionId) {
+        try {
+            Page<Article> article = this.articleRepository
+                    .findAllArticlesBySection(
+                            PageRequest.of(page, size), sectionId);
 
-        Page<Article> article = this.articleRepository
-                .findAllArticlesBySection(PageRequest.of(page, size), sectionId);
+            return article.map(art -> this.modelMapper.map(art, ArticleDto.class));
+        } catch (DataAccessException ex) {
 
-        // Mapping de chaque article dans la page vers articleDTO
-        Page<ArticleDto> articleDtoPage = article.map(art -> this.modelMapper.map(art, ArticleDto.class));
+            String message = String
+                    .format("Erreur lors de la récupération de la page %d élément %d section %s message %s",
+                            page, size, sectionId, ex.getMessage());
 
-        return articleDtoPage;
+            log.error(message);
+            throw new ArticleException(String.format(message), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
     }
 
     /**
@@ -87,70 +112,72 @@ public class ArticleServiceImpl implements ArticleService {
      * @return Renvoi un objet article qui contient tout les références.
      */
     @Override
-    public Optional<Article> findArticleById(Integer id) {
+    public Article findArticleById(Integer id) throws ArticleException {
+        try {
+            return articleRepository.findById(id)
+                    .orElseThrow(() -> new ArticleException(
+                            String.format("L'identifiant de l'article : %d n'a pas été trouvé", id),
+                            HttpStatus.NOT_FOUND
+                    ));
 
-        return this.articleRepository.findById(id);
-    }
+        } catch (DataAccessException ex) {
+            //log.error("Erreur lors de l'accès à la base pour l'article ID: {}. Message: {}", id, ex.getMessage(), ex);
+            throw new ArticleException("Erreur technique : impossible de récupérer l'article.",
+                    HttpStatus.INTERNAL_SERVER_ERROR);
 
-    @Override
-    public Optional<Article> saveArticle(ArticleSave articleSave) throws ArticleException {
-
-        log.info("Tire de l'article : {}" , articleSave.getTitre());
-        log.info("Identifiant user : {}" , articleSave.getIdUser());
-
-        Article article = this.modelMapper.map(articleSave, Article.class);
-
-        return Optional.of(this.articleRepository.save(article));
-
-    }
-
-    @Override
-    public Optional<Article> updateArticle(ArticleUpdate articleUpdate) throws ArticleException {
-
-        log.info("Titre de l'article : {}", articleUpdate.getTitre());
-        log.info("Identifiant user : {}", articleUpdate.getIdUser());
-        log.info("Article url image : {}", articleUpdate.getImgUrl());
-
-        //Article article = this.modelMapper.map(articleUpdate, Article.class);
-
-        // Récupérer l'article de la base de données en utilisant son ID
-        Optional<Article> optionalArticle = this.articleRepository.findById(articleUpdate.getIdArticle());
-
-
-        if (optionalArticle.isPresent()) {
-
-            Article art = optionalArticle.get();
-
-            // Modification des valeurs de l'objet
-            art.setTitre(articleUpdate.getTitre());
-            art.setArticle(articleUpdate.getArticle());
-            art.setDescription(articleUpdate.getDescription());
-            art.setImgUrl(articleUpdate.getImgUrl());
-            art.setImgDescription(articleUpdate.getImgDescription());
-            art.setVisibiliter(articleUpdate.getVisibiliter());
-            art.setDateMaj(Timestamp.valueOf(LocalDateTime.now()));
-            art.setSection(articleUpdate.getSection());
-
-            // met à jour l'article en base de données
-            Article updateArt = this.articleRepository.save(art);
-
-            entityManager.flush();
-
-            // Rafraîchir l'état de l'objet en mémoire avec les valeurs actuelles en base de données
-            this.entityManager.refresh(updateArt);
-
-            return Optional.of(updateArt);
-        } else {
-            throw new ArticleException("L'article avec l'ID " + articleUpdate.getIdArticle() +
-                    " n'existe pas en base de données",
-                    HttpStatus.NOT_FOUND);
         }
     }
 
+    @Override
+    public ArticleDto saveArticle(ArticleDtoSave articleDtoSave) {
+
+        log.info("Titre de l'article : {}", articleDtoSave.getTitre());
+        log.info("Identifiant user : {}", articleDtoSave.getIdUser());
+
+        try {
+            Article articleSave = this.articleRepository
+                    .save(this.modelMapper.map(articleDtoSave, Article.class));
+            return this.modelMapper.map(articleSave, ArticleDto.class);
+
+        } catch (DataAccessException ex) {
+
+            log.error("Erreur lors de l'insertion en base de données : {}", ex.getMessage());
+            throw new ArticleException("Un problème technique est survenue pendant l'insertion de l'article",
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+
+        }
+    }
 
     @Override
-    public void deleteArticleById(Integer idArticle) throws IllegalArgumentException {
-        this.articleRepository.deleteById(idArticle);
+    public ArticleDto updateArticle(ArticleDtoUpdate articleDtoUpdate) throws ArticleException {
+
+        log.info("Titre de l'article : {}", articleDtoUpdate.getTitre());
+        log.info("Identifiant user : {}", articleDtoUpdate.getIdUser());
+        log.info("Article url image : {}", articleDtoUpdate.getImgUrl());
+
+        // Récupérer l'article en base de données en utilisant son ID
+        Article article = this.articleRepository.findById(articleDtoUpdate.getIdArticle())
+                .orElseThrow(() -> new ArticleException(
+                        String.format("L'article avec l'ID %s n'existe pas en base de données",
+                                articleDtoUpdate.getIdArticle()),
+                        HttpStatus.NOT_FOUND));
+
+        // Met à jour les données
+        this.modelMapper.map(articleDtoUpdate, article);
+        article.setDateMaj(Timestamp.valueOf(LocalDateTime.now()));
+
+        // Enregistre en base de données
+        Article updateArt = this.articleRepository.save(article);
+        return this.modelMapper.map(updateArt, ArticleDto.class);
+    }
+
+    @Override
+    public boolean deleteArticleById(Integer idArticle) {
+        if (this.articleRepository.existsById(idArticle)) {
+            this.articleRepository.deleteById(idArticle);
+            return true;
+        }
+        return false;
     }
 
     @Override

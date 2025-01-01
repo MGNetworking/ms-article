@@ -20,7 +20,10 @@
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
+
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
         <jar.finalName>${project.name}</jar.finalName>
         <maven.compiler.target>${maven.compiler.source}</maven.compiler.target>
 
@@ -160,11 +163,34 @@
             <version>2.4.4</version>
         </dependency>
 
+        <!-- permet de récupérer des données dans le token (utilisé pour les test unitaire) -->
         <dependency>
-            <groupId>io.swagger</groupId>
-            <artifactId>swagger-annotations</artifactId>
-            <version>1.5.14</version>
+            <groupId>com.auth0</groupId>
+            <artifactId>java-jwt</artifactId>
+            <version>4.4.0</version>
         </dependency>
+
+        <!-- Fournit des annotations Swagger pour documenter les APIs (comme @Schema, @Operation) -->
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations</artifactId>
+            <version>2.2.8</version>
+        </dependency>
+
+        <!-- Permet de générer automatiquement la documentation Swagger UI pour les APIs exposées -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-ui</artifactId>
+            <version>1.7.0</version>
+        </dependency>
+
+        <!-- Nécessaire pour intégrer les endpoints OpenAPI avec Spring Boot Actuator -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-webmvc-core</artifactId>
+            <version>1.7.0</version>
+        </dependency>
+
 
         <!--        <dependency>-->
         <!--            <groupId>org.ghoverblog</groupId>-->
@@ -201,6 +227,7 @@
                 <configuration>
                     <executable>true</executable>
                     <excludes>
+                        <!-- Exclude du build-time tool -->
                         <exclude>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
@@ -208,10 +235,117 @@
                     </excludes>
                 </configuration>
             </plugin>
+
+            <!-- Plugin Surefire pour les tests unitaires -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.22.2</version>
+                <configuration>
+                    <includes>
+                        <!-- Inclure uniquement les tests unitaires -->
+                        <include>**/*Test.java</include>
+                    </includes>
+                    <excludes>
+                        <!-- Exclure les tests d'intégration et E2E -->
+                        <exclude>**/*IT.java</exclude>
+                        <exclude>**/*E2ETest.java</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+
+            <!-- Plugin Failsafe pour les tests d'intégration/end-to-end -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>2.22.2</version>
+                <executions>
+                    <execution>
+                        <id>default</id>
+                        <phase>none</phase>
+                    </execution>
+                    <!-- Cette exécution est contrôlée par les profils -->
+                    <execution>
+                        <id>integration-tests</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <!-- Associe le goal failsafe:integration-test à la phase integration-test -->
+                            <goal>integration-test</goal>
+                            <!-- Associe le goal failsafe:verify à la phase verify -->
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
         </plugins>
     </build>
 
-    <!-- Mon dépôt privet -->
+    <!--============================= -->
+    <!-- profiles pour les tests      -->
+    <!--============================= -->
+    <profiles>
+        <!-- Profil pour les tests d'intégration -->
+        <profile>
+            <id>integration</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <configuration>
+                            <includes>
+                                <include>**/integration/*ITTest.java</include>
+                            </includes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Profil pour les tests E2E -->
+        <profile>
+            <id>e2e</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <configuration>
+                            <includes>
+                                <include>**/endtoend/*E2ETest.java</include>
+                            </includes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+    <!--============================= -->
+    <!-- Mon dépôt privet             -->
+    <!--============================= -->
+
     <repositories>
 
         <repository>

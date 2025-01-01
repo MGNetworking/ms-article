@@ -1,13 +1,18 @@
 package ArticleWebService.web;
 
-import ArticleWebService.Exception.ArticleException;
+import ArticleWebService.handler.Exception.ArticleException;
+import ArticleWebService.dto.ArticleDtoSave;
+import ArticleWebService.dto.ArticleDtoUpdate;
 import ArticleWebService.entities.*;
-import ArticleWebService.response.CustomerResponse;
 import ArticleWebService.dto.ArticleDto;
-import ArticleWebService.response.ResponseHandler;
+import ArticleWebService.handler.Exception.InvalidPathVariableException;
+import ArticleWebService.handler.response.GenericApiResponse;
+import ArticleWebService.handler.response.ResponseHandler;
 import ArticleWebService.service.ArticleService;
-import io.swagger.annotations.ApiOperation;
+//import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.keycloak.authorization.client.util.Http;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.data.domain.Page;
@@ -18,84 +23,133 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.util.List;
-import java.util.Map;
+import java.util.UUID;
 
-@RestController
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+
 @Slf4j
+@RestController
 @RequestMapping("/article")
 public class ControllerArticle {
 
-    @Autowired
-    private ArticleService articleService;
+    private final ArticleService articleService;
 
-
-    public ControllerArticle() {
+    public ControllerArticle(ArticleService articleService) {
+        this.articleService = articleService;
     }
-
 
     /**
      * Récupère un article par son identifiant.
      *
-     * @param id L'identifiant de l'article à récupérer. Ne dois pas être null, sinon retourne un status 404.
-     * @return Article L'article correspondant à l'identifiant spécifié.
-     * @throws ArticleException Si l'article correspondant à l'identifiant n'est pas trouvé.
+     * @param id      l'identifiant de l'article à récupérer. Ne doit pas être null.
+     *                Retourne un statut HTTP 404 si l'article n'est pas trouvé.
+     * @param request l'objet de requête HTTP en cours.
+     * @return un objet ResponseEntity contenant une réponse API avec l'article correspondant (Article).
+     * Le statut HTTP sera HttpStatus.OK si l'article est trouvé.
+     * @throws ArticleException si aucun article correspondant à l'identifiant spécifié n'est trouvé.
      */
     @GetMapping(path = "/getArticle/{id}")
-    public Article getArticle(@PathVariable @NotNull Integer id) {
+    @Operation(summary = "Obtenir l'article par son identifiant", responses = {
+            @ApiResponse(responseCode = "200", description = "Article récupéré avec succès",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = GenericApiResponse.class)
+                    )),
+            @ApiResponse(responseCode = "400", description = "Validation failed",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = GenericApiResponse.class)
+                    )),
+            @ApiResponse(responseCode = "404", description = "Article non trouvé",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = GenericApiResponse.class)
+                    )),
+            @ApiResponse(responseCode = "500", description = "Erreur interne du serveur",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = GenericApiResponse.class)
+                    ))
+    })
+    public ResponseEntity<GenericApiResponse<Article>> getArticle(
+            @PathVariable("id") Integer id, HttpServletRequest request) {
 
-        return this.articleService
-                .findArticleById(id)
-                .orElseThrow(() -> new ArticleException(
-                        String.format("L'identifiant de l'article : %d  n'a pas était trouver", id),
-                        HttpStatus.NOT_FOUND
-                ));
 
+        if (id < 0) {
+            throw new InvalidPathVariableException(request.getRequestURI(), "Votre ID inférieur a 0");
+        }
+
+
+        return ResponseHandler.generateResponse(
+                String.format("Demande sur l'article %d", id),
+                HttpStatus.OK,
+                request.getRequestURI(),
+                this.articleService.findArticleById(id)
+        );
     }
-
 
     /**
      * Récupère une liste paginée d'articles.
      *
-     * @param page Le numéro de la page à récupérer (par défaut 0). Doit être un entier positif.
-     * @param size Le nombre d'articles par page (par défaut 10). Doit être un entier positif.
-     * @return ResponseEntity<Page < ArticleDto>> Un objet ResponseEntity contenant une page d'articles.
-     * Le statut sera HttpStatus.OK en cas de succès.
-     * @throws Exception Si une erreur survient lors de la récupération des articles paginés.
+     * @param page    le numéro de la page à récupérer (par défaut : 0). Doit être un entier positif.
+     * @param size    le nombre d'articles par page (par défaut : 10). Doit être un entier positif.
+     * @param request l'objet de requête HTTP en cours.
+     * @return un objet ResponseEntity contenant une réponse API avec une page d'articles (ArticleDto).
+     * Le statut HTTP sera HttpStatus.OK en cas de succès.
      */
     @GetMapping(path = "/getAllArticles")
-    @ApiOperation(value = "Get articles list with pagable ")
-    public ResponseEntity<Page<ArticleDto>> getlistArticlePagination(
-            @RequestParam(defaultValue = "0", name = "page", required = true) Integer page,
-            @RequestParam(defaultValue = "10", name = "size", required = true) Integer size)
-            throws Exception {
+    @Operation(summary = "Obtenir une liste paginée d'articles", responses = {
+            @ApiResponse(responseCode = "200", description = "Liste paginée d'articles récupérée avec succès",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = GenericApiResponse.class)
+                    )),
+            @ApiResponse(responseCode = "400", description = "Requête invalide : paramètres de pagination incorrects"),
+            @ApiResponse(responseCode = "500", description = "Erreur interne du serveur")
+    })
+    public ResponseEntity<GenericApiResponse<Page<ArticleDto>>> getlistArticlePagination(
+            @RequestParam(defaultValue = "0", name = "page") @Min(0) @Max(10) Integer page,
+            @RequestParam(defaultValue = "10", name = "size") @Min(0) @Max(10) Integer size,
+            HttpServletRequest request) {
 
-        // Validation des paramètres minimal
-        page = page < 0 ? 0 : page;
-        size = size < 1 ? 10 : size;
-
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(this.articleService.findArticlesPagination(page, size));
+        return ResponseHandler.generateResponse(
+                String.format("La page %d et le nombre d'élement %d", page, size),
+                HttpStatus.OK,
+                request.getRequestURI(),
+                this.articleService.findArticlesPagination(page, size)
+        );
     }
 
-    @GetMapping(path = "/getAllArticlesOrderBy")
-    @ApiOperation(value = "Get articles list with pagable ")
-    public ResponseEntity<Page<ArticleDto>> getlistArticlePaginationOrdreBy(
-            @RequestParam(defaultValue = "0", name = "page", required = true) Integer page,
-            @RequestParam(defaultValue = "10", name = "size", required = true) Integer size)
-            throws Exception {
+    /**
+     * Récupère une liste paginée des articles triés par identifiant.
+     *
+     * @param page    le numéro de la page (par défaut 0)
+     * @param size    le nombre d'éléments par page (par défaut 10)
+     * @param request l'objet de requête HTTP en cours
+     * @return un objet de type ResponseEntity contenant une réponse API avec
+     * une page d'articles (ArticleDto) triés par identifiant
+     */
+    @GetMapping(path = "/getAllArticlesOrderById")
+    //@Operation(summary = "Obtenir une liste paginée des articles triés par identifiant", response = ResponseEntity.class)
+    public ResponseEntity<GenericApiResponse<Page<ArticleDto>>> getlistArticlePaginationOrdreBy(
+            @RequestParam(defaultValue = "0", name = "page") @Min(0) @Max(10) Integer page,
+            @RequestParam(defaultValue = "10", name = "size") @Min(0) @Max(10) Integer size,
+            HttpServletRequest request) {
 
-        // Validation des paramètres minimal
-        page = page < 0 ? 0 : page;
-        size = size < 1 ? 10 : size;
+        return ResponseHandler.generateResponse(
+                String.format("Page %d numbre d'élement %d", page, size),
+                HttpStatus.OK,
+                request.getRequestURI(),
+                this.articleService.findAllArticlePageOrderBy(page, size));
 
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(this.articleService.findAllArticlePageOrderBy(page, size));
     }
 
     /**
@@ -106,161 +160,109 @@ public class ControllerArticle {
      * @param section L'identifiant de la section pour laquelle récupérer les articles (par défaut 1).
      * @return ResponseEntity<Page < ArticleDto>> Un objet ResponseEntity contenant une page d'articles.
      * Le statut sera HttpStatus.OK en cas de succès.
-     * @throws Exception Si une erreur survient lors de la récupération des articles.
      */
     @GetMapping(path = "/getAllArticlesSection")
-    @ApiOperation(value = "Get articles list with section in pagable ")
-    public ResponseEntity<Page<ArticleDto>> getlistArticleWithPagination(
-            @RequestParam(defaultValue = "0", name = "page", required = true) Integer page,
-            @RequestParam(defaultValue = "10", name = "size", required = true) Integer size,
-            @RequestParam(defaultValue = "1", name = "sectionId", required = true) Integer section)
-            throws Exception {
+    //@ApiOperation(value = "Permet d'obtenir une pagination des articles par section", response = ResponseEntity.class)
+    public ResponseEntity<GenericApiResponse<Page<ArticleDto>>> getlistArticleWithPagination(
+            @RequestParam(defaultValue = "0", name = "page") @Min(0) @Max(10) Integer page,
+            @RequestParam(defaultValue = "10", name = "size") @Min(0) @Max(10) Integer size,
+            @RequestParam(defaultValue = "1", name = "sectionId") @Min(0) @Max(10) Integer section,
+            HttpServletRequest request) {
 
-        // Validation des paramètres minimal
-        page = page < 0 ? 0 : page;
-        size = size < 1 ? 10 : size;
+        return ResponseHandler.generateResponse(
+                String.format("Page %d nombre d'élement %d", page, size),
+                HttpStatus.OK,
+                request.getRequestURI(),
+                this.articleService.findArticlesPaginationSection(page, size, section));
 
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(this.articleService
-                        .findArticlesPaginationSection(page, size, section));
     }
 
 
     /**
      * Sauvegarde les données d'un article dans le système.
-     * Seuls les utilisateurs autorisés sont autorisés à effectuer cette opération.
+     * Cette opération est réservée aux utilisateurs autorisés.
      *
-     * @param articleSave Les données de l'article à sauvegarder.
-     *                    Les champs incluent le titre, le contenu et toute autre information pertinente.
-     *                    L'identifiant de l'utilisateur doit être fourni pour des raisons de sécurité.
-     * @return ResponseEntity<?> Un objet ResponseEntity contenant le résultat de la sauvegarde.
-     * En cas de succès, le statut sera 201 et l'article créé sera retourné.
-     * En cas d'erreur, le statut correspondant à l'erreur sera retourné avec un message d'erreur approprié.
-     * Si la mise à jour d'un article est détectée via ce endpoint, le statut sera 403.
-     * @throws Exception Si une erreur survient lors de la sauvegarde ou mise à jour de l'article.
+     * @param articleDtoSave les données de l'article à sauvegarder.
+     *                       Inclut le titre, le contenu et toute autre information pertinente.
+     *                       L'identifiant de l'utilisateur (`idUser`) doit être fourni pour des raisons de sécurité.
+     * @param request        l'objet de requête HTTP en cours.
+     * @return un objet ResponseEntity contenant l'article sauvegardé avec un statut HTTP 200 (OK) en cas de succès.
      */
     @PostMapping(path = "/saveArticle",
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    @ApiOperation(value = "Sauvegarde ou met a jour les données d'un article", response = Article.class)
-    @PreAuthorize("@authentification.isAuthorization(#articleSave.idUser)")
-    public ResponseEntity<Map<String, Object>> saveArticle(@Valid @RequestBody ArticleSave articleSave)
-            throws Exception {
+    //@ApiOperation(value = "Sauvegarder ou mettre à jour les données d'un article", response = ResponseEntity.class)
+    @PreAuthorize("@access.isAuthorization(#articleDtoSave.idUser)")
+    public ResponseEntity<GenericApiResponse<ArticleDto>> saveArticle(@Valid @RequestBody ArticleDtoSave articleDtoSave,
+                                                                      HttpServletRequest request) {
 
-        // vérification de la nouveauté d'un article par son ID
-        if (articleSave.statusArticle()) {
+        return ResponseHandler.generateResponse(
+                "L'article à été créer avec succès",
+                HttpStatus.CREATED,
+                request.getRequestURI(),
+                this.articleService.saveArticle(articleDtoSave));
 
-            log.info("la mise à jour d'un article ne doit pas être exécute à partir de ce endpoint");
-            return ResponseHandler.generateResponse(new CustomerResponse(
-                    HttpStatus.FORBIDDEN,
-                    "Accès interdit",
-                    "La mise à jour d'un article n'est pas autorisé à parti de ce point de terminaison",
-                    "/article/saveArticle"));
-
-
-        } else {
-
-            log.info("Un nouvelle article va être créer");
-            Article article = this.articleService.saveArticle(articleSave)
-                    .orElseThrow(() -> new ArticleException(
-                            String.format("L'article n° %d n'a pas été mise à jour ",
-                                    articleSave.getIdArticle()),
-                            HttpStatus.NOT_FOUND
-                    ));
-
-            String message = "L'article n° " + article.getIdArticle() + " à été créer avec succès ";
-            log.info(message);
-
-            return ResponseHandler.generateResponse(
-                    message,
-                    HttpStatus.CREATED,
-                    article);
-        }
 
     }
 
     /**
      * Met à jour les données d'un article dans le système.
-     * Seuls les utilisateurs autorisés sont autorisés à effectuer cette opération.
+     * Cette opération est réservée aux utilisateurs autorisés.
      *
-     * @param articleUpdate Les données de l'article à mettre à jour.
-     *                      Les champs modifiables incluent le titre, le contenu et toute autre information pertinente.
-     *                      L'identifiant de l'utilisateur doit être fourni pour des raisons de sécurité.
-     * @return ResponseEntity<Map < String, Object>> Une Map de String et objet ResponseEntity contenant le résultat
-     * de la mise à jour.
-     * En cas de succès, le statut sera 200 et l'article mis à jour sera retourné.
-     * En cas d'erreur, le statut correspondant à l'erreur sera retourné avec un message d'erreur approprié.
-     * Si la création d'un article est détectée via ce endpoint, le statut sera 403.
-     * @throws ArticleException Si l'article n'existe pas ou ne peut pas être mis à jour.
-     * @throws Exception        Si une erreur survient lors de la mise à jour de l'article.
+     * @param articleDtoUpdate les données de l'article à mettre à jour.
+     *                         Les champs modifiables incluent le titre, le contenu et toute autre information pertinente.
+     *                         L'identifiant de l'utilisateur (`idUser`) doit être fourni pour des raisons de sécurité.
+     * @param request          l'objet de requête HTTP en cours.
+     * @return un objet ResponseEntity contenant l'article mis à jour avec un statut HTTP 200 (OK) en cas de succès.
      */
     @PutMapping(path = "/updateArticle",
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    @ApiOperation(value = "Met à jour les données d'un article", response = Article.class)
-    @PreAuthorize("@authentification.isAuthorization(#articleUpdate.idUser)")
-    public ResponseEntity<Map<String, Object>> updateArticle(@Valid @RequestBody ArticleUpdate articleUpdate)
-            throws Exception {
+    //@ApiOperation(value = "Met à jour les données d'un article", response = ResponseEntity.class)
+    @PreAuthorize("@access.isAuthorization(#articleDtoUpdate.idUser)")
+    public ResponseEntity<GenericApiResponse<ArticleDto>> updateArticle(
+            @Valid @RequestBody ArticleDtoUpdate articleDtoUpdate,
+            HttpServletRequest request) {
 
-        // vérification de l'ancienneté de l'article par la presence de son ID
-        if (articleUpdate.statusArticle()) {
-
-            log.info("la création d'un article ne doit pas être exécuter à partir de ce endpoint ");
-            return ResponseHandler.generateResponse(new CustomerResponse(
-                    HttpStatus.FORBIDDEN,
-                    "Accès interdit",
-                    "La création d'un article n'est pas autorisé à parti de ce point de terminaison",
-                    "/article/updateArticle"));
-
-        } else {
-
-            Article article = this.articleService.updateArticle(articleUpdate)
-                    .orElseThrow(() -> new ArticleException(
-                            String.format("L'article n° %d n'a pas était mise à jour ",
-                                    articleUpdate.getIdArticle()),
-                            HttpStatus.NOT_FOUND
-                    ));
-
-            String message = "L'article n° " + articleUpdate.getIdArticle() + " va être mise à jour avec succès";
-            log.info(message);
-
-            return ResponseHandler.generateResponse(
-                    message,
-                    HttpStatus.CREATED,
-                    article);
-        }
+        return ResponseHandler.generateResponse(
+                "L'article a été mis à jour avec succès",
+                HttpStatus.CREATED,
+                request.getRequestURI(),
+                this.articleService.updateArticle(articleDtoUpdate));
 
     }
 
     /**
      * Supprime un article du système.
-     * Seuls les utilisateurs autorisés sont autorisés à effectuer cette opération.
+     * Cette opération est réservée aux utilisateurs autorisés.
      *
-     * @param idArticle L'identifiant de l'article à supprimer. Doit être un entier positif non nul.
-     * @return ResponseEntity<?> Un objet ResponseEntity contenant le résultat de la suppression.
-     * En cas de succès, le statut sera HttpStatus.OK et l'identifiant de l'article supprimé sera retourné.
-     * En cas d'erreur, le statut HttpStatus.NOT_FOUND sera retourné avec un message d'erreur approprié.
+     * @param idArticle l'identifiant de l'article à supprimer. Doit être un entier positif non nul.
+     * @param idUser    l'identifiant de l'utilisateur effectuant l'opération. Doit être un UUID valide.
+     * @param request   l'objet de requête HTTP en cours.
+     * @return un objet ResponseEntity contenant l'identifiant de l'article supprimé avec un statut HTTP 200 (OK) en cas de succès.
      */
-    @DeleteMapping(path = "/deleteArticle/{idArticle}")
-    @PreAuthorize("@authentification.deleteArticle(#idArticle)")
-    public ResponseEntity deteleArticle(@PathVariable @NotNull @Min(1) Integer idArticle) {
+    @DeleteMapping(path = "/deleteArticle/{idArticle}/{idUser}")
+    //@ApiOperation(value = "Supprime un article", response = ResponseEntity.class)
+    @PreAuthorize("@access.isAuthorization(#idUser)")
+    public ResponseEntity<GenericApiResponse<Integer>> deteleArticle(
+            @PathVariable @NotNull @Min(1) Integer idArticle,
+            @PathVariable @NotNull @Min(1) UUID idUser,
+            HttpServletRequest request) {
 
-        try {
 
-            this.articleService.deleteArticleById(idArticle);
+        if (this.articleService.deleteArticleById(idArticle)) {
             return ResponseHandler.generateResponse(
-                    "La suppression de l'article a été réaliser avec succès "
-                    , HttpStatus.OK
-                    , idArticle);
-
-        } catch (Exception ex) {
-
-            log.error(ex.getMessage());
+                    "La suppression de votre article a été réaliser avec succès",
+                    HttpStatus.OK,
+                    request.getRequestURI(),
+                    idArticle);
+        } else {
+            log.error("Échec de la suppression de l'article,Impossible de trouver la ressource");
             return ResponseHandler.generateResponse(
-                    "Impossible de trouver l'élément correspondant "
-                    , HttpStatus.NOT_FOUND
-                    , idArticle);
+                    String.format("Impossible de trouver l'article correspondant à l'ID: %d", idArticle),
+                    HttpStatus.NOT_FOUND,
+                    request.getRequestURI(),
+                    idArticle);
 
         }
     }
@@ -268,12 +270,17 @@ public class ControllerArticle {
     /**
      * Récupère la liste de tous les domaines avec leurs sections associées.
      *
-     * @return List<Domain> Une liste de tous les domaines avec leurs sections associées.
-     * @throws Exception Si une erreur survient lors de la récupération des domaines avec sections.
+     * @return une liste de tous les domaines avec leurs sections associées.
      */
     @GetMapping(path = "/getAllDomain")
-    public List<Domain> getAllDomain() {
-        return this.articleService.getAllDomainWithSection();
+    //@ApiOperation(value = "Récupère la liste de tous les domaines", response = ResponseEntity.class)
+    public ResponseEntity<GenericApiResponse<List<Domain>>> getAllDomain(HttpServletRequest request) {
+        return ResponseHandler.generateResponse(
+                "La liste des Domain",
+                HttpStatus.OK,
+                request.getRequestURI(),
+                this.articleService.getAllDomainWithSection()
+        );
     }
 
 }

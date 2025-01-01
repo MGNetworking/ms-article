@@ -35,6 +35,10 @@ public class Article implements Serializable {
     @Column(name = "id_user", nullable = false)
     private String idUser;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "id_section", referencedColumnName = "id_section")
+    private Section section;
+
     @Column(name = "id_commentaire", nullable = true)
     private Integer idCommentaire;
 
@@ -43,11 +47,6 @@ public class Article implements Serializable {
 
     @Column(name = "id_note", nullable = true)
     private Integer idNote;
-
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "id_section", referencedColumnName = "id_section")
-    //@JsonBackReference
-    private Section section;
 
     @Column(name = "titre", nullable = false)
     private String titre;
@@ -68,7 +67,12 @@ public class Article implements Serializable {
     @Column(name = "description_art", nullable = false)
     private String description;
 
-    //@Column(name = "date_creation", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @Column(name = "vue", nullable = true)
+    private int vue;
+
+    @Column(name = "visibiliter", nullable = false)
+    private boolean isVisibale;
+
     @JsonSerialize(using = DateSerialisation.class)
     @JsonDeserialize(using = DateDeserializer.class)
     @CreationTimestamp
@@ -77,18 +81,8 @@ public class Article implements Serializable {
 
     @JsonSerialize(using = DateSerialisation.class)
     @JsonDeserialize(using = DateDeserializer.class)
-    //@UpdateTimestamp
     @Column(name = "date_maj", nullable = true)
     private Timestamp dateMaj;
 
-    @Column(name = "vue", nullable = true)
-    private int vue;
-
-    @Column(name = "visibiliter", nullable = false)
-    private boolean visibiliter;
-
-    public boolean getVisibiliter(){
-        return this.visibiliter;
-    }
 
 }

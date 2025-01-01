@@ -1,12 +1,12 @@
 package ArticleWebService.service;
 
-import ArticleWebService.Exception.ArticleException;
+import ArticleWebService.handler.Exception.ArticleException;
 import ArticleWebService.dto.ArticleDto;
+import ArticleWebService.dto.ArticleDtoSave;
+import ArticleWebService.dto.ArticleDtoUpdate;
 import ArticleWebService.entities.*;
-import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 
-import javax.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,28 +40,45 @@ public interface ArticleService {
      */
     Page<ArticleDto> findArticlesPaginationSection(int page, int size, Integer sectionId);
 
-    Optional<Article> findArticleById(Integer id);
+    /**
+     * Récuéper l'article complet par son ID
+     *
+     * @param id l'identifier de l'article
+     * @return un objet Article complet
+     */
+    Article findArticleById(Integer id) throws ArticleException;
 
     /**
      * Sauvegarde d'un article
      *
-     * @param articleSave l'article a sauvegarder
-     * @return un objet Article sauvegarder
+     * @param articleDtoSave l'article a sauvegarder
+     * @return un ArticleDto Article sauvegarder
      * @throws ArticleException si l'article n'a pas pu être Sauvegardé
      */
-    Optional<Article> saveArticle(ArticleSave articleSave) throws ArticleException;
+    ArticleDto saveArticle(ArticleDtoSave articleDtoSave) throws ArticleException;
 
     /**
-     * Met à jour l'article
+     * Met à jour un article
      *
-     * @param articleUpdate l'article à mettre à jour
+     * @param articleDtoUpdate l'article à mettre à jour
      * @return un objet Article mise à jour
      * @throws ArticleException si l'article n'a pas pu être mis à jour
      */
-    Optional<Article> updateArticle(ArticleUpdate articleUpdate) throws ArticleException;
+    ArticleDto updateArticle(ArticleDtoUpdate articleDtoUpdate) throws ArticleException;
 
-    void deleteArticleById(Integer idArticle) throws IllegalArgumentException;
+    /**
+     * Supprime un article
+     *
+     * @param idArticle l'identifant de l'article
+     * @return un boolean qui status de la réussite de l'opération
+     */
+    boolean deleteArticleById(Integer idArticle);
 
+    /**
+     * Permet d'obtenir la liste des domaines et section.
+     *
+     * @return une liste de domain
+     */
     List<Domain> getAllDomainWithSection();
 
 }

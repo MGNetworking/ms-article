@@ -13,16 +13,19 @@ import java.util.Date;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class ArticleDto {
 
     private Integer idArticle;
     private String idUser;
     private Section section ;
     private String titre;
+    private String article;
     private String imgUrl;
     private String imgDescription;
     private String description;
-    private boolean visibiliter;
+    private int vue;
+    private boolean isVisibale;
 
     // Serialisation de l'objet date au format => yyyy-MM-dd HH:mm:ss
     @JsonSerialize(using = DateSerialisation.class)
