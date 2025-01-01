@@ -238,9 +238,9 @@ pipeline {
             }
             steps {
                 script {
-                    echo("Gestion des tests unitaire sous le profile : ${env.BRANCH_NAME}")
-                    sh("mvn clean test -Dspring.profiles.active=${env.BRANCH_NAME}")
-                    sh("mvn clean verify -P e2e -Dspring.profiles.active=${env.BRANCH_NAME}")
+                    echo("Gestion des tests unitaire sous le profile : dev")
+                    sh("mvn clean test -Dspring.profiles.active=dev")
+                    sh("mvn clean verify -P e2e -Dspring.profiles.active=dev")
 
 
                 }
