@@ -177,13 +177,6 @@
             <version>2.2.8</version>
         </dependency>
 
-        <!-- Permet de générer automatiquement la documentation Swagger UI pour les APIs exposées -->
-        <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-ui</artifactId>
-            <version>1.7.0</version>
-        </dependency>
-
         <!-- Nécessaire pour intégrer les endpoints OpenAPI avec Spring Boot Actuator -->
         <dependency>
             <groupId>org.springdoc</groupId>

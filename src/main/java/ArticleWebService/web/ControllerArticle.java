@@ -57,28 +57,6 @@ public class ControllerArticle {
      * @throws ArticleException si aucun article correspondant à l'identifiant spécifié n'est trouvé.
      */
     @GetMapping(path = "/getArticle/{id}")
-    @Operation(summary = "Obtenir l'article par son identifiant", responses = {
-            @ApiResponse(responseCode = "200", description = "Article récupéré avec succès",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = GenericApiResponse.class)
-                    )),
-            @ApiResponse(responseCode = "400", description = "Validation failed",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = GenericApiResponse.class)
-                    )),
-            @ApiResponse(responseCode = "404", description = "Article non trouvé",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = GenericApiResponse.class)
-                    )),
-            @ApiResponse(responseCode = "500", description = "Erreur interne du serveur",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = GenericApiResponse.class)
-                    ))
-    })
     public ResponseEntity<GenericApiResponse<Article>> getArticle(
             @PathVariable("id") Integer id, HttpServletRequest request) {
 
@@ -106,15 +84,6 @@ public class ControllerArticle {
      * Le statut HTTP sera HttpStatus.OK en cas de succès.
      */
     @GetMapping(path = "/getAllArticles")
-    @Operation(summary = "Obtenir une liste paginée d'articles", responses = {
-            @ApiResponse(responseCode = "200", description = "Liste paginée d'articles récupérée avec succès",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = GenericApiResponse.class)
-                    )),
-            @ApiResponse(responseCode = "400", description = "Requête invalide : paramètres de pagination incorrects"),
-            @ApiResponse(responseCode = "500", description = "Erreur interne du serveur")
-    })
     public ResponseEntity<GenericApiResponse<Page<ArticleDto>>> getlistArticlePagination(
             @RequestParam(defaultValue = "0", name = "page") @Min(0) @Max(10) Integer page,
             @RequestParam(defaultValue = "10", name = "size") @Min(0) @Max(10) Integer size,
@@ -138,7 +107,6 @@ public class ControllerArticle {
      * une page d'articles (ArticleDto) triés par identifiant
      */
     @GetMapping(path = "/getAllArticlesOrderById")
-    //@Operation(summary = "Obtenir une liste paginée des articles triés par identifiant", response = ResponseEntity.class)
     public ResponseEntity<GenericApiResponse<Page<ArticleDto>>> getlistArticlePaginationOrdreBy(
             @RequestParam(defaultValue = "0", name = "page") @Min(0) @Max(10) Integer page,
             @RequestParam(defaultValue = "10", name = "size") @Min(0) @Max(10) Integer size,
@@ -162,7 +130,6 @@ public class ControllerArticle {
      * Le statut sera HttpStatus.OK en cas de succès.
      */
     @GetMapping(path = "/getAllArticlesSection")
-    //@ApiOperation(value = "Permet d'obtenir une pagination des articles par section", response = ResponseEntity.class)
     public ResponseEntity<GenericApiResponse<Page<ArticleDto>>> getlistArticleWithPagination(
             @RequestParam(defaultValue = "0", name = "page") @Min(0) @Max(10) Integer page,
             @RequestParam(defaultValue = "10", name = "size") @Min(0) @Max(10) Integer size,
@@ -191,7 +158,6 @@ public class ControllerArticle {
     @PostMapping(path = "/saveArticle",
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    //@ApiOperation(value = "Sauvegarder ou mettre à jour les données d'un article", response = ResponseEntity.class)
     @PreAuthorize("@access.isAuthorization(#articleDtoSave.idUser)")
     public ResponseEntity<GenericApiResponse<ArticleDto>> saveArticle(@Valid @RequestBody ArticleDtoSave articleDtoSave,
                                                                       HttpServletRequest request) {
@@ -218,7 +184,6 @@ public class ControllerArticle {
     @PutMapping(path = "/updateArticle",
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    //@ApiOperation(value = "Met à jour les données d'un article", response = ResponseEntity.class)
     @PreAuthorize("@access.isAuthorization(#articleDtoUpdate.idUser)")
     public ResponseEntity<GenericApiResponse<ArticleDto>> updateArticle(
             @Valid @RequestBody ArticleDtoUpdate articleDtoUpdate,
@@ -242,7 +207,6 @@ public class ControllerArticle {
      * @return un objet ResponseEntity contenant l'identifiant de l'article supprimé avec un statut HTTP 200 (OK) en cas de succès.
      */
     @DeleteMapping(path = "/deleteArticle/{idArticle}/{idUser}")
-    //@ApiOperation(value = "Supprime un article", response = ResponseEntity.class)
     @PreAuthorize("@access.isAuthorization(#idUser)")
     public ResponseEntity<GenericApiResponse<Integer>> deteleArticle(
             @PathVariable @NotNull @Min(1) Integer idArticle,
@@ -273,7 +237,6 @@ public class ControllerArticle {
      * @return une liste de tous les domaines avec leurs sections associées.
      */
     @GetMapping(path = "/getAllDomain")
-    //@ApiOperation(value = "Récupère la liste de tous les domaines", response = ResponseEntity.class)
     public ResponseEntity<GenericApiResponse<List<Domain>>> getAllDomain(HttpServletRequest request) {
         return ResponseHandler.generateResponse(
                 "La liste des Domain",
