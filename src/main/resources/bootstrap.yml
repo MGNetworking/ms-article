@@ -37,3 +37,18 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:8099/eureka # URL pour le contexte local
+
+########## Configuration pour le profil de test
+---
+spring:
+  config:
+    activate:
+      on-profile: test # Activer pour le profil
+  cloud:
+    config:
+      enabled: false # Désactiver Spring Cloud Config
+eureka:
+  client:
+    enabled: false # Désactiver le client Eureka
+    register-with-eureka: false # Désactiver l'enregistrement auprès du serveur Eureka
+    fetch-registry: false # Désactiver télécharge du registre Eureka au près du client
