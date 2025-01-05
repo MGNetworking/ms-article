@@ -135,6 +135,13 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- DB H2  -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <!-- This 2 dependence it's useful for used keycloak -->
         <!-- dependence for adaptateur keycloak -->
         <dependency>
