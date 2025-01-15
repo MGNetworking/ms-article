@@ -19,11 +19,11 @@ public class ArticleDtoSave {
 
     private Integer idArticle;
 
-    @NotBlank(message = "L'identifiant utilisateur est absent")
-    private String idUser;
-
     @NotNull(message = "La section de l'article est obligatoire ")
     private Section section;
+
+    @NotBlank(message = "L'identifiant utilisateur est absent")
+    private String idUser;
 
     @NotBlank(message = "Vous devez mettre un titre")
     @Size(min = 3, max = 100, message = "Le titre doit contenir entre 3 et 100 caractères.")
@@ -41,6 +41,7 @@ public class ArticleDtoSave {
     @NotBlank(message = "L'article doit avoir un contenu")
     private String article;
 
+    // Permet de rendre visible ou non un article a sa création
     private boolean isVisibale;
 
 }

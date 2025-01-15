@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.persistence.Column;
 import javax.validation.constraints.*;
 import java.sql.Timestamp;
 import java.util.List;
@@ -56,8 +57,7 @@ public class ArticleDtoUpdate {
     @JsonDeserialize(using = DateDeserializer.class)
     private Timestamp dateCreation;
 
-    // variable mise à jour après update
+    // Variable mise à jour en BD après update
     private Timestamp dateMaj;
-
 
 }

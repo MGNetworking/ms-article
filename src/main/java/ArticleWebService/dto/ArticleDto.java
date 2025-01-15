@@ -17,15 +17,15 @@ import java.util.Date;
 public class ArticleDto {
 
     private Integer idArticle;
+    private Section section;
     private String idUser;
-    private Section section ;
     private String titre;
-    private String article;
     private String imgUrl;
     private String imgDescription;
     private String description;
-    private int vue;
+    private String article;
     private boolean isVisibale;
+    private int vue;
 
     // Serialisation de l'objet date au format => yyyy-MM-dd HH:mm:ss
     @JsonSerialize(using = DateSerialisation.class)
