@@ -6,8 +6,8 @@
 * [Configuration Requise](#configuration-requise)
     * [Étapes de Configuration](#étapes-de-configuration)
     * [Les dépendances externes](#les-dépendances-externes)
-* [Compilation et déploiement](#compilation-et-déploiement)
-    * [Les types de tests](#les-types-de-tests)
+* [Test, Compilation et déploiement](#test-compilation-et-déploiement)
+    * [Configuration Maven pour les Tests](#configuration-maven-pour-les-tests)
     * [Les Phases de compilation](#les-phases-de-compilation)
     * [Intégration avec ms-gateway](#intégration-avec-ms-gateway)
     * [Accès via ms-gateway](#accès-via-ms-gateway)
@@ -80,115 +80,118 @@ ms-article.
 projet principal [back-end](https://github.com/MGNetworking/back-end) qui regroupe toutes les API de ce projet, il
 possède comme ce projet son propre depôt.
 
-## Compilation et déploiement
+## Test, Compilation et déploiement
 
-### Les types de tests
+### Configuration Maven pour les Tests
 
-1. Tests unitaires :
+Cette configuration Maven permet de gérer et d'exécuter trois types de tests dans un projet Spring Boot :
 
-* Vérifient un composant isolé (une méthode ou une classe) sans dépendances externes.
-* Utilisent des mocks pour simuler les dépendances (comme une base de données ou d'autres services).
+* Les tests unitaires
+* Les tests d'intégration
+* Les tests End-to-End (E2E)
 
-2. Tests d'intégration :
+#### Structure de la configuration
 
-* Vérifient l'interaction entre plusieurs composants du système (par exemple, un service avec une base de données
-  réelle).
-* Chargent une partie ou la totalité du contexte Spring.
+1. Plugins configurés
+    1. Spring Boot Maven Plugin
 
-3. Tests End-to-End (E2E) :
+        * Défini pour exclure certains artefacts comme lombok du processus de construction.
+        * Permet d'exécuter une application Spring Boot via Maven.
 
-* Vérifient tout le flux de bout en bout, du point d'entrée (souvent un contrôleur) jusqu'à la base de données et les
-  autres systèmes connectés.
-* Simulent des appels HTTP et testent les résultats complets.
+    2. Maven Surefire Plugin
 
-### Tests d'intégration vs Tests End-to-End (E2E)
+        * Utilisé pour exécuter les tests unitaires uniquement.
+        * Exclut les tests d'intégration (*ITTest.java) et E2E (*E2ETest.java).
 
-Dans ce projet, nous avons deux types de tests distincts pour assurer la qualité et la fiabilité de l'application :
-tests `d'intégration` et tests `end-to-end`. Voici une explication des deux concepts pour clarifier leurs objectifs,
-leurs configurations, et leurs utilisations.
+    3. Maven Failsafe Plugin
 
-* Liste de commande rapide :
-
-Tests unitaires uniquement :
-
-````bash
-mvn test -Dspring.profiles.active=<profiles>
-````
-
-Tests d'intégration uniquement :
-
-````bash
-mvn verify -Pintegration -Dspring.profiles.active=<profiles>
-````
-
-Tests E2E uniquement :
-
-````bash
-mvn verify -Pe2e -Dspring.profiles.active=<profiles>
-````
-
-Exécuter les Testes unitaire et les deux (intégration + E2E) :
-
-````bash
-mvn verify -Pintegration,e2e -Dspring.profiles.active=<profiles>
-````
-
-1. Tests d'intégration
-   Les tests d'intégration valident que différentes parties de l'application fonctionnent correctement ensemble, sans
-   inclure de dépendances externes réelles. Ces tests utilisent des bases de données en mémoire ou des dépendances
-   simulées (mocks).
-
-* Objectif :  
-  Vérifier que les composants internes (contrôleurs, services, DAO, etc.) fonctionnent bien ensemble.
-  Tester la logique métier avec des dépendances simulées (par exemple, une base H2 en mémoire ou un Keycloak mocké).
+        * Utilisé pour exécuter les tests d'intégration et E2E, généralement après le déploiement dans un environnement
+          d'intégration.
+        * Contrôle les étapes integration-test et verify.
 
 
-* Configuration :
-* Base de données : Utilisation de H2 pour simuler une base de données sans affecter les données réelles.
-* Mocking : Les dépendances externes comme Keycloak, API tierces, ou queues de messages sont simulées à l’aide de
-  bibliothèques comme Mockito.
+2. Profils Maven  
+   Des profils distincts permettent de déclencher des tests spécifiques en fonction du contexte.
 
-* Exécution des tests d'intégration :
-  Les fichiers de test suivent la convention : *IT.java.
-  Les tests d'intégration sont exécutés avec le profil integration :
+**a) Profil integration**
+
+Exécute uniquement les tests d'intégration.
+
+Configuration :
+Désactive les tests unitaires (maven-surefire-plugin).
+Active uniquement les fichiers de tests dans `**/integration/*ITTest.java`.
+
+**b) Profil e2e**
+
+Exécute uniquement les tests End-to-End (E2E).
+
+Configuration :  
+Désactive les tests unitaires (maven-surefire-plugin).
+Active uniquement les fichiers de tests dans `**/endtoend/*E2ETest.java`.
+
+**c) Profil combiné (optionnel)**
+
+Si vous souhaitez exécuter tous les tests (intégration + E2E) dans une seule commande, vous pouvez définir un profil
+personnalisé (voir section suivante).
+
+**Utilisation**
+
+1. Exécuter les tests unitaires  
+   Les tests unitaires sont exécutés par défaut avec Maven :
 
 ````bash
-mvn verify -Pintegration -Dspring.profiles.active=integration
+mvn clean test
 ````
 
-2. Tests End-to-End (E2E)
-   Les tests end-to-end valident le système entier dans un environnement aussi proche que possible de la production. Ces
-   tests incluent toutes les dépendances réelles, telles que la base de données PostgreSQL, Keycloak, et tout autre
-   service externe.
-
-`Objectif`
-Vérifier le fonctionnement complet de l'application, de bout en bout, dans des conditions réelles.
-Simuler des scénarios utilisateur complets pour valider l’intégration globale.
-
-* `Configuration`
-
-    * Base de données : Utilisation de PostgreSQL (ou la base de données réelle configurée pour l'environnement).
-    * Keycloak : Utilisation du service Keycloak réel avec une configuration spécifique pour les tests.
-      Dépendances externes : Toutes les dépendances externes sont utilisées telles qu'elles sont en production.
-
-
-* Exécution des tests E2E :
-  Les fichiers de test suivent la convention : *E2ETest.java.
-  Les tests E2E sont exécutés avec le profil e2e :
+2. Exécuter les tests d'intégration  
+   Pour exécuter les tests d'intégration uniquement :
 
 ````bash
-mvn verify -Pe2e -Dspring.profiles.active=e2e
+mvn clean verify -P integration -Dspring.profiles.active=test
 ````
 
-4. Quand utiliser quel type de test ?
+3. Exécuter les tests End-to-End  
+   Pour exécuter les tests E2E uniquement :
 
-* Tests d'intégration :
-    * Pendant le développement pour vérifier que les composants fonctionnent ensemble.
-    * Plus rapides et isolés, car ils utilisent des dépendances simulées.
+````bash
+mvn clean verify -P e2e -Dspring.profiles.active=test
+````
 
-* Tests End-to-End :
-    * Pour valider l’application complète avant le déploiement.
-    * Plus lents et nécessitent un environnement complet (base de données réelle, Keycloak, etc.).
+4. Exécuter tous les tests  
+   Si un profil combiné est défini (voir ci-dessous), vous pouvez exécuter tous les tests :
+
+````shell
+mvn clean verify -P all-tests -Dspring.profiles.active=test
+````
+
+--- 
+
+**Notes importantes**
+
+1. Structure des fichiers de test :
+
+   * unitaires : **/*Test.java
+   * Tests d'intégration : **/integration/*ITTest.java
+   * Tests E2E : **/endtoend/*E2ETest.java
+
+2. Phases Maven utilisées :
+
+   * test : Exécution des tests unitaires via `maven-surefire-plugin`.
+   * integration-test et verify : Exécution des tests d'intégration et E2E via `maven-failsafe-plugin`.
+
+3. Exclusion de Lombok :
+
+   * Le plugin Spring Boot est configuré pour exclure lombok au moment du build afin d'éviter des dépendances inutiles dans
+     l'environnement de production.
+
+**Commandes rapides**
+
+| Action                  | Commande                                                        |
+|-------------------------|-----------------------------------------------------------------|
+| Tests unitaires         | `mvn clean test`                                                |
+| Tests d'intégration     | `mvn clean verify -P integration -Dspring.profiles.active=test` |
+| Tests End-to-End        | `mvn clean verify -P e2e -Dspring.profiles.active=test`         |
+| Tous les tests (option) | `mvn clean verify -P all-tests -Dspring.profiles.active=test`   |
 
 ### Les Phases de compilation
 
@@ -198,65 +201,44 @@ mvn verify -Pe2e -Dspring.profiles.active=e2e
 Exemple de compilation pour le serveur Nas :
 
 ```bash
-mvn clean package -Dspring.profiles.active=nas -DIP=192.168.1.56 -DSERVICE_CONFIG_DOCKER=${SERVICE_CONFIG_URI}
+mvn clean package -Dspring.profiles.active=nas -DSERVICE_CONFIG_DOCKER=${SERVICE_CONFIG_URI}
 ```
 
 * `-Dspring.profiles.active=nas`  
-  La spécification du profil permet au service, de récupérer son fichier de properties en correspondance avec son
-  environnement. Il est indispensable a la création du build mes aussi dans les étapes du deployment.
-  Cependant, pour le déployment, il lui aussi lui spécifier (voir cela dans 3 phase)
+  La spécification du profil Spring permet au service, de récupérer son fichier de properties en correspondance avec son
+  environnement. Il est indispensable à la compilation.
 
 
 * `-DSERVICE_CONFIG_DOCKER=${SERVICE_CONFIG_URI}`  
   Cette variable permet de localiser le service qui possède le fichier de properties. Sans cette adresse, il ne peut
-  contacter le service pour récupérer son fichier de properties qui lui ai indispensable.
+  contacter le service pour récupérer son fichier de properties qui lui est indispensable.
 
-
-* `-DIP=192.168.1.56`  
-  Cette variable permet de définir l'adresse IP la base de données. Cette donnée est récupéré puis ajouté aux variables
-  d'environnement pour être données au fichier de `.properties`
-
-NB: La variable `-DIP` est nécessaire uniquement pour :
-
-- La phase de compilation `Maven` dans le context Nas par l'intermédiaire du fichier `msarticle-nas.properties`
-- Le déploiement `Swarm` dans le context Nas par l'intermédiaire du fichier `docker-compose-swarm.yml`
+Dans cette phase de compilation, sous le profile `nas` le fichier utilisé du fichier `msarticle-nas.properties`.
+Ce fichier n'est pas présent dans le projet et récupèrer via Spring config.
 
 2. phase 2 :  
-   Après la compilation, l'image et construite en utilisant le fichier docker compose dédier a cette effet.
-   Le docker compose référence le Dockerfile qui permet la construction de l'image. Si l'image est présent dans votre
-   environnement la construction ne sera pas réaliser. L'image est en suite construit en couches dans lesquels sont
-   copier les scripts d'exécution et le jar précédemment compiler.
+   Après la compilation, l'image docker est créé en utilisant le fichier `docker-compose.yml`.
+   Si l'`image:version` n'est pas présent dans l'environnment docker du système, le fichier `Dockerfile` lancera la
+   construction de l'image.
+   L'image sera ansi construit en couches, avec en copié, les scripts d'exécution et le jar précédemment compiler.
 
-NB: Ce docker compose permet unique de build votre image docker avec la version et le port que vous aurais choisi
+Le fichier `docker-compose.yml` permet UNIQUEMENT la création de l'image docker de ce projet sous la version définit
+dans le fichier `.env`
 
 3. phase 3 :  
-   Après la construction de l'image, celle-ci peut être déployer dans stack. Un docker compose prévu a cette et
-   configurer dans le but de paramètre sa mise jours (update_config) ainsi que la possible de retour en arriére (
-   rollback_config). Aussi dans la configuration du docker compose un mécanisme de vérification de santé (healthcheck) y
-   est configurer.
+   Après la construction de l'image, celle-ci peux être déployé dans une stack via le script `deploy.sh`. Le fichier
+   `docker-compose-swarm.yml` contient toutes les configurations pour le déploiment et la gestion du service.
+   Il est configuré dans le but de paramètre un update, un rollback. Ce fichier possède aussi un mécanisme de
+   vérification de santé (healthcheck) lui permettent redémarrer une instance en cas de mauvaise santer du service en
+   cours d'exécution dans la stack.
 
-Exemple de deployment :
-
-```shell
-export $(cat .env) && docker stack deploy -c ./docker-compose-swarm-nas.yml article
-```
-
-* `export $(cat .env)`
-  Permet export les variables contenu dans le fichier `.env`. Cela permet une souplesse dans le déployment de la stack
-  A noté que pour serveur Nas l'export des variables ne fonctionne pas, même le variable d'environnement du docker
-  compose ne fonctionne pas.
-  Cette spécificité est unique au Nas Synology. Par contre, les serveurs Ubuntu n'ont pas cette restriction.
-
-Le reste de la commande cible le docker compose en charge du déployment. Il contient la configuration Swarm permettent
-la gestion de la stack qui contient vos service.
-
-Les services contenu dans le stack `article` sont lancer via un script `wait_for_config.sh` qui comme son nom l'indique
+Les services contenus dans la stack `article` sont lancé via un script `wait_for_config.sh` qui comme son nom l'indique
 Attente que le service configuration soit en cours d'exécution avant de lancer le `Jar` exécutable.
 
 ## Intégration avec ms-gateway
 
 Cette API fonctionne au travers du micro-service [ms-gateway](https://github.com/MGNetworking/ms-gateway). Cette API
-fait parti du projet principal [back-end](https://github.com/MGNetworking/back-end). Cependant, elle peut également être
+fait partie du projet principal [backend](https://github.com/MGNetworking/backend). Cependant, elle peut également être
 accessible directement par son adresse IP.
 
 ### Accès via ms-gateway
@@ -332,33 +314,18 @@ Dans l'espace Run ajoute la commande :
 Sans la mode debug
 
 ```shell
-# context devlocal
-clean test -Dspring.profiles.active=devlocal -DSERVICE_CONFIG_DOCKER=http://192.168.1.68:8089 spring-boot:run "-Dspring-boot.run.jvmArguments=-Dspring.profiles.active=devlocal -DSERVICE_CONFIG_DOCKER=http://192.168.1.68:8089"
-# ancien context dev
-clean test -Dspring.profiles.active=dev -DSERVICE_CONFIG_DOCKER=http://192.168.1.68:8089  spring-boot:run -Dspring-boot.run.jvmArguments="-Dspring.profiles.active=dev -DSERVICE_CONFIG_DOCKER=http://192.168.1.68:8089" 
+clean test -Dspring.profiles.active=dev -DSERVICE_CONFIG_DOCKER=http://192.168.x.xx:8089 spring-boot:run "-Dspring-boot.run.jvmArguments=-Dspring.profiles.active=devlocal -DSERVICE_CONFIG_DOCKER=http://192.168.1.68:8089" 
 ```
 
 Avec mode debug
 
 ```shell
-# context devlocal
-clean test -Dspring.profiles.active=devlocal -DSERVICE_CONFIG_DOCKER=http://192.168.1.68:8089 spring-boot:run -Dspring-boot.run.jvmArguments="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005 -DSERVICE_CONFIG_DOCKER=http://192.168.1.68:8089 -Dspring.profiles.active=devlocal"
-# ancien context dev
 clean test -Dspring.profiles.active=dev -DSERVICE_CONFIG_DOCKER=http://192.168.1.68:8089 spring-boot:run -Dspring-boot.run.jvmArguments="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005 -DSERVICE_CONFIG_DOCKER=http://192.168.1.68:8089 -Dspring.profiles.active=dev"
 ```
 
-Le profile `devlocal` permet l'exécution de l'API de manière autonome. Cependant, cette API fonction conjointement avec
-l'api `Gateway`. Et donc, ces deux API doit se trouver dans le type d'environnement, pour cause de configuration réseau.
-En effet, dans un environnement docker swarm, la communication s'exécute au traver du réseau overlay, qui un réseau
-spécifique interne docker. Alors, si par exemple la Gateway se trouve dans ce réseau docker, elle ne pourra pas
-communiquer avec l'API Article. Ces deux API doivent impérativement ce trouve sur le même réseau. Donc le réseau de la
-machine locale soit le réseau overlay docker.
-
-Note que le profile `devlocal` et conçut spécifiquement a cet effet, c'est-à-dire le développement local de l'API
-appelé autonome ou local.
+Le lancement de l'application Spring Boot
 
 ```shell
-# commande de base 
 mvn spring-boot:run -Dspring-boot.run.jvmArguments="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005"
 ```
 
@@ -367,7 +334,7 @@ déclenche pas automatiquement l'exécution des tests unitaires
 
 Détail de la commande :
 
-1. `clean test` : lance les testes unitaires (goal test)
+1. `clean test` : Néttoye puis lance les testes unitaires (goal test)
 2. `spring-boot:run` : Le lancement de l'API Spring Boot directement à partir du code source sans générer de fichier
    exécutable (JAR ou WAR) au préalable.
 3. `-Dspring-boot.run.jvmArguments` le passage en arguments pour la JVM
@@ -387,7 +354,7 @@ Détail de la commande :
         * **address=5005**: Spécifie le port sur lequel l'application écoutera les connexions du débogueur. Dans ce cas,
           le port est 5005.
 
-5. `-Dspring.profiles.active=devlocal` :  
+5. `-Dspring.profiles.active=dev` :  
    Le profile active permet de prècisé l'environnement dans lequel s'execute
    cette API. Cela aura pour effet au moment de l'exécution, de cibler le fichier de properties avec lequel cette API
    va fonctionner et aussi les testes unitaires qui seront exécuter au moment de la compilation.
@@ -400,7 +367,7 @@ Pour utiliser le script `run.sh` qui utilise le`down.sh` et aussi `deploy.sh` , 
 Windows, vous pouvez utiliser wsl qui un sous système linux dans Windows. Voici un exemple de configuration qui utilise
 le script `run.sh`
 
-La partie importante est de localiser le Bash de wsl qui reste à vérifier sur votre machine
+La partie importante est de localiser l'intépréteur `Bash` de votre wsl, qui reste à vérifier sur votre machine
 
 ````bash
 \\wsl.localhost\Ubuntu-22.04\usr\bin\bash
