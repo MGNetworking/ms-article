@@ -22,6 +22,7 @@ import java.util.List;
 @AllArgsConstructor
 @ToString
 @Table(name = "section", schema = "ms_article")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Section implements Serializable {
 
     @Id
