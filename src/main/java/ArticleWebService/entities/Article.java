@@ -27,34 +27,27 @@ import java.util.Date;
 @Table(name = "article", schema = "ms_article")
 public class Article implements Serializable {
 
+    // constructeur utilisé uniquement pour les tests unitaires
+    public Article(Integer idArticle, Section section) {
+        this.idArticle = idArticle;
+        this.section = section;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_article")
     private Integer idArticle;
 
-    @Column(name = "id_user", nullable = false)
-    private String idUser;
-
-    @ManyToOne(fetch = FetchType.EAGER)
+    //@ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_section", referencedColumnName = "id_section")
     private Section section;
 
-    @Column(name = "id_commentaire", nullable = true)
-    private Integer idCommentaire;
-
-    @Column(name = "id_source", nullable = true)
-    private Integer idSource;
-
-    @Column(name = "id_note", nullable = true)
-    private Integer idNote;
+    @Column(name = "id_user", nullable = false)
+    private String idUser;
 
     @Column(name = "titre", nullable = false)
     private String titre;
-
-    @Lob
-    @Type(type = "org.hibernate.type.TextType")
-    @Column(name = "article", nullable = false)
-    private String article;
 
     @Column(name = "img_url", nullable = true)
     private String imgUrl;
@@ -67,11 +60,16 @@ public class Article implements Serializable {
     @Column(name = "description_art", nullable = false)
     private String description;
 
-    @Column(name = "vue", nullable = true)
-    private int vue;
+    @Lob
+    @Type(type = "org.hibernate.type.TextType")
+    @Column(name = "article", nullable = false)
+    private String article;
 
     @Column(name = "visibiliter", nullable = false)
     private boolean isVisibale;
+
+    @Column(name = "vue", nullable = true)
+    private int vue;
 
     @JsonSerialize(using = DateSerialisation.class)
     @JsonDeserialize(using = DateDeserializer.class)
@@ -83,6 +81,19 @@ public class Article implements Serializable {
     @JsonDeserialize(using = DateDeserializer.class)
     @Column(name = "date_maj", nullable = true)
     private Timestamp dateMaj;
+
+
+/*
+    @Column(name = "id_commentaire", nullable = true)
+    private Integer idCommentaire;
+
+    @Column(name = "id_source", nullable = true)
+    private Integer idSource;
+
+    @Column(name = "id_note", nullable = true)
+    private Integer idNote;
+
+*/
 
 
 }
