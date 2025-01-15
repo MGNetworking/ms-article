@@ -1,8 +1,10 @@
-# Maintenir LF pour les fichiers suivant
+# Indique explicitement que Git a Forcer les fins de ligne à utiliser LF (line feed) sur toutes les plateformes.
 *.txt text eol=lf
 *.sh text eol=lf
 *.env text eol=lf
+resources/**/*.properties text eol=lf
 
-# Exclure les images du traitement "text"
+
+# Indique explicitement que Git ne doit pas traiter ces fichiers comme des fichiers texte
 *.png -text
 *.jpg -text
