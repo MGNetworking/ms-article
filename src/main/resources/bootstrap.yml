@@ -8,7 +8,6 @@ spring:
         - ${SERVICE_CONFIG_DOCKER:http://ms-configuration:8089}
       enabled: true # Par défaut activé
 
-
 ########## Configuration spécifique au profil devDocker pour docker ##########
 ---
 spring:
