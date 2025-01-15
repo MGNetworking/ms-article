@@ -248,7 +248,7 @@
                     </includes>
                     <excludes>
                         <!-- Exclure les tests d'intégration et E2E -->
-                        <exclude>**/*IT.java</exclude>
+                        <exclude>**/*ITTest.java</exclude>
                         <exclude>**/*E2ETest.java</exclude>
                     </excludes>
                 </configuration>
@@ -340,6 +340,35 @@
                 </plugins>
             </build>
         </profile>
+
+        <profile>
+            <id>all-tests</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <configuration>
+                            <includes>
+                                <include>**/integration/*ITTest.java</include>
+                                <include>**/endtoend/*E2ETest.java</include>
+                            </includes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
     </profiles>
 
     <!--============================= -->
