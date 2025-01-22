@@ -99,7 +99,9 @@ public class ArticleValidatorDtoSaveTest {
         assertTrue(violations
                 .stream()
                 .anyMatch(v -> v.getMessage()
-                        .equals("Vous devez mettre un titre")));
+                        .equals("Vous devez mettre un titre")),
+                "La propriété doit avoir un titre");
+
         assertTrue(violations
                 .stream()
                 .anyMatch(v -> v.getMessage()
