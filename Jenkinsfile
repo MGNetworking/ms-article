@@ -228,24 +228,67 @@ pipeline {
         }
 
 
-/*        stage('Test unitaire') {
-            agent {
-                docker {
-                    image 'maven:3.8.5-jdk-8-slim'
-                    args '-v /var/jenkins_home/maven/.m2:/root/.m2' +
-                            ' -v /var/run/docker.sock:/var/run/docker.sock'
+        stage('Tests parallèles') {
+            parallel {
+                stage('UNITAIRE') {
+                    agent {
+                        docker {
+                            image 'maven:3.8.5-jdk-8-slim'
+                            args '-v /var/jenkins_home/maven/.m2:/root/.m2' +
+                                    ' -v /var/run/docker.sock:/var/run/docker.sock'
+                        }
+                    }
+                    steps {
+                        script {
+                            // Si les tests échouent, le pipeline est interrompu
+                            echo("Lancement des tests unitaire")
+                            sh("mvn clean test -Dspring.profiles.active=test")
+                        }
+                    }
                 }
-            }
-            steps {
-                script {
-                    echo("Gestion des tests unitaire sous le profile : dev")
-                    sh("mvn clean test -Dspring.profiles.active=dev")
-                    sh("mvn clean verify -P e2e -Dspring.profiles.active=dev")
-
-
+                stage('INTEGRATION') {
+                    agent {
+                        docker {
+                            image 'maven:3.8.5-jdk-8-slim'
+                            args '-v /var/jenkins_home/maven/.m2:/root/.m2' +
+                                    ' -v /var/run/docker.sock:/var/run/docker.sock'
+                        }
+                    }
+                    steps {
+                        script {
+                            // Si une erreur survient, le stage est marqué comme FAILURE, mais le pipeline continue
+                            // Le résultat global du pipeline est marqué comme UNSTABLE
+                            echo("Lancement des tests d'intégration et end to end")
+                            catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                                sh("mvn clean verify -P integration -Dspring.profiles.active=test")
+                            }
+                        }
+                    }
                 }
+
+                stage('END TO END') {
+                    agent {
+                        docker {
+                            image 'maven:3.8.5-jdk-8-slim'
+                            args '-v /var/jenkins_home/maven/.m2:/root/.m2' +
+                                    ' -v /var/run/docker.sock:/var/run/docker.sock'
+                        }
+                    }
+                    steps {
+                        script {
+                            // Si une erreur survient, le stage est marqué comme UNSTABLE,
+                            // mais cela n’affecte pas le résultat global du pipeline.
+                            echo("Lancement des tests d'intégration et end to end")
+                            catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
+                                sh "mvn clean verify -P e2e -Dspring.profiles.active=test"
+                            }
+                        }
+                    }
+                }
+
             }
-        }*/
+        }
+
 
         stage('Maven Compilation') {
             agent {
@@ -257,10 +300,8 @@ pipeline {
             }
             steps {
                 script {
-                    echo("Compilation du service ms-article")
-                    sh("mvn clean package -Dspring.profiles.active=${env.BRANCH_NAME} " +
-                            "-DIP=192.168.1.56 " +                              // uniquement pour le nas
-                            "-DSERVICE_CONFIG_DOCKER=${SERVICE_CONFIG_URI}")    // le service config
+                    echo("Compilation du service ms-article sous le profile Spring ${env.BRANCH_NAME}")
+                    sh("mvn clean package -Dspring.profiles.active=${env.BRANCH_NAME} -DSERVICE_CONFIG_DOCKER=${SERVICE_CONFIG_URI}")
 
                 }
             }
@@ -281,6 +322,7 @@ pipeline {
             steps {
                 script {
                     echo(LINE)
+                    // TAG de l'image vers la version spécifier beta / relase
                     echo("Tag de l'image docker ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION} vers ${dockers.img}")
                     sh(script: "docker tag ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION} ${dockers.img}")
                     echo("push de l'image ${dockers.img} vers le dépôt Docker Nexus")
@@ -425,14 +467,28 @@ pipeline {
                     echo("Fermeture de la connection au dépôt nexus depuis Jenkins")
                     sh(script: "docker login -u ${nexus.user} -p ${nexus.pass} ${nexus.domain}")
 
-                    echo("Nettoyage de l'images: ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION}")
+                    echo("Nettoyage de l'images de base : ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION}")
                     utilsDocker.clsImage(this, "docker rmi ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION}")
 
-                    echo("Nettoyage de l'images: ${dockers.img}")
+                    echo("Nettoyage de l'images beta / relase : ${dockers.img}")
                     utilsDocker.clsImage(this, "docker rmi ${dockers.img}")
 
+                    echo "Collecte des rapports JUnit pour les tests unitaires."
+                    junit '**/target/surefire-reports/*.xml', allowEmptyResults: true
+
+                    echo "Collecte des rapports JUnit pour les tests d'intégration et E2E."
+                    junit '**/target/failsafe-reports/*.xml', allowEmptyResults: true
+
+                    def testResults = sh(script: "grep -H '<testsuite' target/surefire-reports/*.xml || echo 'Aucun résultat trouvé'", returnStdout: true).trim()
+                    if (testResults) {
+                        echo "Résumé des résultats des tests :"
+                        echo testResults
+                    } else {
+                        echo "Aucun résultat de test trouvé dans target/surefire-reports."
+                    }
+
                 } catch (Exception e) {
-                    error("Une erreur est survenu dans POST always , message : ${e.message}")
+                    error("Une erreur est survenu dans la parti POST always, message : ${e.message}")
                 }
             }
         }
