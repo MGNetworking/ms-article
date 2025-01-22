@@ -51,8 +51,8 @@ public class ArticleDtoUpdate {
     @NotNull(message = "Vous devez faire un choix concernant la visibilité de l'article : true ou false")
     private boolean isVisibale ;
 
-    @Min(-1)
-    @Max(1)
+    @Min(value = -1, message = "La valeur de 'vue' doit être au moins -1")
+    @Max(value = 1, message = "La valeur de 'vue' ne doit pas dépasser 1")
     private int vue;
 
     @NotNull(message = "La date de création est obligatoire")
