@@ -4,14 +4,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import ArticleWebService.dto.ArticleDtoSave;
 import ArticleWebService.entities.Section;
-import ArticleWebService.web.SystemPropertiesActiveProfileResolver;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.ActiveProfiles;
 
 import javax.validation.ConstraintViolation;
@@ -28,7 +24,7 @@ import java.util.Set;
 
 @ActiveProfiles("test")
 @Slf4j
-public class ArticleValidatorTest {
+public class ArticleValidatorDtoSaveTest {
 
     private Validator validator;
 
