@@ -17,12 +17,12 @@ public class SystemPropertiesActiveProfileResolver implements ActiveProfilesReso
         public String[] resolve(Class<?> testClass) {
             String activeProfile = System.getProperty("spring.profiles.active");
 
-            if (activeProfile != null && !activeProfile.isEmpty()) {
+/*            if (activeProfile != null && !activeProfile.isEmpty()) {
                 log.info("------------------------");
                 log.info("Profil actif : {}", activeProfile);
                 log.info("------------------------");
                 return new String[]{activeProfile};
-            }
+            }*/
 
             // Récupérer les profils définis dans application.properties
             StandardEnvironment environment = new StandardEnvironment();
