@@ -9,6 +9,7 @@ import ArticleWebService.handler.response.ResponseHandler;
 import ArticleWebService.repository.ArticleRepository;
 import ArticleWebService.repository.DomainRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.Hibernate;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
@@ -20,7 +21,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceException;
 import javax.swing.text.html.Option;
+import javax.validation.ConstraintViolationException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -52,7 +55,11 @@ public class ArticleServiceImpl implements ArticleService {
             Page<Article> article = this.articleRepository
                     .findAll(PageRequest.of(page, size));
 
-            // Mapping de chaque article en articleDTO dans la pagination
+            // Charger explicitement les relations Lazy pour chaque entité
+            article.getContent().forEach(
+                    art -> Hibernate.initialize(art.getSection()));
+
+
             return article.map(art -> this.modelMapper.map(art, ArticleDto.class));
 
         } catch (DataAccessException ex) {
@@ -72,6 +79,10 @@ public class ArticleServiceImpl implements ArticleService {
             Page<Article> articleData = this.articleRepository
                     .findAllArticlePageOrderBy(PageRequest.of(page, size));
 
+            // Charger explicitement les relations Lazy pour chaque entité
+            articleData.getContent().forEach(
+                    art -> Hibernate.initialize(art.getSection()));
+
             return articleData.map(article -> this.modelMapper.map(article, ArticleDto.class));
         } catch (DataAccessException ex) {
             String message = String
@@ -88,9 +99,14 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     public Page<ArticleDto> findArticlesPaginationSection(int page, int size, Integer sectionId) {
         try {
+
             Page<Article> article = this.articleRepository
                     .findAllArticlesBySection(
                             PageRequest.of(page, size), sectionId);
+
+            // Charger explicitement les relations Lazy pour chaque entité
+            article.getContent().forEach(
+                    art -> Hibernate.initialize(art.getSection()));
 
             return article.map(art -> this.modelMapper.map(art, ArticleDto.class));
         } catch (DataAccessException ex) {
@@ -114,11 +130,16 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     public Article findArticleById(Integer id) throws ArticleException {
         try {
-            return articleRepository.findById(id)
+            Article article = articleRepository.findById(id)
                     .orElseThrow(() -> new ArticleException(
                             String.format("L'identifiant de l'article : %d n'a pas été trouvé", id),
                             HttpStatus.NOT_FOUND
                     ));
+
+            // Chargement explicite de la relation Lazy section
+            Hibernate.initialize(article.getSection());
+
+            return article;
 
         } catch (DataAccessException ex) {
             //log.error("Erreur lors de l'accès à la base pour l'article ID: {}. Message: {}", id, ex.getMessage(), ex);
@@ -146,6 +167,33 @@ public class ArticleServiceImpl implements ArticleService {
                     HttpStatus.INTERNAL_SERVER_ERROR);
 
         }
+    }
+
+
+    @Override
+    public int updateArticleFields(ArticleDtoUpdate dto) throws ArticleException {
+
+        int updatedRows = this.articleRepository.updateArticleFields(dto);
+
+        if (updatedRows == 0) {
+            throw new ArticleException("Aucun article mis à jour. Vérifiez l'ID ou les paramètres.",
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        return updatedRows;
+    }
+
+    @Override
+    public int updateArticleMeta(ArticleDtoUpdate dto) throws ArticleException {
+        int updatedRows = this.articleRepository.updateArticleMeta(dto);
+
+        if (updatedRows == 0) {
+            throw new ArticleException("Aucune métadonnée de votre article n'a été mise à jour. " +
+                    "Veuillez réessayer ultérieurement.",
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        return updatedRows;
     }
 
     @Override
