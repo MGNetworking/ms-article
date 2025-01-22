@@ -60,11 +60,9 @@ public class ControllerArticle {
     public ResponseEntity<GenericApiResponse<Article>> getArticle(
             @PathVariable("id") Integer id, HttpServletRequest request) {
 
-
         if (id < 0) {
             throw new InvalidPathVariableException(request.getRequestURI(), "Votre ID inférieur a 0");
         }
-
 
         return ResponseHandler.generateResponse(
                 String.format("Demande sur l'article %d", id),
@@ -90,7 +88,7 @@ public class ControllerArticle {
             HttpServletRequest request) {
 
         return ResponseHandler.generateResponse(
-                String.format("La page %d et le nombre d'élement %d", page, size),
+                String.format("La page %d et le nombre d'éléments %d", page, size),
                 HttpStatus.OK,
                 request.getRequestURI(),
                 this.articleService.findArticlesPagination(page, size)
@@ -159,8 +157,9 @@ public class ControllerArticle {
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     @PreAuthorize("@access.isAuthorization(#articleDtoSave.idUser)")
-    public ResponseEntity<GenericApiResponse<ArticleDto>> saveArticle(@Valid @RequestBody ArticleDtoSave articleDtoSave,
-                                                                      HttpServletRequest request) {
+    public ResponseEntity<GenericApiResponse<ArticleDto>> saveArticle(
+            @Valid @RequestBody ArticleDtoSave articleDtoSave,
+            HttpServletRequest request) {
 
         return ResponseHandler.generateResponse(
                 "L'article à été créer avec succès",

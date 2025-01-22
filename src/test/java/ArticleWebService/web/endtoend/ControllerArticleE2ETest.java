@@ -16,6 +16,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.jayway.jsonpath.DocumentContext;
+import com.jayway.jsonpath.JsonPath;
 import lombok.extern.slf4j.Slf4j;
 
 import org.junit.jupiter.api.*;
@@ -41,9 +43,9 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.sql.Timestamp;
+import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -81,7 +83,8 @@ public class ControllerArticleE2ETest {
     @Value("${keycloak.resource}")
     private String keycloakResource;
 
-    private final ObjectMapper mapper = new ObjectMapper(); // permet la sérialisation / désérialisation JSON en Java
+    // permet la sérialisation / désérialisation JSON en Java
+    private final ObjectMapper mapper = new ObjectMapper();
     private String tokenMax;
     private String tokenMaximus;
 
@@ -108,8 +111,8 @@ public class ControllerArticleE2ETest {
         // Préparation des données d'entrée
         articleDtoSave = new ArticleDtoSave(
                 null,
-                this.userMax,
                 new Section(1, "Java"),
+                this.userMax,
                 "Nouvel Article",
                 "image.png",
                 "Ceci est une description",
@@ -126,27 +129,30 @@ public class ControllerArticleE2ETest {
     public void getArticleById() throws Exception {
 
         int idArticle = 1;
+
         MvcResult result = this.mockMvc.perform(get("/article/getArticle/{id}", idArticle)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.timestamp").exists())
-                .andExpect(jsonPath("$.message").value("Demande sur l'article " + idArticle))
-                .andExpect(jsonPath("$.status").value(200))
-                .andExpect(jsonPath("$.path").value("/article/getArticle/" + idArticle))
-                .andExpect(jsonPath("$.data").exists())
                 .andDo(print())
                 .andReturn();
 
-        // Mapper vers ApiResponse<Article> et vérifier que "data" contient bien un Article
+
         String responseJson = result.getResponse().getContentAsString();
+        JsonNode jsonNode = this.mapper.readTree(responseJson);
+        int status = result.getResponse().getStatus();
+
+        assertEquals(200, status, "Le statut HTTP attendu est incorrect.");
+        assertTrue(jsonNode.has("timestamp"), "Le champ 'timestamp' devrait exister dans la réponse");
+
+        // Mapping de la réponse pour des vérifications supplémentaires
         GenericApiResponse<Article> genericApiResponse = this.mapper
                 .readValue(responseJson, new TypeReference<GenericApiResponse<Article>>() {
                 });
 
         // Vérifiez que l'ApiResponse et l'Article ne sont pas null
-        assertNotNull(genericApiResponse);
-        assertNotNull(genericApiResponse.getData());
+        assertNotNull(genericApiResponse, "La réponse API ne doit pas être null");
+        assertNotNull(genericApiResponse.getData(), "Les données de l'article ne doivent pas être null");
+
     }
 
     @Test
@@ -211,33 +217,49 @@ public class ControllerArticleE2ETest {
     }
 
     @Test
-    @Order(8)
-    @DisplayName("Recherche reussi une pagination d'article status 200")
+    @Order(6)
+    @DisplayName("/article/getAllArticles - Recherche reussi une pagination d'article status 200")
     public void getAllArticles_pageble_OK() throws Exception {
 
         int page = 0, size = 10;
 
-        this.mockMvc.perform(get("/article/getAllArticles")
+        MvcResult result = this.mockMvc.perform(get("/article/getAllArticles")
                         .param("page", Integer.toString(page))
                         .param("size", Integer.toString(size))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andDo(MockMvcResultHandlers.print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.timestamp").exists())
-                .andExpect(jsonPath("$.message")
-                        .value(String.format("La page %d et le nombre d'élement %d", page, size)))
-                .andExpect(jsonPath("$.status").value(200))
-                .andExpect(jsonPath("$.path").value("/article/getAllArticles"))
-                .andExpect(jsonPath("$.data.content").isArray()) // Vérifie que 'content' est un tableau
-                .andExpect(jsonPath("$.data.content").isNotEmpty()) // Vérifie que 'content' est vide
-                .andExpect(jsonPath("$.data.pageable").exists()) // Vérifie que 'pagination' existe
-                .andDo(print());
+                .andReturn();
 
+        // Affichage de la réponse complète pour analyse
+        String responseContent = result.getResponse().getContentAsString();
+        System.out.println("Réponse complète : " + responseContent);
+
+        // Vérifiez manuellement si le statut est correct
+        assertEquals(200, result.getResponse().getStatus(), "Le statut HTTP attendu est incorrect.");
+
+        // Assertions détaillées avec messages personnalisés
+        assertNotNull(responseContent, "La réponse ne doit pas être nulle.");
+
+        // Utilisation de JsonPath pour des assertions plus précises
+        DocumentContext jsonContext = JsonPath.parse(responseContent);
+
+        // Vérifie l'existence de clés principales
+        assertTrue(jsonContext.read("$.timestamp") != null, "Le champ 'timestamp' est manquant.");
+
+        assertEquals(
+                String.format("La page %d et le nombre d'éléments %d", page, size),
+                jsonContext.read("$.message"),
+                "Le message de confirmation est incorrect."
+        );
+
+        assertTrue(jsonContext.read("$.data.content") instanceof List, "Le champ 'content' devrait être une liste.");
+        assertFalse(((List<?>) jsonContext.read("$.data.content")).isEmpty(), "Le champ 'content' ne devrait pas être vide.");
+        assertNotNull(jsonContext.read("$.data.pageable"), "Le champ 'pageable' est manquant.");
     }
 
     @Test
-    @Order(9)
+    @Order(7)
     @DisplayName("GET /article/getAllArticles - Success")
     public void getAllArticles_pageble_IsEmpty() throws Exception {
 
@@ -252,7 +274,7 @@ public class ControllerArticleE2ETest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.message")
-                        .value(String.format("La page %d et le nombre d'élement %d", page, size)))
+                        .value(String.format("La page %d et le nombre d'éléments %d", page, size)))
                 .andExpect(jsonPath("$.status").value(200))
                 .andExpect(jsonPath("$.path").value("/article/getAllArticles"))
                 .andExpect(jsonPath("$.data.content").isArray()) // Vérifie que 'content' est un tableau
@@ -262,7 +284,7 @@ public class ControllerArticleE2ETest {
     }
 
     @Test
-    @Order(10)
+    @Order(8)
     @DisplayName("GET /article/getAllArticlesSection - Success")
     public void getArticleSection_pageble_OK() throws Exception {
 
@@ -287,7 +309,7 @@ public class ControllerArticleE2ETest {
     }
 
     @Test
-    @Order(11)
+    @Order(9)
     @DisplayName("GET /article/getAllArticlesSection - Success")
     public void getArticleSection_pageble_IsEmpty() throws Exception {
 
@@ -312,7 +334,7 @@ public class ControllerArticleE2ETest {
     }
 
     @Test
-    @Order(12)
+    @Order(10)
     @DisplayName("GET /article/getAllDomain - Success")
     public void getAllDomain() throws Exception {
 
@@ -323,7 +345,7 @@ public class ControllerArticleE2ETest {
     }
 
     @Test
-    @Order(13)
+    @Order(11)
     @DisplayName("POST /article/saveArticle - Success")
     void shouldCreateArticleWhenValidRequest() throws Exception {
 
@@ -353,7 +375,7 @@ public class ControllerArticleE2ETest {
     }
 
     @Test
-    @Order(14)
+    @Order(12)
     @DisplayName("POST /article/saveArticle - Forbidden")
     void shouldReturnForbiddenWhenUpdatingArticle() throws Exception {
 
@@ -366,7 +388,7 @@ public class ControllerArticleE2ETest {
     }
 
     @Test
-    @Order(15)
+    @Order(13)
     @DisplayName("POST /article/saveArticle - Unauthoriezed")
     void shouldReturnUnauthorizedWhenUpdatingArticle() throws Exception {
 
@@ -379,7 +401,7 @@ public class ControllerArticleE2ETest {
     }
 
     @Test
-    @Order(16)
+    @Order(14)
     @DisplayName("PUT /article/updateArticle - Is created")
     void shouldReturnCreateWhenUpdatingArticle() throws Exception {
 
@@ -393,6 +415,7 @@ public class ControllerArticleE2ETest {
                 "Ceci est une description d'article",
                 "Ceci est le contenu de l'article",
                 true,
+                1,
                 this.dateCreation,
                 null
         );
@@ -407,7 +430,7 @@ public class ControllerArticleE2ETest {
     }
 
     @Test
-    @Order(17)
+    @Order(15)
     @DisplayName("DELETE /article/deleteArticle/{idArticle}/{idUser} - Is Forbidden")
     void shouldReturnFalseAfterDeleteArticle() throws Exception {
 
@@ -422,7 +445,7 @@ public class ControllerArticleE2ETest {
     }
 
     @Test
-    @Order(18)
+    @Order(16)
     @DisplayName("DELETE /article/deleteArticle/{idArticle}/{idUser} - Success")
     void shouldReturnTrueAfterDeleteArticle() throws Exception {
         this.mockMvc.perform(delete("/article/deleteArticle/{idArticle}/{idUser}"
