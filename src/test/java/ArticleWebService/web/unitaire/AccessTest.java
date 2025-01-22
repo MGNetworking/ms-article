@@ -60,7 +60,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * @see SecurityContextHolder
  */
 @ExtendWith(MockitoExtension.class)
-@ActiveProfiles(resolver = SystemPropertiesActiveProfileResolver.class)
+@ActiveProfiles("test")
 class AccessTest {
 
     @InjectMocks

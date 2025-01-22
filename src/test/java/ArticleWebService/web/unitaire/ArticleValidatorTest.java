@@ -25,6 +25,8 @@ import java.util.Set;
  * Ils n'ont pas besoin de context Spring et donc ne dépend pas
  * de conteneur Spring.
  */
+
+@ActiveProfiles("test")
 @Slf4j
 public class ArticleValidatorTest {
 
@@ -47,8 +49,8 @@ public class ArticleValidatorTest {
         // Créez un objet ArticleSave invalide
         ArticleDtoSave articleValidation = new ArticleDtoSave(
                 null,
-                "user123",
                 new Section(1, "Java"),
+                "user123",
                 "Titre valide",
                 "image.png",
                 "Ceci est une description",
@@ -79,8 +81,8 @@ public class ArticleValidatorTest {
         // Créez un objet ArticleSave invalide
         ArticleDtoSave articleValidation = new ArticleDtoSave(
                 null,
-                "user123",
                 new Section(1, "Java"),
+                "user123",
                 "",
                 "image.png",
                 "Ceci est une description",
@@ -113,8 +115,8 @@ public class ArticleValidatorTest {
     void testInvalidIdUserValidation() {
         ArticleDtoSave article = new ArticleDtoSave(
                 null,
-                null, // idUser null
                 new Section(1, "Java"),
+                null, // idUser null
                 "Titre valide",
                 "image.png",
                 "Ceci est une description",
@@ -136,8 +138,8 @@ public class ArticleValidatorTest {
     void testInvalidSectionValidation() {
         ArticleDtoSave article = new ArticleDtoSave(
                 null,
-                "user123",
                 null, // Section null
+                "user123",
                 "Titre valide",
                 "image.png",
                 "Ceci est une description",
@@ -160,8 +162,8 @@ public class ArticleValidatorTest {
     void testInvalidImgUrlValidation() {
         ArticleDtoSave article = new ArticleDtoSave(
                 null,
-                "user123",
                 new Section(1, "Java"),
+                "user123",
                 "Titre valide",
                 "", // imgUrl vide
                 "Ceci est une description",
@@ -184,8 +186,8 @@ public class ArticleValidatorTest {
     void testInvalidImgDescriptionValidation() {
         ArticleDtoSave article = new ArticleDtoSave(
                 null,
-                "user123",
                 new Section(1, "Java"),
+                "user123",
                 "Titre valide",
                 "image.png",
                 "", // imgDescription vide
@@ -209,8 +211,8 @@ public class ArticleValidatorTest {
     void testInvalidDescriptionValidation() {
         ArticleDtoSave article = new ArticleDtoSave(
                 null,
-                "user123",
                 new Section(1, "Java"),
+                "user123",
                 "Titre valide",
                 "image.png",
                 "Ceci est une description",
