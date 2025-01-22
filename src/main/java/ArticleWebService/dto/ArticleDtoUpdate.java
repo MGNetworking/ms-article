@@ -51,6 +51,10 @@ public class ArticleDtoUpdate {
     @NotNull(message = "Vous devez faire un choix concernant la visibilité de l'article : true ou false")
     private boolean isVisibale ;
 
+    @Min(-1)
+    @Max(1)
+    private int vue;
+
     @NotNull(message = "La date de création est obligatoire")
     @PastOrPresent(message = "La date de création doit être dans le présent ou le passé")
     @JsonSerialize(using = DateSerialisation.class)
