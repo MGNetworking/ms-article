@@ -3,6 +3,7 @@ package ArticleWebService.handler.Exception;
 import ArticleWebService.handler.response.GenericApiResponse;
 import ArticleWebService.handler.response.ResponseHandler;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -18,6 +19,7 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import javax.persistence.PersistenceException;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
@@ -47,8 +49,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
      * @return Un objet {@link GenericApiResponse <Object>} contenant les informations sur l'erreur et le statut HTTP.
      */
     @ExceptionHandler(ArticleException.class)
-    public ResponseEntity<GenericApiResponse<Object>> handleArticleException(ArticleException ex,
-                                                                             WebRequest request) {
+    public ResponseEntity<GenericApiResponse<Object>> handleArticleException(ArticleException ex, WebRequest request) {
 
         // Récupération de la requête HTTP
         HttpServletRequest httpRequest = ((ServletWebRequest) request).getRequest();
@@ -69,27 +70,53 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         log.error("User-Agent            : {}", userAgent);
         log.error("********** [ Fin du Log handleArticleException ] **********");
 
-        return ResponseHandler.generateResponse(
-                ex.getArticleMessage(),
-                ex.getStatus(),
-                uri,
-                null
-        );
+        return ResponseHandler.generateResponse(ex.getArticleMessage(), ex.getStatus(), uri, null);
     }
 
 
     /**
-     * Gestionnaire global pour capturer les exceptions levées
+     * Gestionnaire global pour toutes les exceptions inattendues non spécifiquement traitées.
+     * <p>
+     * Cette méthode capture les exceptions de type {@link Exception}, enregistre les informations pertinentes
+     * dans les logs et retourne une réponse utilisateur générique avec un statut HTTP 500.
      *
-     * @param ex
-     * @param request
-     * @return
+     * @param ex      L'exception levée, contenant les informations sur l'erreur survenue.
+     * @param request L'objet {@link HttpServletRequest} permettant d'obtenir des informations sur la requête
+     *                ayant provoqué l'exception.
+     * @return Une réponse standardisée {@link ResponseEntity} contenant :
+     * <ul>
+     *     <li>Un message utilisateur générique indiquant qu'une erreur technique est survenue.</li>
+     *     <li>Un statut HTTP {@code 500 Internal Server Error}.</li>
+     *     <li>Le chemin de la requête ayant généré l'exception.</li>
+     * </ul>
+     * @throws AccessDeniedException Si l'exception capturée est de type {@link AccessDeniedException}.
+     *                               Dans ce cas, l'exception est propagée pour être gérée par Spring Security.
+     *
+     *                               <p>
+     *                               <b>Notes:</b>
+     *                               <ul>
+     *                               <li>
+     *                                  Les logs contiennent des informations détaillées sur l'exception, y compris le
+     *                                  type d'exception et sa cause, si disponible.
+     *                               </li>
+     *                               <li>
+     *                                  Si une {@link AccessDeniedException} est interceptée, elle est propagée pour
+     *                                  une gestion spécifique par un gestionnaire de sécurité personnalisé.
+     *                               </li>
+     *                               </ul>
+     *                               </p>
+     *                               <p>
      */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<GenericApiResponse<Object>> handleGenericException(
-            Exception ex, HttpServletRequest request) throws AccessDeniedException {
+    public ResponseEntity<GenericApiResponse<Object>> handleGenericException(Exception ex, HttpServletRequest request) throws AccessDeniedException {
 
         log.error("Une erreur inattendue est survenue : {}, Type : {}", ex.getMessage(), ex.getClass().getName());
+        if (ex.getCause() != null) {
+            log.error("Cause de l'erreur : {}", ex.getCause().toString());
+        } else {
+            log.error("Aucune raison détaillée fournie.");
+        }
+
 
         // Si l'exception est une AccessDeniedException, laissez Spring Security la gérer
         if (ex instanceof AccessDeniedException) {
@@ -101,22 +128,38 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 "Une erreur technique est survenue. Veuillez réessayer plus tard.",
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 request.getRequestURI(),
-                null
-        );
+                null);
     }
 
+    /**
+     * Gestionnaire global d'exceptions pour les variables de chemin invalides.
+     * <p>
+     * Cette méthode capture et traite les exceptions de type {@link InvalidPathVariableException},
+     * levées lorsqu'une variable de chemin dans une URL est invalide ou non conforme aux attentes.
+     *
+     * @param ex      L'exception levée, contenant des détails sur la variable de chemin problématique
+     *                et la raison de son invalidité.
+     * @param request L'objet {@link HttpServletRequest} permettant d'obtenir des informations sur la requête
+     *                ayant causé l'exception.
+     * @return Une réponse standardisée {@link ResponseEntity}
+     */
     @ExceptionHandler(InvalidPathVariableException.class)
-    public ResponseEntity<GenericApiResponse<Object>> handleGenericInvalidPathVariableException(
-            InvalidPathVariableException ex, HttpServletRequest request) {
+    public ResponseEntity<GenericApiResponse<Object>> handleInvalidPathVariableException(InvalidPathVariableException ex, HttpServletRequest request) {
 
-        log.error("Message globale de l'erreur : {}", ex.getMessage());
-        log.error("Message globale plus précis de l'erreur  : {}", ex.getRaison());
+        String message = "Une variable de chemin est invalide. Veuillez vérifier l'URL et réessayer.";
+
+        log.error("Erreur de variable de chemin détectée. Message : {}", ex.getMessage());
+        if (ex.getRaison() != null) {
+            log.error("Raison de l'erreur : {}", ex.getRaison());
+        } else {
+            log.error("Aucune raison détaillée fournie.");
+        }
 
         return ResponseHandler.generateResponse(
-                ex.getMessage(), // message complet
+                ex.getMessage(),
                 HttpStatus.NOT_FOUND,
                 ex.getPathVariable(),
-                ex.getRaison() // message plus précis
+                null
         );
     }
 
@@ -142,49 +185,100 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
      * </ul>
      */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<GenericApiResponse<String>> handleMethodArgumentTypeMismatchException(
-            MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
+    public ResponseEntity<GenericApiResponse<String>> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
 
-        String message = String.format("La valeur '%s' pour le paramètre '%s' est invalide.",
-                ex.getValue(), ex.getName());
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-                new GenericApiResponse<>(
-                        HttpStatus.BAD_REQUEST.value(),
-                        "Validation failed",
-                        request.getRequestURI(),
-                        message
-                )
-        );
+        return ResponseHandler.generateResponse(
+                "Validation failed",
+                HttpStatus.BAD_REQUEST,
+                request.getRequestURI(),
+                String.format("La valeur '%s' pour le paramètre '%s' est invalide.", ex.getValue(), ex.getName()));
     }
 
 
     /**
-     * En gestion des erreurs de type @PathVariable, @RequestParam
+     * Gestionnaire global d'exceptions pour les violations de contraintes de validation.
+     * <p>
+     * Ce gestionnaire capture et traite les exceptions de type {@link ConstraintViolationException},
+     * qui surviennent lorsqu'une entité ou des paramètres de requête échouent à valider les contraintes
+     * définies (par exemple, via des annotations comme {@code @NotNull}, {@code @Size}, etc.).
      *
-     * @param ex
-     * @return
+     * @param ex      L'exception levée, contenant les détails des violations de contraintes.
+     * @param request L'objet {@link HttpServletRequest} permettant d'obtenir des informations sur la requête
+     *                ayant provoqué l'exception.
+     * @return Une réponse standardisée {@link ResponseEntity} contenant un message utilisateur générique,
+     * un code HTTP 400, et une carte des erreurs détaillées associant les champs violés à leurs messages
+     * respectifs.
      */
     @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<GenericApiResponse<Map<String, String>>> handleConstraintViolation(
+    public ResponseEntity<GenericApiResponse<Map<String, String>>> handleConstraintViolationException(
             ConstraintViolationException ex, HttpServletRequest request) {
-        Map<String, String> errors = ex.getConstraintViolations()
-                .stream()
-                .collect(Collectors.toMap(
-                        violation -> violation.getPropertyPath().toString(),
-                        ConstraintViolation::getMessage
-                ));
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(
-                        new GenericApiResponse<>(
-                                HttpStatus.BAD_REQUEST.value(),
-                                "Validation failed",
-                                request.getRequestURI(),
-                                errors
-                        )
-                );
+        Map<String, String> errorsMap = ex.getConstraintViolations()
+                .stream()
+                .collect(
+                        Collectors.toMap(
+                                violation ->
+                                        violation.getPropertyPath().toString(), ConstraintViolation::getMessage));
+
+
+        return ResponseHandler.generateResponse(
+                "Validation failed",
+                HttpStatus.BAD_REQUEST,
+                request.getRequestURI(),
+                errorsMap);
+
+    }
+
+
+    /**
+     * Gestionnaire global d'exceptions pour les erreurs liées à la persistance et à l'intégrité des données.
+     * <p>
+     * Ce gestionnaire capture et traite les exceptions de type {@link PersistenceException} et
+     * {@link DataIntegrityViolationException}, qui peuvent survenir lors des opérations de persistance
+     * ou en cas de violation des contraintes de données dans la base.
+     *
+     * @param ex      L'exception levée, pouvant être une {@link PersistenceException} ou une
+     *                {@link DataIntegrityViolationException}.
+     * @param request L'objet {@link HttpServletRequest} permettant d'obtenir des informations sur la requête
+     *                ayant provoqué l'exception.
+     * @return Une réponse standardisée {@link ResponseEntity} contenant un message utilisateur générique,
+     * un code HTTP 500, et le chemin de la requête ayant échoué.
+     * @throws PersistenceException            Si une erreur technique liée à la persistance des données se produit.
+     * @throws DataIntegrityViolationException Si une violation des contraintes d'intégrité des données est détectée.
+     */
+    @ExceptionHandler({PersistenceException.class, DataIntegrityViolationException.class})
+    public ResponseEntity<GenericApiResponse<Map<String, String>>> handlePersistanceDataIntegrityException(Exception ex, HttpServletRequest request) {
+        String message = "";
+
+        if (ex instanceof PersistenceException) {
+            message = "Une erreur technique est survenue lors du traitement de votre requête. " +
+                    "Veuillez réessayer plus tard ou contacter l'administrateur du service si le problème persiste.\n";
+
+            log.error("Erreur de persistance détectée. Message : {}", ex.getMessage());
+            if (ex.getCause() != null) {
+                log.error("Cause de l'erreur : {}", ex.getCause().toString());
+            } else {
+                log.error("Aucune cause détaillée disponible.");
+            }
+        }
+
+        if (ex instanceof DataIntegrityViolationException) {
+            message = "Une erreur de données est survenue. Veuillez vérifier les informations fournies et réessayer. " +
+                    "Si le problème persiste, contactez l'administrateur.\n";
+
+            log.error("Violation d'intégrité des données : {}", ex.getMessage());
+            if (ex.getCause() != null) {
+                log.error("Cause de l'erreur : {}", ex.getCause().toString());
+            } else {
+                log.error("Aucune cause détaillée disponible.");
+            }
+        }
+
+        return ResponseHandler.generateResponse(
+                message,
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                request.getRequestURI(),
+                null);
     }
 
 
@@ -201,11 +295,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
      * @return Un objet {@link ResponseEntity} contenant les informations d'erreur et le statut HTTP BAD_REQUEST (400).
      */
     @Override
-    protected ResponseEntity<Object> handleMethodArgumentNotValid(
-            MethodArgumentNotValidException ex,
-            HttpHeaders headers,
-            HttpStatus status,
-            WebRequest request) {
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatus status, WebRequest request) {
 
         // Récupération des informations utiles
         String uri = ((ServletWebRequest) request).getRequest().getRequestURI();
@@ -231,12 +321,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         log.error("********** [ handleMethodArgumentNotValid ] **********");
 
         // Génération de la réponse avec ResponseHandler
-        GenericApiResponse<Map<String, String>> genericApiResponse = new GenericApiResponse<>(
-                HttpStatus.BAD_REQUEST.value(),
-                "Validation failed",
-                ((ServletWebRequest) request).getRequest().getRequestURI(),
-                mapError
-        );
+        GenericApiResponse<Map<String, String>> genericApiResponse = new GenericApiResponse<>(HttpStatus.BAD_REQUEST.value(), "Validation failed", ((ServletWebRequest) request).getRequest().getRequestURI(), mapError);
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(genericApiResponse);
 
@@ -255,11 +340,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
      * @return Un objet {@link ResponseEntity} contenant les détails de l'erreur et le statut HTTP BAD_REQUEST (400).
      */
     @Override
-    public ResponseEntity<Object> handleHttpMessageNotReadable(
-            HttpMessageNotReadableException ex,
-            HttpHeaders headers,
-            HttpStatus status,
-            WebRequest request) {
+    public ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatus status, WebRequest request) {
 
         // Récupération des informations utiles
         String uri = ((ServletWebRequest) request).getRequest().getRequestURI();
@@ -278,12 +359,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         log.error("********** [ handleHttpMessageNotReadable ] **********");
 
         // Construction de la réponse avec ApiResponse
-        GenericApiResponse<Object> genericApiResponse = new GenericApiResponse<>(
-                HttpStatus.BAD_REQUEST.value(),
-                "Erreur de désérialisation",
-                ((ServletWebRequest) request).getRequest().getRequestURI(),
-                ex.getMessage()
-        );
+        GenericApiResponse<Object> genericApiResponse = new GenericApiResponse<>(HttpStatus.BAD_REQUEST.value(), "Erreur de désérialisation", ((ServletWebRequest) request).getRequest().getRequestURI(), ex.getMessage());
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(genericApiResponse);
     }
