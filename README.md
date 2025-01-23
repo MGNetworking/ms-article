@@ -170,25 +170,26 @@ mvn clean verify -P all-tests -Dspring.profiles.active=test
 
 1. Structure des fichiers de test :
 
-   * unitaires : **/*Test.java
-   * Tests d'intégration : **/integration/*ITTest.java
-   * Tests E2E : **/endtoend/*E2ETest.java
+    * unitaires : **/*Test.java
+    * Tests d'intégration : **/integration/*ITTest.java
+    * Tests E2E : **/endtoend/*E2ETest.java
 
 2. Phases Maven utilisées :
 
-   * test : Exécution des tests unitaires via `maven-surefire-plugin`.
-   * integration-test et verify : Exécution des tests d'intégration et E2E via `maven-failsafe-plugin`.
+    * test : Exécution des tests unitaires via `maven-surefire-plugin`.
+    * integration-test et verify : Exécution des tests d'intégration et E2E via `maven-failsafe-plugin`.
 
 3. Exclusion de Lombok :
 
-   * Le plugin Spring Boot est configuré pour exclure lombok au moment du build afin d'éviter des dépendances inutiles dans
-     l'environnement de production.
+    * Le plugin Spring Boot est configuré pour exclure lombok au moment du build afin d'éviter des dépendances inutiles
+      dans
+      l'environnement de production.
 
 **Commandes rapides**
 
 | Action                  | Commande                                                        |
 |-------------------------|-----------------------------------------------------------------|
-| Tests unitaires         | `mvn clean test`                                                |
+| Tests unitaires         | `mvn clean test -Dspring.profiles.active=test`                  |
 | Tests d'intégration     | `mvn clean verify -P integration -Dspring.profiles.active=test` |
 | Tests End-to-End        | `mvn clean verify -P e2e -Dspring.profiles.active=test`         |
 | Tous les tests (option) | `mvn clean verify -P all-tests -Dspring.profiles.active=test`   |
