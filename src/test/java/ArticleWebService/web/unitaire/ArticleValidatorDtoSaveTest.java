@@ -25,8 +25,7 @@ import java.util.stream.Collectors;
 
 /**
  * Classe de test unitaire classique pure.
- * Ils n'ont pas besoin de context Spring et donc ne dépend pas
- * de conteneur Spring.
+ * Ils n'ont pas besoin de context Spring et donc ne dépend pas de conteneur Spring.
  */
 
 @ActiveProfiles("test")
