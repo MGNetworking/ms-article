@@ -20,6 +20,7 @@ pipeline {
     }
 
     parameters {
+        booleanParam(name: 'ALLOW_REBUILD', defaultValue: false, description: 'Autoriser le rebuild même si la version existe déjà')
         choice choices: ['beta', 'release'], description: 'selection du type de version', name: 'BUILD'
         string defaultValue: '', description: 'Entrez votre message de Publication', name: 'PUBLIC_MESSAGE'
     }
@@ -168,6 +169,8 @@ pipeline {
                     } else if (version == version_release && http_status_release.equals("404")) {
                         echo("La version: ${version} n'existe pas dans le dépôt nexus donc le build peut être lancer !")
 
+                    } else if (http_status_beta.equals("404") || http_status_release.equals("404") || params.ALLOW_REBUILD) {
+                        echo("La version: ${version} est absente ou le rebuild est autorisé. Le build peut être lancé.")
                     } else {
                         error("Une erreur inattendu est survenu pendant la recherche de la version du projet dans le dépôt nexus")
                     }
