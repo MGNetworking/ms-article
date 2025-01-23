@@ -2,7 +2,6 @@ package ArticleWebService.web.integration;
 
 import ArticleWebService.dto.ArticleDto;
 import ArticleWebService.service.ArticleServiceImpl;
-import ArticleWebService.web.SystemPropertiesActiveProfileResolver;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.modelmapper.ModelMapper;
@@ -11,7 +10,6 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 
 import javax.transaction.Transactional;
@@ -21,9 +19,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @DataJpaTest
 @Sql(scripts = {"/data.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Import(ArticleServiceImpl.class)
-@ActiveProfiles(resolver = SystemPropertiesActiveProfileResolver.class)
 @Transactional
-public class ArticleServiceIntegrationITTest {
+public class ArticleServiceITTest {
 
     @Autowired
     private ArticleServiceImpl articleService;
