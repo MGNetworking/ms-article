@@ -21,7 +21,11 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@Sql(scripts = {"/data.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+/**
+ * Classe de test unitaire classique pure.
+ * Ils n'ont pas besoin de context Spring et donc ne dépend pas de conteneur Spring.
+ */
+
 @ActiveProfiles("test")
 @Slf4j
 public class ArticleValidatorDtoUpdateTest {
