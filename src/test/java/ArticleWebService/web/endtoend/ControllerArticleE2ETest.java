@@ -218,7 +218,7 @@ public class ControllerArticleE2ETest {
 
     @Test
     @Order(6)
-    @DisplayName("/article/getAllArticles - Recherche reussi une pagination d'article status 200")
+    @DisplayName("GET /article/getAllArticles - Recherche reussi une pagination d'article status 200")
     public void getAllArticles_pageble_OK() throws Exception {
 
         int page = 0, size = 10;
