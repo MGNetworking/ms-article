@@ -394,7 +394,7 @@ pipeline {
         }
 
 
-        stage('Test d\'intégration') {
+        stage('Vérification de disponibilité') {
             agent any
             steps {
                 script {
@@ -474,10 +474,11 @@ pipeline {
                     utilsDocker.clsImage(this, "docker rmi ${dockers.img}")
 
                     echo "Collecte des rapports JUnit pour les tests unitaires."
-                    junit '**/target/surefire-reports/*.xml', allowEmptyResults: true
+                    junit testResults: '**/target/surefire-reports/*.xml', allowEmptyResults: true
 
                     echo "Collecte des rapports JUnit pour les tests d'intégration et E2E."
-                    junit '**/target/failsafe-reports/*.xml', allowEmptyResults: true
+                    junit testResults: '**/target/failsafe-reports/*.xml', allowEmptyResults: true
+
 
                     def testResults = sh(script: "grep -H '<testsuite' target/surefire-reports/*.xml || echo 'Aucun résultat trouvé'", returnStdout: true).trim()
                     if (testResults) {
@@ -488,7 +489,7 @@ pipeline {
                     }
 
                 } catch (Exception e) {
-                    error("Une erreur est survenu dans la parti POST always, message : ${e.message}")
+                    echo("Une erreur est survenu dans la parti POST always, message : ${e.message}")
                 }
             }
         }
