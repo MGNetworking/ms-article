@@ -37,6 +37,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -169,8 +170,28 @@ public class ControllerArticleE2ETest {
                         .value("/article/getArticle/-1"));
     }
 
+
     @Test
     @Order(3)
+    @DisplayName("GET /article/getArticle/{id} - Invalid ID - MethodArgumentTypeMismatchException")
+    public void testValidationErrors() throws Exception {
+        this.mockMvc.perform(get("/article/getArticle/{id}", "invalid-id")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isBadRequest()) // Vérifie que le statut est 400
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.data").isNotEmpty())
+                .andExpect(jsonPath("$.data.message").isNotEmpty())
+                .andExpect(jsonPath("$.data.info").isNotEmpty())
+                .andExpect(result -> {
+                            Throwable exception = result.getResolvedException();
+                            Assertions.assertTrue(exception instanceof MethodArgumentTypeMismatchException);
+                        }
+                );
+    }
+
+    @Test
+    @Order(4)
     @DisplayName("GET /article/getAllArticles - ID manquant")
     public void getArticleById_NullId() throws Exception {
         this.mockMvc.perform(get("/article/getArticle/")
@@ -181,22 +202,8 @@ public class ControllerArticleE2ETest {
     }
 
     @Test
-    @Order(4)
-    @DisplayName("GET /article/getArticle/{id} - Invalid ID")
-    public void testValidationErrors() throws Exception {
-        this.mockMvc.perform(get("/article/getArticle/{id}", "invalid-id")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isBadRequest()) // Vérifie que le statut est 400
-                .andExpect(jsonPath("$.message").value("Validation failed"))
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.data")
-                        .value("La valeur 'invalid-id' pour le paramètre 'id' est invalide."));
-    }
-
-    @Test
     @Order(5)
-    @DisplayName("GET /article/getAllArticles - Article Not found")
+    @DisplayName("GET /article/getAllArticles - Article Not found - ArticleException")
     public void getArticle_ById_NotFound() throws Exception {
 
         this.mockMvc.perform(MockMvcRequestBuilders
@@ -204,14 +211,13 @@ public class ControllerArticleE2ETest {
                 .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status")
-                        .value(404))
-                .andExpect(jsonPath("$.message")
-                        .value("L'identifiant de l'article : 5000 n'a pas été trouvé"))
-                .andExpect(jsonPath("$.data").doesNotExist())
+                        .value(HttpStatus.NOT_FOUND.value()))
+                .andExpect(jsonPath("$.data").isNotEmpty())
+                .andExpect(jsonPath("$.data.message").isNotEmpty())
+                .andExpect(jsonPath("$.data.info").isNotEmpty())
                 .andExpect(result -> {
                             Throwable exception = result.getResolvedException();
                             Assertions.assertTrue(exception instanceof ArticleException);
-                            Assertions.assertEquals(HttpStatus.NOT_FOUND, ((ArticleException) exception).getStatus());
                         }
                 );
     }

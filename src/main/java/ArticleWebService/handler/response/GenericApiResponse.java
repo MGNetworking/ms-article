@@ -13,11 +13,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @ToString
 @NoArgsConstructor
 @Schema(description = "Structure standard pour les réponses de l'API")
-public class GenericApiResponse<T> {
-
-    @Schema(description = "Messages détaillés spécifiques à la réponse, comme des erreurs ou des informations additionnelles",
-            example = "{\"error\": \"Invalid ID\"}")
-    private Map<String, Object> detailMessage;
+public class GenericApiResponse<D> {
 
     @Schema(description = "Horodatage de la réponse", example = "2024-12-13T12:00:00Z")
     private String timestamp;
@@ -28,9 +24,9 @@ public class GenericApiResponse<T> {
     @Schema(description = "Chemin de l'API qui a généré la réponse", example = "/article/list")
     private String path;
     @Schema(description = "Données de la réponse")
-    private T data;
+    private D data;
 
-    public GenericApiResponse(int status, String message, String path, T data) {
+    public GenericApiResponse( int status, String message, String path, D data) {
         this.timestamp = LocalDate.now().toString();
         this.status = status;
         this.message = message;

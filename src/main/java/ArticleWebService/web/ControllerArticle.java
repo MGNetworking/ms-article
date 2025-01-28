@@ -111,7 +111,7 @@ public class ControllerArticle {
             HttpServletRequest request) {
 
         return ResponseHandler.generateResponse(
-                String.format("Page %d numbre d'élement %d", page, size),
+                String.format("Page %d nombre d'éléments %d", page, size),
                 HttpStatus.OK,
                 request.getRequestURI(),
                 this.articleService.findAllArticlePageOrderBy(page, size));
