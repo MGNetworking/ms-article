@@ -9,6 +9,7 @@
 * [Test, Compilation et déploiement](#test-compilation-et-déploiement)
     * [Configuration Maven pour les Tests](#configuration-maven-pour-les-tests)
     * [Les Phases de compilation](#les-phases-de-compilation)
+        * [Commandes rapides](#commandes-rapides)
     * [Intégration avec ms-gateway](#intégration-avec-ms-gateway)
     * [Accès via ms-gateway](#accès-via-ms-gateway)
     * [Accès Direct par Adresse IP](#accès-direct-par-adresse-ip)
@@ -185,7 +186,7 @@ mvn clean verify -P all-tests -Dspring.profiles.active=test
       dans
       l'environnement de production.
 
-**Commandes rapides**
+#### Commandes rapides
 
 | Action                  | Commande                                                        |
 |-------------------------|-----------------------------------------------------------------|
