@@ -3,6 +3,11 @@
 echo "export des variables "
 export $(cat .env)
 
+# gesiton des droites utilisateur sur le système host
+export UID=$(id -u)
+export GID=$(id -g)
+
+
 echo "déploiement / update de la stack : $STACK_NAME"
 echo "PROFILES : $PROFILES"
 
