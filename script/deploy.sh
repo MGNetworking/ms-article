@@ -30,13 +30,13 @@ echo "PROFILES: $PROFILES"
 if [ "$PROFILES" == "nas" ]; then
   echo "Deploiement avec le PROFILES: NAS !"
   echo "Commande de déploiement sur le serveur Nas"
-  echo "/usr/local/bin/docker stack deploy -c ./docker-compose-swarm.yml $STACK_NAME"
-  /usr/local/bin/docker stack deploy -c ./docker-compose-swarm.yml $STACK_NAME
+  echo "/usr/local/bin/docker stack deploy -c ./docker-compose-swarm.yml --resolve-image never $STACK_NAME"
+  /usr/local/bin/docker stack deploy -c ./docker-compose-swarm.yml --resolve-image never $STACK_NAME
 else
   echo "Deploiement avec le PROFILES: $PROFILES"
   echo "Commande de déploiement sur le serveur $PROFILES"
-  echo "docker stack deploy -c ./docker-compose-swarm.yml $STACK_NAME"
-  docker stack deploy -c ./docker-compose-swarm.yml $STACK_NAME
+  echo "docker stack deploy -c ./docker-compose-swarm.yml --resolve-image never $STACK_NAME"
+  docker stack deploy -c ./docker-compose-swarm.yml --resolve-image never $STACK_NAME
 fi
 
 echo "Fin du script de déploiement"
