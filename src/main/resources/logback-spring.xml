@@ -1,4 +1,4 @@
-<configuration>
+<configuration debug="true">
 
     <!-- Configuration spécifique pour les classes suivantes -->
     <logger name="ArticleWebService.web.ControllerArticle" level="debug" additivity="true"/>
