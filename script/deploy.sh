@@ -59,10 +59,4 @@ echo "Commande de déploiement sur le serveur $PROFILES"
 echo "docker stack deploy -c ./docker-compose-swarm.yml --resolve-image never $STACK_NAME"
 docker stack deploy -c ./docker-compose-swarm.yml --resolve-image never $STACK_NAME
 
-echo "Liste des processus en cours sur stack : " $STACK_NAME
-docker service ps article_ms-article
-
-echo "Docker log de la stack : " $STACK_NAME
-docker service logs article_ms-article --tail 100
-
 echo "✅ Fin du script de déploiement"
