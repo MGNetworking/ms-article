@@ -3,7 +3,7 @@ version: '3.9'
 services:
   ms-article:
     image: sonatype-nexus.backhole.ovh/ms-article-service:${IMAGE_VERSION:-latest}
-    user: "${UID}:${GID}"  # Transmet les droits de l'utilisateur host
+    user: "${USER_ID}:${GROUP_ID}"  # Transmet les droits de l'utilisateur host
     volumes:
       - ./logs:/app/logs:rw
     env_file:
