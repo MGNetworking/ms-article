@@ -414,6 +414,12 @@ pipeline {
                             echo("sorti : ${result}")
                             echo("La mise en service de ${NAME_SERVICE} à été réalisé avec Succès ")
                             status = "SUCCESS"
+
+                            echo("Liste des processus en cours sur stack : ${STACK_NAME}")
+                            sh(script: "docker service ps article_ms-article")
+
+                            echo("Docker log de la stack : ${STACK_NAME}")
+                            sh(script: "docker service logs article_ms-article --tail 100")
                             break
                         } else {
                             echo("sorti : ${result}")
@@ -423,13 +429,6 @@ pipeline {
                         }
                     }
                     if (status != "SUCCESS") {
-
-                        echo("Liste des processus en cours sur stack : ${STACK_NAME}")
-                        sh(script: "docker service ps article_ms-article")
-
-                        echo("Docker log de la stack : ${STACK_NAME}")
-                        sh(script: "docker service logs article_ms-article --tail 100")
-
                         error("Le service ${NAME_SERVICE} est en echec !!!")
                     }
                 }
