@@ -384,7 +384,7 @@ pipeline {
             }
         }
 
-        stage('Update / Deploy blog') {
+        stage('Update / Deploy ms-article') {
             agent any
             steps {
                 script {
