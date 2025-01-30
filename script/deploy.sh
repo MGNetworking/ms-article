@@ -3,12 +3,24 @@
 echo "export des variables "
 export $(cat .env)
 
-# gesiton des droites utilisateur sur le système host
-export UID=$(id -u)
-export GID=$(id -g)
+# Vérifier si le fichier ~/.profile existe avant de le charger
+if [ -f ~/.profile ]; then
+    echo "Chargement et application des variables d’environnement, "
+    echo "définies dans le fichier .profile de la session utilisateur"
+    source ~/.profile
+    echo "✅ Fichier ~/.profile chargé avec succès."
+else
+    echo "⚠️ Fichier ~/.profile introuvable, chargement ignoré."
+fi
 
 
-echo "déploiement / update de la stack : $STACK_NAME"
+echo "Chargement des droites utilisateur du système host"
+USER_ID=$(id -u)
+GROUP_ID=$(id -g)
+export USER_ID
+export GROUP_ID
+
+echo "Déploiement / update de la stack : $STACK_NAME"
 echo "PROFILES : $PROFILES"
 
 # Demander le suffixe à ajouter (ou utiliser une variable pour le définir)
@@ -26,17 +38,31 @@ echo "Modification du nom de la version: $IMAGE_VERSION"
 echo "Le nom de la stack: $STACK_NAME"
 echo "PROFILES: $PROFILES"
 
-# le déploiement sur le nas
-if [ "$PROFILES" == "nas" ]; then
-  echo "Deploiement avec le PROFILES: NAS !"
-  echo "Commande de déploiement sur le serveur Nas"
-  echo "/usr/local/bin/docker stack deploy -c ./docker-compose-swarm.yml --resolve-image never $STACK_NAME"
-  /usr/local/bin/docker stack deploy -c ./docker-compose-swarm.yml --resolve-image never $STACK_NAME
+echo "Vérification et création du dossier logs"
+LOGS_DIR="$(pwd)/logs"
+
+if [ ! -d "$LOGS_DIR" ]; then
+    echo "Le dossier logs n'existe pas. Création en cours..."
+
+    mkdir -p "$LOGS_DIR" || { echo "Erreur : Échec de la création du dossier logs."; exit 1; }
+    chmod -R 760 "$LOGS_DIR" || { echo "Erreur : Impossible de modifier les permissions."; exit 1; }
+    chown -R ${USER_ID}:${GROUP_ID} "$LOGS_DIR" || { echo "Erreur : Impossible de modifier le propriétaire."; exit 1; }
+
+    echo "✅ Dossier logs créé avec succès !"
 else
-  echo "Deploiement avec le PROFILES: $PROFILES"
-  echo "Commande de déploiement sur le serveur $PROFILES"
-  echo "docker stack deploy -c ./docker-compose-swarm.yml --resolve-image never $STACK_NAME"
-  docker stack deploy -c ./docker-compose-swarm.yml --resolve-image never $STACK_NAME
+    echo "✅ Le dossier logs existe déjà."
 fi
 
-echo "Fin du script de déploiement"
+# Le déploiement sur le serveur
+echo "🚀 Deploiement avec le PROFILES : " $PROFILES
+echo "Commande de déploiement sur le serveur $PROFILES"
+echo "docker stack deploy -c ./docker-compose-swarm.yml --resolve-image never $STACK_NAME"
+docker stack deploy -c ./docker-compose-swarm.yml --resolve-image never $STACK_NAME
+
+echo "Liste des processus en cours sur stack : " $STACK_NAME
+docker service ps article_ms-article
+
+echo "Docker log de la stack : " $STACK_NAME
+docker service logs article_ms-article --tail 100
+
+echo "✅ Fin du script de déploiement"
