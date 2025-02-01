@@ -416,10 +416,11 @@ pipeline {
                             status = "SUCCESS"
 
                             echo("Liste des processus en cours sur stack : ${STACK_NAME}")
-                            sh(script: "docker service ps article_ms-article")
+                            utilsDocker.checkDockerServicePs(this,remote, "${NAME_SERVICE}")
 
                             echo("Docker log de la stack : ${STACK_NAME}")
-                            sh(script: "docker service logs article_ms-article --tail 100")
+                            utilsDocker.getDockerServiceLogs(this,remote, "${NAME_SERVICE}")
+
                             break
                         } else {
                             echo("sorti : ${result}")
