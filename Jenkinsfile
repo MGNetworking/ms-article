@@ -5,7 +5,7 @@ def remote
 def nexus
 def dockers
 def VERSION_Docker
-def LINE
+def LINE = "-----------------------------------------------------"
 boolean STATUS_STACK = false
 
 pipeline {
