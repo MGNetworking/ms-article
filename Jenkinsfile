@@ -58,6 +58,11 @@ pipeline {
                             Nexus_CREDS_PSW,
                             'sonatype-nexus.backhole.ovh')
 
+                    echo "DEBUG - nexus: ${nexus}"
+                    echo "DEBUG - nexus.user: ${nexus?.user}"
+                    echo "DEBUG - nexus.pass: ${nexus?.pass}"
+                    echo "DEBUG - nexus.domain: ${nexus?.domain}"
+
                     echo("Type de version sélectionner: ${params.BUILD}")
                     echo("Message de publication: ${params.PUBLIC_MESSAGE}")
 
