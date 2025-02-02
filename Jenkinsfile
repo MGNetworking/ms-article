@@ -415,10 +415,10 @@ pipeline {
                             status = "SUCCESS"
 
                             echo("Liste des processus en cours sur stack : ${STACK_NAME}")
-                            utilsDocker.getPsStack(this, remote, NAME_SERVICE)
+                            utilsDocker.getPsStack(this, NAME_SERVICE, remote)
 
                             echo("Docker log de la stack : ${STACK_NAME}")
-                            utilsDocker.getServiceLogs(this, remote, NAME_SERVICE)
+                            utilsDocker.getServiceLogs(this, NAME_SERVICE, remote)
 
                             break
                         } else {
