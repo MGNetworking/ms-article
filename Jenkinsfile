@@ -88,8 +88,7 @@ pipeline {
                     // Les données dockers projet
                     dockers = utilsServeur.dockers(
                             "${VERSION_Docker}",                                        // img
-                            '/usr/local/bin',                                           // binDocker
-                            '/volume1/docker/ms-article',                            // pathProjet
+                            '/volume1/docker/ms-article',                               // pathProjet
                             env.STACK_NAME                                              // stackName
                     )
 
@@ -123,7 +122,6 @@ pipeline {
                     // les données dockers projet
                     dockers = utilsServeur.dockers(
                             "${VERSION_Docker}",                                    // img
-                            '/usr/bin',                                             // binDocker
                             '/home/max/docker_home/ms-article',                     // pathProjet
                             "${env.STACK_NAME}")                                    // stackName
 
@@ -148,7 +146,7 @@ pipeline {
                     version = "${env.IMAGE_VERSION}-${params.BUILD}"  // La version recherché exemple: 1.0.25-release
                     version_beta = "${env.IMAGE_VERSION}-beta"        // Version de recherche
                     version_release = "${env.IMAGE_VERSION}-release"  // Version de recherche
-                    path = "ms-article-service"                                     // Référence au dossier projet
+                    path = "ms-article-service"                       // Référence au dossier projet nexus
 
                     def http_status_beta = sh(script: """
                         curl -s -o /dev/null -w "%{http_code}" -u ${nexus.user}:${nexus.pass} \
@@ -221,11 +219,10 @@ pipeline {
             steps {
                 script {
                     echo("Ouverture de la connection au dépôt nexus sur le serveur ${env.BRANCH_NAME}")
-                    utilsDocker.loginDepotSsh(this, remote,
-                            "${dockers.binDocker}/docker login -u ${nexus.user} -p ${nexus.pass} ${nexus.domain}")
+                    utilsDocker.loginDepot(this, nexus.user, nexus.pass, nexus.domain, remote)
 
                     echo("Ouverture de la connection au dépôt nexus depuis Jenkins")
-                    sh(script: "docker login -u ${nexus.user} -p ${nexus.pass} ${nexus.domain}")
+                    utilsDocker.loginDepot(this, nexus.user, nexus.pass, nexus.domain)
                 }
             }
         }
@@ -353,17 +350,14 @@ pipeline {
                 script {
                     echo(LINE)
                     echo("Pull de l'image docker: ${dockers.img} sur le serveur: ${env.BRANCH_NAME}")
-                    utilsDocker.pullCommandeSsh(this, remote, "${dockers.binDocker}/docker pull ${dockers.img}")
 
-                    try {
-
-                        echo("Affiche la liste des images Docker sur le serveur ${env.BRANCH_NAME}")
-                        sshCommand remote: remote, failOnError: true, sudo: false, command: "${dockers.binDocker}/docker images"
-
-                    } catch (Exception e) {
-                        // Si une exception est levée, cela signifie que la commande a échoué
-                        echo("La commande docker tag a échoué : ${e.message}")
+                    if (!utilsDocker.pullImg(this, dockers.img, remote)) {
+                        error("Une erreur est survenu pendant le pull de l'imges sur le serveur !")
                     }
+
+                    echo("Affiche la liste des images Docker sur le serveur ${env.BRANCH_NAME}")
+                    utilsDocker.getImg(this, dockers.img)
+
 
                 }
             }
@@ -375,9 +369,7 @@ pipeline {
                 script {
                     echo(LINE)
                     echo("Vérifi si la stack ${dockers.stackName} est deployer ou mettre à jours ")
-                    STATUS_STACK = utilsSwarm.statusStackSsh(this, remote,
-                            "${dockers.binDocker}/docker stack ls | grep ${dockers.stackName}")
-
+                    STATUS_STACK = utilsDocker.statusStack(this, dockers.stackName, remote)
                     echo("La stack ${dockers.stackName} sera a " + (STATUS_STACK ? "mettre à jours" : "déployée") +
                             " sur le serveur ${env.BRANCH_NAME}")
                 }
@@ -389,9 +381,11 @@ pipeline {
             steps {
                 script {
                     echo(LINE)
-                    echo("Deploiment sur le serveur: ${env.BRANCH_NAME} , en version: ${params.BUILD}")
-                    utilsSwarm.deployStackSsh(this, remote,
-                            "cd ${dockers.pathProjet} && export PROFILES=${env.BRANCH_NAME} && ./script/deploy.sh ${params.BUILD}")
+                    echo("Deploiment sur le serveur: ${env.BRANCH_NAME}, en version: ${params.BUILD}")
+                    String commande = "cd ${dockers.pathProjet} && " +
+                            "export PROFILES=${env.BRANCH_NAME} && " +
+                            "./script/deploy.sh ${params.BUILD}";
+                    utilsDocker.deployStack(this, commande, remote)
                 }
             }
         }
@@ -416,10 +410,10 @@ pipeline {
                             status = "SUCCESS"
 
                             echo("Liste des processus en cours sur stack : ${STACK_NAME}")
-                            utilsDocker.checkDockerServicePs(this,remote, "${NAME_SERVICE}")
+                            utilsDocker.getPsStack(this, remote, NAME_SERVICE)
 
                             echo("Docker log de la stack : ${STACK_NAME}")
-                            utilsDocker.getDockerServiceLogs(this,remote, "${NAME_SERVICE}")
+                            utilsDocker.getServiceLogs(this, remote, NAME_SERVICE)
 
                             break
                         } else {
@@ -472,16 +466,16 @@ pipeline {
                 echo(LINE)
                 try {
                     echo("Déconnection au dépôt nexus docker entre le serveur ${env.BRANCH_NAME} et le dépôt nexus")
-                    utilsDocker.logoutDepotSsh(this, remote, "${dockers.binDocker}/docker logout ${nexus.domain}")
+                    utilsDocker.logoutDepot(this, nexus.user, nexus.pass, nexus.domain, remote)
 
                     echo("Fermeture de la connection au dépôt nexus depuis Jenkins")
-                    sh(script: "docker login -u ${nexus.user} -p ${nexus.pass} ${nexus.domain}")
+                    utilsDocker.logoutDepot(this, nexus.user, nexus.pass, nexus.domain)
 
                     echo("Nettoyage de l'images de base : ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION}")
-                    utilsDocker.clsImage(this, "docker rmi ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION}")
+                    utilsDocker.rmi(this, "${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION}")
 
                     echo("Nettoyage de l'images beta / relase : ${dockers.img}")
-                    utilsDocker.clsImage(this, "docker rmi ${dockers.img}")
+                    utilsDocker.rmi(this, dockers.img)
 
                     echo "Collecte des rapports JUnit pour les tests unitaires."
                     junit testResults: '**/target/surefire-reports/*.xml', allowEmptyResults: true
@@ -519,18 +513,17 @@ pipeline {
                 if (!STATUS_STACK) {
                     echo("Échec du déploiement de la stack ${dockers.stackName}")
                     echo("Suppression de la stack ${dockers.stackName} sur le serveur distant")
-                    String deleteStack = sshCommand remote: remote, command: "${dockers.binDocker}/docker stack rm ${dockers.stackName}"
+                    utilsDocker.rmStack(this, dockers.stackName, remote)
                     echo("Sortie Delete stack: ${deleteStack}")
                 } else {
                     echo("Échec de la mise à jour de la stack ${dockers.stackName}")
                     echo("ROLLBACK de la stack ${dockers.stackName}")
-                    String rollbackResult = sshCommand remote: remote, command: "docker service rollback ${NAME_SERVICE}"
-                    echo("Sortie ROLLBACK : ${rollbackResult}")
+                    utilsDocker.rollbackService(this, NAME_SERVICE)
                 }
                 def time = 15
                 echo "Suppression de l'image en échec ${dockers.img} sur le serveur dans ${time} secondes ..."
                 sleep time: time, unit: 'SECONDS'
-                utilsDocker.clsImageSsh(this, remote, "${dockers.binDocker}/docker rmi ${dockers.img}")
+                utilsDocker.rmi(this, dockers.img, remote)
             }
         }
     }
