@@ -247,7 +247,9 @@ pipeline {
                         script {
                             // Si les tests échouent, le pipeline est interrompu
                             echo("Lancement des tests unitaire")
-                            sh("mvn clean test -Dspring.profiles.active=test")
+                            sh("mvn clean test -Dspring.profiles.active=test -Dsurefire.report.directory=${WORKSPACE}/test-reports")
+                            sh 'pwd'
+                            sh 'ls -al target/surefire-reports'
                         }
                     }
                 }
@@ -265,7 +267,9 @@ pipeline {
                             // Le résultat global du pipeline est marqué comme UNSTABLE
                             echo("Lancement des tests d'intégration et end to end")
                             catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                                sh("mvn clean verify -P integration -Dspring.profiles.active=test")
+                                sh("mvn clean verify -P integration -Dspring.profiles.active=test -Dsurefire.report.directory=${WORKSPACE}/test-reports")
+                                sh 'pwd'
+                                sh 'ls -al target/surefire-reports'
                             }
                         }
                     }
@@ -285,7 +289,9 @@ pipeline {
                             // mais cela n’affecte pas le résultat global du pipeline.
                             echo("Lancement des tests d'intégration et end to end")
                             catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
-                                sh "mvn clean verify -P e2e -Dspring.profiles.active=test"
+                                sh "mvn clean verify -P e2e -Dspring.profiles.active=test -Dsurefire.report.directory=${WORKSPACE}/test-reports"
+                                sh 'pwd'
+                                sh 'ls -al target/surefire-reports'
                             }
                         }
                     }
@@ -483,13 +489,13 @@ pipeline {
                     utilsDocker.rmi(this, dockers.img)
 
                     echo "Collecte des rapports JUnit pour les tests unitaires."
-                    junit testResults: '**/target/surefire-reports/*.xml', allowEmptyResults: true
+                    junit testResults: "${env.WORKSPACE}/test-reports/*.xml", allowEmptyResults: true
 
                     echo "Collecte des rapports JUnit pour les tests d'intégration et E2E."
-                    junit testResults: '**/target/failsafe-reports/*.xml', allowEmptyResults: true
+                    junit testResults: "${env.WORKSPACE}/test-reports/*.xml", allowEmptyResults: true
 
 
-                    def testResults = sh(script: "grep -H '<testsuite' target/surefire-reports/*.xml || echo 'Aucun résultat trouvé'", returnStdout: true).trim()
+                    def testResults = sh(script: "grep -H '<testsuite' ${WORKSPACE}/test-reports/*.xml || echo 'Aucun résultat trouvé'", returnStdout: true).trim()
                     if (testResults) {
                         echo "Résumé des résultats des tests :"
                         echo testResults
