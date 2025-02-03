@@ -58,11 +58,6 @@ pipeline {
                             Nexus_CREDS_PSW,
                             'sonatype-nexus.backhole.ovh')
 
-                    echo "DEBUG - nexus: ${nexus}"
-                    echo "DEBUG - nexus.user: ${nexus?.user}"
-                    echo "DEBUG - nexus.pass: ${nexus?.pass}"
-                    echo "DEBUG - nexus.domain: ${nexus?.domain}"
-
                     echo("Type de version sélectionner: ${params.BUILD}")
                     echo("Message de publication: ${params.PUBLIC_MESSAGE}")
 
@@ -267,6 +262,7 @@ pipeline {
                             sh("mvn test -Dspring.profiles.active=test -Dsurefire.report.directory=${WORKSPACE}/target/surefire-reports")
                             sh 'pwd'
                             sh 'ls -al target/surefire-reports || echo "surefire-reports non trouvé"'
+                            stash name: 'test-reports', includes: 'target/surefire-reports/*.xml'
                         }
                     }
                 }
@@ -287,6 +283,7 @@ pipeline {
                                 sh("mvn verify -P integration -Dspring.profiles.active=test -Dfailsafe.report.directory=${WORKSPACE}/target/failsafe-reports")
                                 sh 'pwd'
                                 sh 'ls -al target/failsafe-reports || echo "failsafe-reports non trouvé"'
+                                stash name: 'integration-reports', includes: 'target/failsafe-reports/*.xml'
                             }
                         }
                     }
@@ -309,6 +306,7 @@ pipeline {
                                 sh "mvn verify -P e2e -Dspring.profiles.active=test -Dfailsafe.report.directory=${WORKSPACE}/target/failsafe-reports"
                                 sh 'pwd'
                                 sh 'ls -al target/failsafe-reports || echo "failsafe-reports non trouvé"'
+                                stash name: 'integration-reports', includes: 'target/failsafe-reports/*.xml'
                             }
                         }
                     }
@@ -490,6 +488,10 @@ pipeline {
                     sh 'pwd'
                     sh 'ls -al target/surefire-reports || echo "surefire-reports non trouvé"'
                     sh 'ls -al target/failsafe-reports || echo "failsafe-reports non trouvé"'
+
+                    unstash 'test-reports'
+                    unstash 'integration-reports'
+                    unstash 'e2e-reports'
 
                     echo "Collecte des rapports JUnit pour les tests unitaires."
                     junit testResults: "${WORKSPACE}/target/surefire-reports/*.xml", allowEmptyResults: true
