@@ -494,10 +494,10 @@ pipeline {
                     unstash 'e2e-reports'
 
                     echo "Collecte des rapports JUnit pour les tests unitaires."
-                    junit testResults: "${WORKSPACE}/target/surefire-reports/*.xml", allowEmptyResults: true
+                    junit testResults: "target/surefire-reports/*.xml", allowEmptyResults: true
 
                     echo "Collecte des rapports JUnit pour les tests d'intégration et E2E."
-                    junit testResults: "${WORKSPACE}/target/failsafe-reports/*.xml", allowEmptyResults: true
+                    junit testResults: "target/failsafe-reports/*.xml", allowEmptyResults: true
 
                     def testResults = sh(script: "grep -H '<testsuite' ${WORKSPACE}/target/surefire-reports/*.xml || echo 'Aucun résultat trouvé'", returnStdout: true).trim()
                     if (testResults) {
