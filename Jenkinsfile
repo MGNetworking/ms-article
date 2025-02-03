@@ -306,7 +306,7 @@ pipeline {
                                 sh "mvn verify -P e2e -Dspring.profiles.active=test -Dfailsafe.report.directory=${WORKSPACE}/target/failsafe-reports"
                                 sh 'pwd'
                                 sh 'ls -al target/failsafe-reports || echo "failsafe-reports non trouvé"'
-                                stash name: 'integration-reports', includes: 'target/failsafe-reports/*.xml'
+                                stash name: 'e2e-reports', includes: 'target/failsafe-reports/*.xml'
                             }
                         }
                     }
