@@ -264,7 +264,7 @@ pipeline {
                         script {
                             // Si les tests échouent, le pipeline est interrompu
                             echo("Lancement des tests unitaire")
-                            sh("mvn clean test -Dspring.profiles.active=test -Dsurefire.report.directory=${WORKSPACE}/target/surefire-reports")
+                            sh("mvn test -Dspring.profiles.active=test -Dsurefire.report.directory=${WORKSPACE}/target/surefire-reports")
                             sh 'pwd'
                             sh 'ls -al target/surefire-reports || echo "surefire-reports non trouvé"'
                         }
@@ -284,7 +284,7 @@ pipeline {
                             // Le résultat global du pipeline est marqué comme UNSTABLE
                             echo("Lancement des tests d'intégration et end to end")
                             catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                                sh("mvn clean verify -P integration -Dspring.profiles.active=test -Dfailsafe.report.directory=${WORKSPACE}/target/failsafe-reports")
+                                sh("mvn verify -P integration -Dspring.profiles.active=test -Dfailsafe.report.directory=${WORKSPACE}/target/failsafe-reports")
                                 sh 'pwd'
                                 sh 'ls -al target/failsafe-reports || echo "failsafe-reports non trouvé"'
                             }
@@ -306,7 +306,7 @@ pipeline {
                             // mais cela n’affecte pas le résultat global du pipeline.
                             echo("Lancement des tests d'intégration et end to end")
                             catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
-                                sh "mvn clean verify -P e2e -Dspring.profiles.active=test -Dfailsafe.report.directory=${WORKSPACE}/target/failsafe-reports"
+                                sh "mvn verify -P e2e -Dspring.profiles.active=test -Dfailsafe.report.directory=${WORKSPACE}/target/failsafe-reports"
                                 sh 'pwd'
                                 sh 'ls -al target/failsafe-reports || echo "failsafe-reports non trouvé"'
                             }
