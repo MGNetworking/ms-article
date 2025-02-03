@@ -20,7 +20,8 @@ pipeline {
     }
 
     parameters {
-        booleanParam(name: 'ALLOW_REBUILD', defaultValue: false, description: 'Autoriser le rebuild même si la version existe déjà')
+        booleanParam(name: 'ALLOW_REBUILD', defaultValue: false,
+                description: 'Autoriser le rebuild même si la version existe déjà')
         choice choices: ['beta', 'release'], description: 'selection du type de version', name: 'BUILD'
         string defaultValue: '', description: 'Entrez votre message de Publication', name: 'PUBLIC_MESSAGE'
     }
@@ -87,9 +88,9 @@ pipeline {
 
                     // Les données dockers projet
                     dockers = utilsServeur.dockers(
-                            "${VERSION_Docker}",                                        // img
-                            '/volume1/docker/ms-article',                               // pathProjet
-                            env.STACK_NAME                                              // stackName
+                            "${VERSION_Docker}",           // img
+                            '/volume1/docker/ms-article',  // pathProjet
+                            env.STACK_NAME                 // stackName
                     )
 
                     // Les données de connection serveur
@@ -121,9 +122,9 @@ pipeline {
 
                     // les données dockers projet
                     dockers = utilsServeur.dockers(
-                            "${VERSION_Docker}",                                    // img
-                            '/home/max/docker_home/ms-article',                     // pathProjet
-                            "${env.STACK_NAME}")                                    // stackName
+                            "${VERSION_Docker}",                 // img
+                            '/home/max/docker_home/ms-article',  // pathProjet
+                            "${env.STACK_NAME}")                 // stackName
 
                     // les données de connection serveur
                     remote = utilsServeur.remote(
@@ -162,15 +163,22 @@ pipeline {
 
                     // soit il y a un beta mes pas de release
                     if (version == version_beta && http_status_beta.equals("404")) {
-                        echo("La version: ${version} n'existe pas dans le dépôt nexus donc le build peut être lancer !")
+                        echo("La version: ${version} n'existe pas dans le dépôt nexus " +
+                                "donc le build peut être lancer !")
 
                     } else if (version == version_release && http_status_release.equals("404")) {
-                        echo("La version: ${version} n'existe pas dans le dépôt nexus donc le build peut être lancer !")
+                        echo("La version: ${version} n'existe pas dans le dépôt nexus " +
+                                "donc le build peut être lancer !")
 
-                    } else if (http_status_beta.equals("404") || http_status_release.equals("404") || params.ALLOW_REBUILD) {
-                        echo("La version: ${version} est absente ou le rebuild est autorisé. Le build peut être lancé.")
+                    } else if (http_status_beta.equals("404") ||
+                            http_status_release.equals("404") ||
+                            params.ALLOW_REBUILD) {
+
+                        echo("La version: ${version} est absente ou le rebuild est autorisé. " +
+                                "Le build peut être lancé.")
                     } else {
-                        error("Une erreur inattendu est survenu pendant la recherche de la version du projet dans le dépôt nexus")
+                        error("Une erreur inattendu est survenu pendant la recherche " +
+                                "de la version du projet dans le dépôt nexus")
                     }
 
                 }
@@ -238,7 +246,8 @@ pipeline {
             steps {
                 script {
                     echo("Compilation du service ms-article sous le profile Spring ${env.BRANCH_NAME}")
-                    sh("mvn clean package -Dspring.profiles.active=${env.BRANCH_NAME} -DSERVICE_CONFIG_DOCKER=${SERVICE_CONFIG_URI}")
+                    sh("mvn clean package -Dspring.profiles.active=${env.BRANCH_NAME} " +
+                            "-DSERVICE_CONFIG_DOCKER=${SERVICE_CONFIG_URI}")
 
                 }
             }
@@ -259,7 +268,8 @@ pipeline {
                         script {
                             // Si les tests échouent, le pipeline est interrompu
                             echo("Lancement des tests unitaire")
-                            sh("mvn test -Dspring.profiles.active=test -Dsurefire.report.directory=${WORKSPACE}/target/surefire-reports")
+                            sh("mvn test -Dspring.profiles.active=test " +
+                                    "-Dsurefire.report.directory=${WORKSPACE}/target/surefire-reports")
                             sh 'pwd'
                             sh 'ls -al target/surefire-reports || echo "surefire-reports non trouvé"'
                         }
@@ -279,7 +289,8 @@ pipeline {
                             // Le résultat global du pipeline est marqué comme UNSTABLE
                             echo("Lancement des tests d'intégration et end to end")
                             catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                                sh("mvn verify -P integration -Dspring.profiles.active=test -Dfailsafe.report.directory=${WORKSPACE}/target/failsafe-reports")
+                                sh("mvn verify -P integration -Dspring.profiles.active=test " +
+                                        "-Dfailsafe.report.directory=${WORKSPACE}/target/failsafe-reports")
                                 sh 'pwd'
                                 sh 'ls -al target/failsafe-reports || echo "failsafe-reports non trouvé"'
                             }
@@ -301,7 +312,8 @@ pipeline {
                             // mais cela n’affecte pas le résultat global du pipeline.
                             echo("Lancement des tests d'intégration et end to end")
                             catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
-                                sh "mvn verify -P e2e -Dspring.profiles.active=test -Dfailsafe.report.directory=${WORKSPACE}/target/failsafe-reports"
+                                sh "mvn verify -P e2e -Dspring.profiles.active=test " +
+                                        "-Dfailsafe.report.directory=${WORKSPACE}/target/failsafe-reports"
                                 sh 'pwd'
                                 sh 'ls -al target/failsafe-reports || echo "failsafe-reports non trouvé"'
                             }
@@ -450,13 +462,14 @@ pipeline {
                         } else if (params.BUILD == 'release') {
                             utilsGit.createOrUpdateRelease(this, TAGE_NAME, REPO_NAME, GITHUB_TOKEN, params.PUBLIC_MESSAGE)
                         } else {
-                            error("Les paramètres de la version son manquantes. Il ne peux y avoir une publication vers le dépôt !" +
-                                    " version: ${TAGE_NAME} , message de publication: ${params.PUBLIC_MESSAGE}")
+                            error("Les paramètres de la version son manquantes. Il ne peux y avoir " +
+                                    "une publication vers le dépôt ! version: ${TAGE_NAME} , " +
+                                    "message de publication: ${params.PUBLIC_MESSAGE}")
                         }
 
                     } catch (Exception execp) {
-                        error("Une erreur est survenu pendant le processus de création de publication de la version ${TAGE_NAME} " +
-                                ", message: ${execp}")
+                        error("Une erreur est survenu pendant le processus de création de publication " +
+                                "de la version ${TAGE_NAME} , message: ${execp}")
                     }
 
                 }
@@ -470,7 +483,8 @@ pipeline {
             script {
                 echo(LINE)
                 try {
-                    echo("Déconnection au dépôt nexus docker entre le serveur ${env.BRANCH_NAME} et le dépôt nexus")
+                    echo("Déconnection au dépôt nexus docker entre le serveur ${env.BRANCH_NAME} " +
+                            "et le dépôt nexus")
                     utilsDocker.logoutDepot(this, nexus.domain, remote)
 
                     echo("Fermeture de la connection au dépôt nexus depuis Jenkins")
@@ -492,7 +506,8 @@ pipeline {
                     echo "Collecte des rapports JUnit pour les tests d'intégration et E2E."
                     junit testResults: "target/failsafe-reports/*.xml", allowEmptyResults: true
 
-                    def testResults = sh(script: "grep -H '<testsuite' ${WORKSPACE}/target/surefire-reports/*.xml || echo 'Aucun résultat trouvé'", returnStdout: true).trim()
+                    def testResults = sh(script: "grep -H '<testsuite' ${WORKSPACE}/target/surefire-reports/*.xml " +
+                            "|| echo 'Aucun résultat trouvé'", returnStdout: true).trim()
                     if (testResults) {
                         echo "Résumé des résultats des tests :"
                         echo testResults
