@@ -249,7 +249,6 @@ pipeline {
                             echo("Lancement des tests unitaire")
                             sh("mvn clean test -Dspring.profiles.active=test -Dsurefire.report.directory=${WORKSPACE}/target/surefire-reports")
                             sh 'pwd'
-                            sh "${WORKSPACE}"
                             sh 'ls -al target/surefire-reports || echo "surefire-reports non trouvé"'
                         }
                     }
@@ -292,7 +291,6 @@ pipeline {
                             catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
                                 sh "mvn clean verify -P e2e -Dspring.profiles.active=test -Dfailsafe.report.directory=${WORKSPACE}/target/failsafe-reports"
                                 sh 'pwd'
-                                sh "${WORKSPACE}"
                                 sh 'ls -al target/failsafe-reports || echo "failsafe-reports non trouvé"'
                             }
                         }
