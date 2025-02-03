@@ -471,10 +471,10 @@ pipeline {
                 echo(LINE)
                 try {
                     echo("Déconnection au dépôt nexus docker entre le serveur ${env.BRANCH_NAME} et le dépôt nexus")
-                    utilsDocker.logoutDepot(this, nexus.user, nexus.pass, nexus.domain, remote)
+                    utilsDocker.logoutDepot(this, nexus.domain, remote)
 
                     echo("Fermeture de la connection au dépôt nexus depuis Jenkins")
-                    utilsDocker.logoutDepot(this, nexus.user, nexus.pass, nexus.domain)
+                    utilsDocker.logoutDepot(this, nexus.domain)
 
                     echo("Nettoyage de l'images de base : ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION}")
                     utilsDocker.rmi(this, "${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION}")
@@ -523,7 +523,7 @@ pipeline {
                 } else {
                     echo("Échec de la mise à jour de la stack ${dockers.stackName}")
                     echo("ROLLBACK de la stack ${dockers.stackName}")
-                    utilsDocker.rollbackService(this, NAME_SERVICE)
+                    utilsDocker.rollbackService(this, NAME_SERVICE, false)
                 }
                 def time = 15
                 echo "Suppression de l'image en échec ${dockers.img} sur le serveur dans ${time} secondes ..."
