@@ -232,6 +232,23 @@ pipeline {
             }
         }
 
+        stage('Maven Compilation') {
+            agent {
+                docker {
+                    image 'maven:3.8.5-jdk-8-slim'
+                    args '-v /var/jenkins_home/maven/.m2:/root/.m2' +
+                            ' -v /var/run/docker.sock:/var/run/docker.sock'
+                }
+            }
+            steps {
+                script {
+                    echo("Compilation du service ms-article sous le profile Spring ${env.BRANCH_NAME}")
+                    sh("mvn clean package -Dspring.profiles.active=${env.BRANCH_NAME} -DSERVICE_CONFIG_DOCKER=${SERVICE_CONFIG_URI}")
+
+                }
+            }
+        }
+
 
         stage('Tests parallèles') {
             parallel {
@@ -297,24 +314,6 @@ pipeline {
                     }
                 }
 
-            }
-        }
-
-
-        stage('Maven Compilation') {
-            agent {
-                docker {
-                    image 'maven:3.8.5-jdk-8-slim'
-                    args '-v /var/jenkins_home/maven/.m2:/root/.m2' +
-                            ' -v /var/run/docker.sock:/var/run/docker.sock'
-                }
-            }
-            steps {
-                script {
-                    echo("Compilation du service ms-article sous le profile Spring ${env.BRANCH_NAME}")
-                    sh("mvn clean package -Dspring.profiles.active=${env.BRANCH_NAME} -DSERVICE_CONFIG_DOCKER=${SERVICE_CONFIG_URI}")
-
-                }
             }
         }
 
@@ -489,7 +488,6 @@ pipeline {
                     utilsDocker.rmi(this, dockers.img)
 
                     sh 'pwd'
-                    sh "${WORKSPACE}"
                     sh 'ls -al target/surefire-reports || echo "surefire-reports non trouvé"'
                     sh 'ls -al target/failsafe-reports || echo "failsafe-reports non trouvé"'
 
