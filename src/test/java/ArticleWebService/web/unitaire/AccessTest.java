@@ -8,6 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.authentication.TestingAuthenticationToken;
@@ -63,22 +64,22 @@ import static org.junit.jupiter.api.Assertions.*;
 @ActiveProfiles("test")
 class AccessTest {
 
-    @InjectMocks
     private Access access;
 
-    @MockBean
+    @Mock
     private ArticleService articleService;
 
-    @MockBean
+    @Mock
     private SecurityContext securityContext;
 
-    @MockBean
+    @Mock
     private Authentication authentication;
 
     @BeforeEach
     void setUp() {
         // Nettoyer le contexte de sécurité avant chaque test
         SecurityContextHolder.clearContext();
+        this.access = new Access();
     }
 
     /**
