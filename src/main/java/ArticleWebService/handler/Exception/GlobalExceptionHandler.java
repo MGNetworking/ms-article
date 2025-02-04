@@ -77,7 +77,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 uri,
                 new ErrorDetail(
                         ex.getArticleMessage(),
-                        "Veuillez contacter l'administrateur système."));
+                        "Veuillez contacter l'administrateur système!"));
     }
 
 
@@ -155,7 +155,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
      * @return Une réponse standardisée {@link ResponseEntity}
      */
     @ExceptionHandler(InvalidPathVariableException.class)
-    public ResponseEntity<GenericApiResponse<ErrorDetail>> handleInvalidPathVariableException(InvalidPathVariableException ex, HttpServletRequest request) {
+    public ResponseEntity<GenericApiResponse<ErrorDetail>> handleInvalidPathVariableException(
+            InvalidPathVariableException ex, HttpServletRequest request) {
 
         String message = "Une variable de chemin est invalide. Veuillez vérifier l'URL et réessayer.";
 
@@ -172,7 +173,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 ex.getPathVariable(),
                 new ErrorDetail(
                         ex.getMessage(),
-                        "Veuillez contacter l'administrateur système !"));
+                        "Veuillez contacter l'administrateur système!"));
 
     }
 
@@ -317,15 +318,16 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
      * @return Un objet {@link ResponseEntity} contenant les informations d'erreur et le statut HTTP BAD_REQUEST (400).
      */
     @Override
-    protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
-                                                                  HttpHeaders headers,
-                                                                  HttpStatus status,
-                                                                  WebRequest request) {
+    public ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
+                                                               HttpHeaders headers,
+                                                               HttpStatus status,
+                                                               WebRequest request) {
 
         // Récupération des informations utiles
         String uri = ((ServletWebRequest) request).getRequest().getRequestURI();
         String contentType = headers.getContentType() != null ? headers.getContentType().toString() : "Unknown";
-        String userAgent = headers.getFirst("User-Agent");
+        String userAgent = headers.getFirst("User-Agent") != null ?
+                headers.getFirst("User-Agent") : "Unknown";
 
         // Construction des erreurs de validation
         Map<String, String> mapError = new HashMap<>();
