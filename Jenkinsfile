@@ -99,9 +99,9 @@ pipeline {
                             Nas_CREDS_PSW           // password
                     ))
 
-                    echo "DEBUG: env.DOCKER après affectation = ${DOCKER}"
-                    echo "DEBUG: env.REMOTE après affectation = ${REMOTE}"
-                    echo("Version de l'images docker : ${DOCKER.img}")
+                    echo "DEBUG: env.DOCKER après affectation = ${env.DOCKER}"
+                    echo "DEBUG: env.REMOTE après affectation = ${env.REMOTE}"
+                    echo("Version de l'images docker : ${env.DOCKER.img}")
                 }
             }
         }
