@@ -1,28 +1,20 @@
 @Library('JenkinsLib_Shared') _
 
-// Configurations des serveurs
-def remote
-def nexus
-def dockers
-def VERSION_Docker
-def LINE = "-----------------------------------------------------"
-boolean STATUS_STACK = false
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
 
 pipeline {
     agent any
 
     environment {
-        SERVICE_CONFIG_URI = ""
+        def LINE = "-----------------------------------------------------"
         Nas_CREDS = credentials('NAS')
         Prod_CREDS = credentials('PROD')
         Nexus_CREDS = credentials('nexus-credentials')
-        GITHUB_TOKEN = credentials('Github')
     }
 
     parameters {
-        booleanParam(name: 'ALLOW_REBUILD', defaultValue: false,
-                description: 'Autoriser le rebuild même si la version existe déjà')
-        choice choices: ['beta', 'release'], description: 'selection du type de version', name: 'BUILD'
+        booleanParam(name: 'BETA', defaultValue: false, description: 'Par défaut la version sera beta')
         string defaultValue: '', description: 'Entrez votre message de Publication', name: 'PUBLIC_MESSAGE'
     }
 
@@ -32,6 +24,7 @@ pipeline {
             steps {
                 script {
                     echo "L'espace de travail : ${WORKSPACE}";
+                    echo("Branche en cours : ${env.BRANCH_NAME}")
 
                     // lecture du fichier
                     def envContent = readFile(".env").trim()
@@ -54,22 +47,25 @@ pipeline {
                     sh 'printenv'
 
                     // les données de connection au dépôt nexus
-                    nexus = utilsServeur.credentials(
+                    env.NEXUS = JsonOutput.toJson(utilsServeur.credentials(
                             Nexus_CREDS_USR,
                             Nexus_CREDS_PSW,
-                            'sonatype-nexus.backhole.ovh')
+                            'sonatype-nexus.backhole.ovh'))
 
+                    echo "DEBUG: env.NEXUS après affectation = ${env.NEXUS}"
                     echo("Type de version sélectionner: ${params.BUILD}")
                     echo("Message de publication: ${params.PUBLIC_MESSAGE}")
 
-                    // création du nom de version de l'image docker
-                    if (params.BUILD == 'beta' || params.BUILD == 'release') {
-                        VERSION_Docker = "${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION}-${params.BUILD}"
-                        echo("Version docker projet : ${VERSION_Docker}")
-                    } else {
-                        error("Aucun version n'a était détecter en paramétre !!! ")
-                    }
+                    // Type 2.0.0-beta
+                    env.IMAGE_TAG = "${env.IMAGE_VERSION}-${params.BETA ? 'beta' : 'release'}"
 
+                    // Type sonatype-nexus.backhole.ovh/ms-article-service:2.0.0-beta
+                    env.IMAGE_NAME = "${env.DOCKER_IMAGE_NAME}:${IMAGE_TAG}"
+                    echo("Nom de l'image docker : ${IMAGE_NAME}")
+
+                    if (!env.IMAGE_TAG?.trim()) {
+                        error("La version de l'image est obligatoire ...")
+                    }
                 }
             }
         }
@@ -87,23 +83,25 @@ pipeline {
                     echo("Branche en cour ${env.BRANCH_NAME}")
 
                     // Les données dockers projet
-                    dockers = utilsServeur.dockers(
-                            "${VERSION_Docker}",           // img
+                    env.DOCKER = JsonOutput.toJson(utilsServeur.dockers(
+                            env.IMAGE_NAME,                // img
                             '/volume1/docker/ms-article',  // pathProjet
                             env.STACK_NAME                 // stackName
-                    )
+                    ))
 
                     // Les données de connection serveur
-                    remote = utilsServeur.remote(
-                            "${env.BRANCH_NAME}",   // name
+                    env.REMOTE = JsonOutput.toJson(utilsServeur.remote(
+                            env.BRANCH_NAME,        // name
                             '192.168.1.56',         // host
                             true,                   // allowAnyHosts
                             99,                     // port
                             Nas_CREDS_USR,          // user
                             Nas_CREDS_PSW           // password
-                    )
+                    ))
 
-                    echo("Version de l'application : ${dockers.img}")
+                    echo "DEBUG: env.DOCKER après affectation = ${DOCKER}"
+                    echo "DEBUG: env.REMOTE après affectation = ${REMOTE}"
+                    echo("Version de l'images docker : ${DOCKER.img}")
                 }
             }
         }
@@ -117,25 +115,24 @@ pipeline {
             steps {
                 script {
                     echo(LINE)
-                    echo "L'espace de travail: ${WORKSPACE}";
-                    echo("Branche en cour ${env.BRANCH_NAME}")
 
                     // les données dockers projet
-                    dockers = utilsServeur.dockers(
-                            "${VERSION_Docker}",                 // img
+                    env.DOCKER = JsonOutput.toJson(utilsServeur.dockers(
+                            env.IMAGE_NAME,                      // img
                             '/home/max/docker_home/ms-article',  // pathProjet
-                            "${env.STACK_NAME}")                 // stackName
+                            env.STACK_NAME))                     // stackName
 
-                    // les données de connection serveur
-                    remote = utilsServeur.remote(
-                            "${env.BRANCH_NAME}",   // name
+                    env.REMOTE = JsonOutput.toJson(utilsServeur.remote(
+                            env.BRANCH_NAME,        // name
                             '192.168.1.70',         // host
                             true,                   // allowAnyHosts
                             22,                     // port
                             Prod_CREDS_USR,         // user
-                            Prod_CREDS_PSW)         // password
+                            Prod_CREDS_PSW))        // password
 
-                    echo("Version de l'application : ${dockers.img}")
+                    echo "DEBUG: env.DOCKER après affectation = ${env.DOCKER}"
+                    echo "DEBUG: env.REMOTE après affectation = ${env.REMOTE}"
+                    echo("Version de l'images docker : ${env.DOCKER.img}")
                 }
             }
         }
@@ -144,41 +141,43 @@ pipeline {
             steps {
                 script {
                     echo(LINE)
-                    version = "${env.IMAGE_VERSION}-${params.BUILD}"  // La version recherché exemple: 1.0.25-release
-                    version_beta = "${env.IMAGE_VERSION}-beta"        // Version de recherche
-                    version_release = "${env.IMAGE_VERSION}-release"  // Version de recherche
-                    path = "ms-article-service"                       // Référence au dossier projet nexus
+
+                    // La version recherché exemple: 1.0.25-release
+                    version_beta = "${env.IMAGE_VERSION}-beta"        // Version beta de recherche
+                    version_release = "${env.IMAGE_VERSION}-release"  // Version release de recherche
 
                     def http_status_beta = sh(script: """
-                        curl -s -o /dev/null -w "%{http_code}" -u ${nexus.user}:${nexus.pass} \
-                        https://${nexus.domain}/repository/docker-private/v2/${path}/manifests/${version_beta}
+                        curl -s -o /dev/null -w "%{http_code}" -u ${env.NEXUS.user}:${env.NEXUS.pass} \
+                        https://${env.NEXUS.domain}/repository/docker-private/v2/${env.PATH_NEXUS}/manifests/${version_beta}
                       """, returnStdout: true).trim()
 
                     def http_status_release = sh(script: """
-                        curl -s -o /dev/null -w "%{http_code}" -u ${nexus.user}:${nexus.pass} \
-                        https://${nexus.domain}/repository/docker-private/v2/${path}/manifests/${version_release}
+                        curl -s -o /dev/null -w "%{http_code}" -u ${env.NEXUS.user}:${env.NEXUS.pass} \
+                        https://${env.NEXUS.domain}/repository/docker-private/v2/${env.PATH_NEXUS}/manifests/${version_release}
                       """, returnStdout: true).trim()
 
                     echo("HTTP Status beta: $http_status_beta et HTTP Status release: $http_status_release")
+                    def version_exists = (http_status_beta == "200" || http_status_release == "200")
 
-                    // soit il y a un beta mes pas de release
-                    if (version == version_beta && http_status_beta.equals("404")) {
-                        echo("La version: ${version} n'existe pas dans le dépôt nexus " +
-                                "donc le build peut être lancer !")
+                    // check des versions sur le serveur Nexus
+                    if (env.IMAGE_TAG == version_beta && http_status_beta.equals("404")) {
+                        echo("La version: ${version_beta} n'existe pas dans le dépôt nexus")
+                        echo("donc le build peut être lancer !")
+                        env.SKIP_BUILD = true
 
-                    } else if (version == version_release && http_status_release.equals("404")) {
-                        echo("La version: ${version} n'existe pas dans le dépôt nexus " +
-                                "donc le build peut être lancer !")
+                    } else if (env.IMAGE_TAG == version_release && http_status_release.equals("404")) {
+                        echo("La version: ${version_release} n'existe pas dans le dépôt nexus")
+                        echo("donc le build peut être lancer !")
+                        env.SKIP_BUILD = true
 
-                    } else if (http_status_beta.equals("404") ||
-                            http_status_release.equals("404") ||
-                            params.ALLOW_REBUILD) {
+                    } else if (version_exists) {
+                        echo("La version: ${env.IMAGE_TAG} est déjà présente sur le serveur Nexus")
+                        echo("Excécution des test unitaire uniquement !")
+                        env.SKIP_BUILD = false
 
-                        echo("La version: ${version} est absente ou le rebuild est autorisé. " +
-                                "Le build peut être lancé.")
                     } else {
-                        error("Une erreur inattendu est survenu pendant la recherche " +
-                                "de la version du projet dans le dépôt nexus")
+                        error("Une erreur inattendu est survenu pendant la recherche de la version du " +
+                                "projet dans le dépôt nexus")
                     }
 
                 }
@@ -193,15 +192,15 @@ pipeline {
                             "correctement sur le serveur ${env.BRANCH_NAME}")
 
                     echo "Initilaisation de l'adresse du service ms-configuration";
-                    SERVICE_CONFIG_URI = "http://${remote.host}:8089"
+                    env.SERVICE_CONFIG_URI = "http://${env.REMOTE.host}:8089"
                     status = false
 
                     for (int index = 0; index < 10; index++) {
 
                         echo("Requet CURL n° $index du service : ms-configuration a l'adresse : " +
-                                "${SERVICE_CONFIG_URI}/actuator/health ")
+                                "${env.SERVICE_CONFIG_URI}/actuator/health ")
 
-                        String result = sh(script: "curl -s ${SERVICE_CONFIG_URI}/actuator/health | " +
+                        String result = sh(script: "curl -s ${env.SERVICE_CONFIG_URI}/actuator/health | " +
                                 "jq -r '.status'", returnStdout: true, returnStatus: false)
 
                         if (result.contains("UP")) {
@@ -227,15 +226,18 @@ pipeline {
             steps {
                 script {
                     echo("Ouverture de la connection au dépôt nexus sur le serveur ${env.BRANCH_NAME}")
-                    utilsDocker.loginDepot(this, nexus.user, nexus.pass, nexus.domain, remote)
+                    utilsDocker.loginDepot(this, env.NEXUS.user, env.NEXUS.pass, env.NEXUS.domain, REMOTE)
 
                     echo("Ouverture de la connection au dépôt nexus depuis Jenkins")
-                    utilsDocker.loginDepot(this, nexus.user, nexus.pass, nexus.domain)
+                    utilsDocker.loginDepot(this, env.NEXUS.user, env.NEXUS.pass, env.NEXUS.domain)
                 }
             }
         }
 
         stage('Maven Compilation') {
+            when {
+                expression { !env.SKIP_BUILD }
+            }
             agent {
                 docker {
                     image 'maven:3.8.5-jdk-8-slim'
@@ -247,7 +249,7 @@ pipeline {
                 script {
                     echo("Compilation du service ms-article sous le profile Spring ${env.BRANCH_NAME}")
                     sh("mvn clean package -Dspring.profiles.active=${env.BRANCH_NAME} " +
-                            "-DSERVICE_CONFIG_DOCKER=${SERVICE_CONFIG_URI}")
+                            "-DSERVICE_CONFIG_DOCKER=${env.SERVICE_CONFIG_URI}")
 
                 }
             }
@@ -325,25 +327,31 @@ pipeline {
         }
 
         stage('Build Docker Image') {
+            when {
+                expression { !env.SKIP_BUILD }
+            }
             agent any
             steps {
                 script {
-                    echo("Création de l'image Docker : ${dockers.img}")
+                    echo("Création de l'image Docker : ${env.DOCKER.img}")
                     sh("docker compose build --no-cache")
                 }
             }
         }
 
         stage('Tag / Push Docker Images dépôt Nexus') {
+            when {
+                expression { env.SKIP_BUILD }
+            }
             agent any
             steps {
                 script {
                     echo(LINE)
                     // TAG de l'image vers la version spécifier beta / relase
-                    echo("Tag de l'image docker ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION} vers ${dockers.img}")
-                    sh(script: "docker tag ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION} ${dockers.img}")
-                    echo("push de l'image ${dockers.img} vers le dépôt Docker Nexus")
-                    sh(script: "docker push ${dockers.img}")
+                    echo("Tag de l'image docker ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION} vers ${env.DOCKER.img}")
+                    sh(script: "docker tag ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION} ${env.DOCKER.img}")
+                    echo("push de l'image ${env.DOCKER.img} vers le dépôt Docker Nexus")
+                    sh(script: "docker push ${env.DOCKER.img}")
                 }
             }
         }
@@ -354,7 +362,7 @@ pipeline {
                 script {
                     echo(LINE)
                     echo("Mise à jours du projet ms-article sur le serveur ${env.BRANCH_NAME}")
-                    utilsGit.gitPullSsh(this, remote, "cd ${dockers.pathProjet} " +
+                    utilsGit.gitPullSsh(this, env.REMOTE, "cd ${DOCKER.pathProjet} " +
                             "&& git checkout ${env.BRANCH_NAME} " +
                             "&& git pull origin ${env.BRANCH_NAME}")
                 }
@@ -362,18 +370,21 @@ pipeline {
         }
 
         stage('Pull Docker Images dépôt Nexus') {
+            when {
+                expression { !env.SKIP_BUILD }
+            }
             agent any
             steps {
                 script {
                     echo(LINE)
-                    echo("Pull de l'image docker: ${dockers.img} sur le serveur: ${env.BRANCH_NAME}")
+                    echo("Pull de l'image docker: ${env.DOCKER.img} sur le serveur: ${env.BRANCH_NAME}")
 
-                    if (!utilsDocker.pullImg(this, dockers.img, remote)) {
+                    if (!utilsDocker.pullImg(this, env.DOCKER.img, env.REMOTE)) {
                         error("Une erreur est survenu pendant le pull de l'imges sur le serveur !")
                     }
 
                     echo("Affiche la liste des images Docker sur le serveur ${env.BRANCH_NAME}")
-                    utilsDocker.getImg(this, dockers.img)
+                    utilsDocker.getImg(this, env.DOCKER.img)
 
 
                 }
@@ -385,9 +396,9 @@ pipeline {
             steps {
                 script {
                     echo(LINE)
-                    echo("Vérifi si la stack ${dockers.stackName} est deployer ou mettre à jours ")
-                    STATUS_STACK = utilsDocker.statusStack(this, dockers.stackName, remote)
-                    echo("La stack ${dockers.stackName} sera a " + (STATUS_STACK ? "mettre à jours" : "déployée") +
+                    echo("Vérifi si la stack ${env.DOCKER.stackName} est deployer ou mettre à jours ")
+                    env.STATUS_STACK = utilsDocker.statusStack(this, env.DOCKER.stackName, env.REMOTE)
+                    echo("La stack ${env.DOCKER.stackName} sera a " + (env.STATUS_STACK ? "mettre à jours" : "déployée") +
                             " sur le serveur ${env.BRANCH_NAME}")
                 }
             }
@@ -399,10 +410,10 @@ pipeline {
                 script {
                     echo(LINE)
                     echo("Deploiment sur le serveur: ${env.BRANCH_NAME}, en version: ${params.BUILD}")
-                    String commande = "cd ${dockers.pathProjet} && " +
+                    String commande = "cd ${env.DOCKER.pathProjet} && " +
                             "export PROFILES=${env.BRANCH_NAME} && " +
                             "./script/deploy.sh ${params.BUILD}";
-                    utilsDocker.deployStack(this, commande, remote)
+                    utilsDocker.deployStack(this, commande, env.REMOTE)
                 }
             }
         }
@@ -415,22 +426,22 @@ pipeline {
                     status = false
                     for (int index = 0; index < 10; index++) {
 
-                        echo("Requet CURL n° ${index} du service : ${NAME_SERVICE}")
-                        echo("à l'adresse : http://${remote.host}:${PORT}/actuator/health ")
+                        echo("Requet CURL n° ${index} du service : ${env.NAME_SERVICE}")
+                        echo("à l'adresse : http://${env.REMOTE.host}:${PORT}/actuator/health ")
 
-                        String result = sh(script: "curl -s http://${remote.host}:${PORT}/actuator/health | " +
+                        String result = sh(script: "curl -s http://${env.REMOTE.host}:${PORT}/actuator/health | " +
                                 "jq -r '.status'", returnStdout: true, returnStatus: false)
 
                         if (result.contains("UP")) {
                             echo("sorti : ${result}")
-                            echo("La mise en service de ${NAME_SERVICE} à été réalisé avec Succès ")
+                            echo("La mise en service de ${env.NAME_SERVICE} à été réalisé avec Succès ")
                             status = "SUCCESS"
 
-                            echo("Liste des processus en cours sur stack : ${STACK_NAME}")
-                            utilsDocker.getPsStack(this, NAME_SERVICE, remote)
+                            echo("Liste des processus en cours sur stack : ${env.STACK_NAME}")
+                            utilsDocker.getPsStack(this, env.NAME_SERVICE, remote)
 
                             echo("Docker log de la stack : ${STACK_NAME}")
-                            utilsDocker.getServiceLogs(this, NAME_SERVICE, remote)
+                            utilsDocker.getServiceLogs(this, env.NAME_SERVICE, remote)
 
                             break
                         } else {
@@ -448,28 +459,40 @@ pipeline {
         }
 
         stage('Publication du projet sur Github') {
+            when {
+                expression { !env.SKIP_BUILD }
+            }
             agent any
             steps {
                 script {
                     echo(LINE)
-
-                    def TAGE_NAME = "${env.IMAGE_VERSION}-${params.BUILD}"
-                    def REPO_NAME = "MGNetworking/ms-article"
-
                     try {
                         if (params.BUILD == 'beta') {
-                            utilsGit.createOrUpdatePreRelease(this, TAGE_NAME, REPO_NAME, GITHUB_TOKEN, params.PUBLIC_MESSAGE)
+
+                            utilsGit.createOrUpdatePreRelease(
+                                    this,
+                                    env.IMAGE_TAG,
+                                    env.REPO_NAME,
+                                    credentials('Github'),
+                                    params.PUBLIC_MESSAGE)
+
                         } else if (params.BUILD == 'release') {
-                            utilsGit.createOrUpdateRelease(this, TAGE_NAME, REPO_NAME, GITHUB_TOKEN, params.PUBLIC_MESSAGE)
+
+                            utilsGit.createOrUpdateRelease(
+                                    this,
+                                    env.IMAGE_TAG,
+                                    env.REPO_NAME,
+                                    credentials('Github'),
+                                    params.PUBLIC_MESSAGE)
                         } else {
                             error("Les paramètres de la version son manquantes. Il ne peux y avoir " +
-                                    "une publication vers le dépôt ! version: ${TAGE_NAME} , " +
+                                    "une publication vers le dépôt ! version: ${env.IMAGE_TAG} , " +
                                     "message de publication: ${params.PUBLIC_MESSAGE}")
                         }
 
-                    } catch (Exception execp) {
+                    } catch (Exception ex) {
                         error("Une erreur est survenu pendant le processus de création de publication " +
-                                "de la version ${TAGE_NAME} , message: ${execp}")
+                                "de la version ${env.IMAGE_TAG} , message: ${ex}")
                     }
 
                 }
@@ -483,18 +506,17 @@ pipeline {
             script {
                 echo(LINE)
                 try {
-                    echo("Déconnection au dépôt nexus docker entre le serveur ${env.BRANCH_NAME} " +
-                            "et le dépôt nexus")
-                    utilsDocker.logoutDepot(this, nexus.domain, remote)
+                    echo("Déconnection du dépôt entre le serveur ${env.BRANCH_NAME} et le dépôt nexus")
+                    utilsDocker.logoutDepot(this, env.NEXUS.domain, env.REMOTE)
 
                     echo("Fermeture de la connection au dépôt nexus depuis Jenkins")
-                    utilsDocker.logoutDepot(this, nexus.domain)
+                    utilsDocker.logoutDepot(this, env.NEXUS.domain)
 
-                    echo("Nettoyage de l'images de base : ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION}")
-                    utilsDocker.rmi(this, "${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION}")
+                    echo("Nettoyage de l'images de base : ${env.IMAGE_NAME}")
+                    utilsDocker.rmi(this, env.IMAGE_NAME)
 
-                    echo("Nettoyage de l'images beta / relase : ${dockers.img}")
-                    utilsDocker.rmi(this, dockers.img)
+                    echo("Nettoyage de l'images beta / relase : ${env.DOCKER.img}")
+                    utilsDocker.rmi(this, env.DOCKER.img)
 
                     sh 'pwd'
                     sh 'ls -al target/surefire-reports || echo "surefire-reports non trouvé"'
@@ -525,7 +547,7 @@ pipeline {
                 echo(LINE)
                 def stack = "du déploiement de la stack avec la version du service ${env.IMAGE_VERSION}"
                 def service = "de la mise à jour du service a la version ${env.IMAGE_VERSION}"
-                echo('Fin ' + (STATUS_STACK ? stack : service))
+                echo('Fin ' + (env.STATUS_STACK ? stack : service))
             }
         }
         failure {
@@ -533,20 +555,19 @@ pipeline {
                 echo(LINE)
                 echo("Échec du déploiement. Effectuer un rollback.")
 
-                if (!STATUS_STACK) {
-                    echo("Échec du déploiement de la stack ${dockers.stackName}")
-                    echo("Suppression de la stack ${dockers.stackName} sur le serveur distant")
-                    utilsDocker.rmStack(this, dockers.stackName, remote)
-                    echo("Sortie Delete stack: ${deleteStack}")
+                if (!env.STATUS_STACK) {
+                    echo("Échec du déploiement de la stack ${env.DOCKER.stackName}")
+                    echo("Suppression de la stack ${env.DOCKER.stackName} sur le serveur distant")
+                    utilsDocker.rmStack(this, env.DOCKER.stackName, env.REMOTE)
                 } else {
-                    echo("Échec de la mise à jour de la stack ${dockers.stackName}")
-                    echo("ROLLBACK de la stack ${dockers.stackName}")
-                    utilsDocker.rollbackService(this, NAME_SERVICE, false)
+                    echo("Échec de la mise à jour de la stack ${env.DOCKER.stackName}")
+                    echo("ROLLBACK de la stack ${env.DOCKER.stackName}")
+                    utilsDocker.rollbackService(this, env.NAME_SERVICE, false)
                 }
                 def time = 15
-                echo "Suppression de l'image en échec ${dockers.img} sur le serveur dans ${time} secondes ..."
+                echo "Suppression de l'image en échec ${env.DOCKER.img} sur le serveur dans ${time} secondes ..."
                 sleep time: time, unit: 'SECONDS'
-                utilsDocker.rmi(this, dockers.img, remote)
+                utilsDocker.rmi(this, env.DOCKER.img, env.REMOTE)
             }
         }
     }
