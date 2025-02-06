@@ -59,6 +59,7 @@ pipeline {
                     echo("Message de publication: ${params.PUBLIC_MESSAGE}")
 
                     // Type 2.0.0-beta
+                    env.BUILD = params.VERSION ? 'beta' : 'release'
                     env.IMAGE_TAG = "${env.IMAGE_VERSION}-${params.VERSION ? 'beta' : 'release'}"
 
                     // Type sonatype-nexus.backhole.ovh/ms-article-service:2.0.0-beta
@@ -167,7 +168,7 @@ pipeline {
                             echo("Donc le build peut être lancer !")
                             env.SKIP_BUILD = true
                         } else {
-                            echo("La version: ${env.IMAGE_TAG} est déjà présente sur le serveur Nexus")
+                            echo("La version beta suivant : ${env.IMAGE_TAG} est déjà présente sur le serveur Nexus")
                             echo("Excécution des test unitaire uniquement !")
                             env.SKIP_BUILD = false
                         }
@@ -179,7 +180,7 @@ pipeline {
                             echo("Donc le build peut être lancer !")
                             env.SKIP_BUILD = true
                         } else {
-                            echo("La version: ${env.IMAGE_TAG} est déjà présente sur le serveur Nexus")
+                            echo("La version relase suivant : ${env.IMAGE_TAG} est déjà présente sur le serveur Nexus")
                             echo("Excécution des test unitaire uniquement !")
                             env.SKIP_BUILD = false
                         }
@@ -418,9 +419,9 @@ pipeline {
             steps {
                 script {
                     echo(LINE)
-                    echo("Deploiment sur le serveur: ${env.BRANCH_NAME} , en version: ${params.BUILD}")
+                    echo("Deploiment sur le serveur: ${env.BRANCH_NAME} , en version: ${env.BUILD}")
                     string commande = "cd ${dockers.pathProjet} && " +
-                            "export PROFILES=${env.BRANCH_NAME} && ./script/deploy.sh ${params.BUILD}"
+                            "export PROFILES=${env.BRANCH_NAME} && ./script/deploy.sh ${env.BUILD}"
                     utilsDocker.deployStack(this, commande, remote)
                 }
             }
