@@ -99,9 +99,12 @@ pipeline {
                             Nas_CREDS_PSW           // password
                     ))
 
+                    // déséralisation des données
+                    def dk = new JsonSlurper().parseText(env.DOCKER)
+
                     echo "DEBUG: env.DOCKER après affectation = ${env.DOCKER}"
                     echo "DEBUG: env.REMOTE après affectation = ${env.REMOTE}"
-                    echo("Version de l'images docker : ${env.DOCKER.img}")
+                    echo("Version de l'images docker : ${dk.img}")
                 }
             }
         }
@@ -130,9 +133,12 @@ pipeline {
                             Prod_CREDS_USR,         // user
                             Prod_CREDS_PSW))        // password
 
+                    // déséralisation des données
+                    def dk = new JsonSlurper().parseText(env.DOCKER)
+
                     echo "DEBUG: env.DOCKER après affectation = ${env.DOCKER}"
                     echo "DEBUG: env.REMOTE après affectation = ${env.REMOTE}"
-                    echo("Version de l'images docker : ${env.DOCKER.img}")
+                    echo("Version de l'images docker : ${dk.img}")
                 }
             }
         }
