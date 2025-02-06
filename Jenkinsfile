@@ -4,13 +4,12 @@
 def remote
 def nexus
 def dockers
-def LINE
+def LINE = "------------------------------";
 
 pipeline {
     agent any
 
     environment {
-        LINE = "------------------------------";
         Nas_CREDS = credentials('NAS')
         Prod_CREDS = credentials('PROD')
         Nexus_CREDS = credentials('nexus-credentials')
@@ -159,15 +158,18 @@ pipeline {
                       """, returnStdout: true).trim()
 
                     echo("HTTP Status beta: $http_status_beta et HTTP Status release: $http_status_release")
-                    def version_exists = (http_status_beta == "200" || http_status_release == "200")
 
-                    // check des versions sur le serveur Nexus
+
                     if (env.IMAGE_TAG == version_beta) {
 
                         if (http_status_beta.equals("404")) {
                             echo("La version beta suivant : ${version_beta} n'existe pas dans le dépôt nexus")
                             echo("Donc le build peut être lancer !")
                             env.SKIP_BUILD = true
+                        } else {
+                            echo("La version: ${env.IMAGE_TAG} est déjà présente sur le serveur Nexus")
+                            echo("Excécution des test unitaire uniquement !")
+                            env.SKIP_BUILD = false
                         }
 
                     } else if (env.IMAGE_TAG == version_release) {
@@ -176,16 +178,11 @@ pipeline {
                             echo("La version relase suivant : ${version_release} n'existe pas dans le dépôt nexus")
                             echo("Donc le build peut être lancer !")
                             env.SKIP_BUILD = true
+                        } else {
+                            echo("La version: ${env.IMAGE_TAG} est déjà présente sur le serveur Nexus")
+                            echo("Excécution des test unitaire uniquement !")
+                            env.SKIP_BUILD = false
                         }
-
-                    } else if (version_exists) {
-                        echo("La version: ${env.IMAGE_TAG} est déjà présente sur le serveur Nexus")
-                        echo("Excécution des test unitaire uniquement !")
-                        env.SKIP_BUILD = false
-
-                    } else {
-                        error("Une erreur inattendu est survenu pendant la recherche de la version du " +
-                                "projet dans le dépôt nexus")
                     }
 
                 }
