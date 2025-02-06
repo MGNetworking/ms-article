@@ -18,7 +18,7 @@ pipeline {
     }
 
     parameters {
-        booleanParam(name: 'RELEASE', defaultValue: false, description: 'Par défaut la version sera beta')
+        booleanParam(name: 'VERSION', defaultValue: false, description: 'Par défaut la version sera beta')
         string defaultValue: '', description: 'Entrez votre message de Publication', name: 'PUBLIC_MESSAGE'
     }
 
@@ -56,11 +56,11 @@ pipeline {
                             'sonatype-nexus.backhole.ovh')
 
 
-                    echo("Type de version sélectionner: ${params.BUILD}")
+                    echo("Valeur param version: ${params.VERSION}")
                     echo("Message de publication: ${params.PUBLIC_MESSAGE}")
 
                     // Type 2.0.0-beta
-                    env.IMAGE_TAG = "${env.IMAGE_VERSION}-${params.RELEASE ? 'beta' : 'release'}"
+                    env.IMAGE_TAG = "${env.IMAGE_VERSION}-${params.VERSION ? 'beta' : 'release'}"
 
                     // Type sonatype-nexus.backhole.ovh/ms-article-service:2.0.0-beta
                     env.IMAGE_NAME = "${env.DOCKER_IMAGE_NAME}:${env.IMAGE_TAG}"
@@ -161,7 +161,6 @@ pipeline {
                     echo("HTTP Status beta: $http_status_beta et HTTP Status release: $http_status_release")
                     def version_exists = (http_status_beta == "200" || http_status_release == "200")
 
-                    // TODO
                     // check des versions sur le serveur Nexus
                     if (env.IMAGE_TAG == version_beta && http_status_beta.equals("404")) {
                         echo("La version beta suivant : ${version_beta} n'existe pas dans le dépôt nexus")
@@ -419,7 +418,7 @@ pipeline {
                     echo("Deploiment sur le serveur: ${env.BRANCH_NAME} , en version: ${params.BUILD}")
                     string commande = "cd ${dockers.pathProjet} && " +
                             "export PROFILES=${env.BRANCH_NAME} && ./script/deploy.sh ${params.BUILD}"
-                    utilsSwarm.deployStack(this, commande, remote)
+                    utilsDocker.deployStack(this, commande, remote)
                 }
             }
         }
