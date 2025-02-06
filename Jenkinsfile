@@ -1,16 +1,20 @@
 @Library('JenkinsLib_Shared') _
 
-import groovy.json.JsonOutput
-import groovy.json.JsonSlurper
+// Configurations des serveurs
+def remote
+def nexus
+def dockers
+def VERSION_Docker
+def LINE
 
 pipeline {
     agent any
 
     environment {
-        def LINE = "-----------------------------------------------------"
         Nas_CREDS = credentials('NAS')
         Prod_CREDS = credentials('PROD')
         Nexus_CREDS = credentials('nexus-credentials')
+        GITHUB_TOKEN = credentials('Github')
     }
 
     parameters {
@@ -24,7 +28,6 @@ pipeline {
             steps {
                 script {
                     echo "L'espace de travail : ${WORKSPACE}";
-                    echo("Branche en cours : ${env.BRANCH_NAME}")
 
                     // lecture du fichier
                     def envContent = readFile(".env").trim()
@@ -47,12 +50,12 @@ pipeline {
                     sh 'printenv'
 
                     // les données de connection au dépôt nexus
-                    env.NEXUS = JsonOutput.toJson(utilsServeur.credentials(
+                    nexus = utilsServeur.credentials(
                             Nexus_CREDS_USR,
                             Nexus_CREDS_PSW,
-                            'sonatype-nexus.backhole.ovh'))
+                            'sonatype-nexus.backhole.ovh')
 
-                    echo "DEBUG: env.NEXUS après affectation = ${env.NEXUS}"
+
                     echo("Type de version sélectionner: ${params.BUILD}")
                     echo("Message de publication: ${params.PUBLIC_MESSAGE}")
 
@@ -60,12 +63,13 @@ pipeline {
                     env.IMAGE_TAG = "${env.IMAGE_VERSION}-${params.BETA ? 'beta' : 'release'}"
 
                     // Type sonatype-nexus.backhole.ovh/ms-article-service:2.0.0-beta
-                    env.IMAGE_NAME = "${env.DOCKER_IMAGE_NAME}:${IMAGE_TAG}"
-                    echo("Nom de l'image docker : ${IMAGE_NAME}")
+                    env.IMAGE_NAME = "${env.DOCKER_IMAGE_NAME}:${env.IMAGE_TAG}"
+                    echo("Nom de l'image docker : ${env.IMAGE_NAME}")
 
                     if (!env.IMAGE_TAG?.trim()) {
                         error("La version de l'image est obligatoire ...")
                     }
+
                 }
             }
         }
@@ -83,29 +87,23 @@ pipeline {
                     echo("Branche en cour ${env.BRANCH_NAME}")
 
                     // Les données dockers projet
-                    env.DOCKER = JsonOutput.toJson(utilsServeur.dockers(
-                            env.IMAGE_NAME,                // img
-                            '/volume1/docker/ms-article',  // pathProjet
-                            env.STACK_NAME                 // stackName
-                    ))
+                    dockers = utilsServeur.dockers(
+                            "${env.VERSION_Docker}",           // img
+                            '/volume1/docker/ms-article',      // pathProjet
+                            env.STACK_NAME                     // stackName
+                    )
 
                     // Les données de connection serveur
-                    env.REMOTE = JsonOutput.toJson(utilsServeur.remote(
-                            env.BRANCH_NAME,        // name
+                    remote = utilsServeur.remote(
+                            "${env.BRANCH_NAME}",   // name
                             '192.168.1.56',         // host
                             true,                   // allowAnyHosts
                             99,                     // port
                             Nas_CREDS_USR,          // user
                             Nas_CREDS_PSW           // password
-                    ))
+                    )
 
-                    // déséralisation des données
-                    def dk = new JsonSlurper().parseText(env.DOCKER)
-                    def remote = new JsonSlurper().parseText(env.DOCKER)
-
-                    echo "DEBUG: env.DOCKER après affectation = ${dk}"
-                    echo "DEBUG: env.REMOTE après affectation = ${remote}"
-                    echo("Version de l'images docker : ${dk.img}")
+                    echo("Version de l'application : ${dockers.img}")
                 }
             }
         }
@@ -119,27 +117,25 @@ pipeline {
             steps {
                 script {
                     echo(LINE)
+                    echo "L'espace de travail: ${WORKSPACE}";
+                    echo("Branche en cour ${env.BRANCH_NAME}")
 
                     // les données dockers projet
-                    env.DOCKER = JsonOutput.toJson(utilsServeur.dockers(
-                            env.IMAGE_NAME,                      // img
-                            '/home/max/docker_home/ms-article',  // pathProjet
-                            env.STACK_NAME))                     // stackName
+                    dockers = utilsServeur.dockers(
+                            "${env.VERSION_Docker}",                  // img
+                            '/home/max/docker_home/ms-article',   // pathProjet
+                            "${env.STACK_NAME}")                  // stackName
 
-                    env.REMOTE = JsonOutput.toJson(utilsServeur.remote(
-                            env.BRANCH_NAME,        // name
+                    // les données de connection serveur
+                    remote = utilsServeur.remote(
+                            "${env.BRANCH_NAME}",   // name
                             '192.168.1.70',         // host
                             true,                   // allowAnyHosts
                             22,                     // port
                             Prod_CREDS_USR,         // user
-                            Prod_CREDS_PSW))        // password
+                            Prod_CREDS_PSW)         // password
 
-                    // déséralisation des données
-                    def dk = new JsonSlurper().parseText(env.DOCKER)
-
-                    echo "DEBUG: env.DOCKER après affectation = ${env.DOCKER}"
-                    echo "DEBUG: env.REMOTE après affectation = ${env.REMOTE}"
-                    echo("Version de l'images docker : ${dk.img}")
+                    echo("Version de l'application : ${dockers.img}")
                 }
             }
         }
@@ -148,21 +144,19 @@ pipeline {
             steps {
                 script {
                     echo(LINE)
-                    // déséralisation des données
-                    def nexus = new JsonSlurper().parseText(env.NEXUS)
 
-                    // La version recherché exemple: 1.0.25-release
-                    version_beta = "${env.IMAGE_VERSION}-beta"        // Version beta de recherche
-                    version_release = "${env.IMAGE_VERSION}-release"  // Version release de recherche
+                    version_beta = "${env.IMAGE_VERSION}-beta"        // Version de recherche
+                    version_release = "${env.IMAGE_VERSION}-release"  // Version de recherche
+                    path = "ms-article-service"                                     // Référence au dossier projet
 
                     def http_status_beta = sh(script: """
                         curl -s -o /dev/null -w "%{http_code}" -u ${nexus.user}:${nexus.pass} \
-                        https://${nexus.domain}/repository/docker-private/v2/${env.PATH_NEXUS}/manifests/${version_beta}
+                        https://${nexus.domain}/repository/docker-private/v2/${path}/manifests/${version_beta}
                       """, returnStdout: true).trim()
 
                     def http_status_release = sh(script: """
                         curl -s -o /dev/null -w "%{http_code}" -u ${nexus.user}:${nexus.pass} \
-                        https://${nexus.domain}/repository/docker-private/v2/${env.PATH_NEXUS}/manifests/${version_release}
+                        https://${nexus.domain}/repository/docker-private/v2/${path}/manifests/${version_release}
                       """, returnStdout: true).trim()
 
                     echo("HTTP Status beta: $http_status_beta et HTTP Status release: $http_status_release")
@@ -170,13 +164,13 @@ pipeline {
 
                     // check des versions sur le serveur Nexus
                     if (env.IMAGE_TAG == version_beta && http_status_beta.equals("404")) {
-                        echo("La version: ${version_beta} n'existe pas dans le dépôt nexus")
-                        echo("donc le build peut être lancer !")
+                        echo("La version beta suivant : ${version_beta} n'existe pas dans le dépôt nexus")
+                        echo("Donc le build peut être lancer !")
                         env.SKIP_BUILD = true
 
                     } else if (env.IMAGE_TAG == version_release && http_status_release.equals("404")) {
-                        echo("La version: ${version_release} n'existe pas dans le dépôt nexus")
-                        echo("donc le build peut être lancer !")
+                        echo("La version relase suivant : ${version_release} n'existe pas dans le dépôt nexus")
+                        echo("Donc le build peut être lancer !")
                         env.SKIP_BUILD = true
 
                     } else if (version_exists) {
@@ -196,9 +190,6 @@ pipeline {
         stage("Test : service ms-configuration") {
             steps {
                 script {
-
-                    // déséralisation des données
-                    def remote = new JsonSlurper().parseText(env.REMOTE)
 
                     echo("Vérifie que le service ms-configuration fonctionne " +
                             "correctement sur le serveur ${env.BRANCH_NAME}")
@@ -237,39 +228,14 @@ pipeline {
         stage("Open connection Nexus: Docker repository") {
             steps {
                 script {
-                    // déséralisation des données
-                    def nexus = new JsonSlurper().parseText(env.NEXUS)
-
                     echo("Ouverture de la connection au dépôt nexus sur le serveur ${env.BRANCH_NAME}")
-                    utilsDocker.loginDepot(this, nexus.user, nexus.pass, nexus.domain, REMOTE)
+                    utilsDocker.loginDepot(this, nexus, remote)
 
                     echo("Ouverture de la connection au dépôt nexus depuis Jenkins")
-                    utilsDocker.loginDepot(this, nexus.user, nexus.pass, nexus.domain)
+                    utilsDocker.loginDepot(this, nexus)
                 }
             }
         }
-
-        stage('Maven Compilation') {
-            when {
-                expression { !env.SKIP_BUILD }
-            }
-            agent {
-                docker {
-                    image 'maven:3.8.5-jdk-8-slim'
-                    args '-v /var/jenkins_home/maven/.m2:/root/.m2' +
-                            ' -v /var/run/docker.sock:/var/run/docker.sock'
-                }
-            }
-            steps {
-                script {
-                    echo("Compilation du service ms-article sous le profile Spring ${env.BRANCH_NAME}")
-                    sh("mvn clean package -Dspring.profiles.active=${env.BRANCH_NAME} " +
-                            "-DSERVICE_CONFIG_DOCKER=${env.SERVICE_CONFIG_URI}")
-
-                }
-            }
-        }
-
 
         stage('Tests parallèles') {
             parallel {
@@ -286,7 +252,7 @@ pipeline {
                             // Si les tests échouent, le pipeline est interrompu
                             echo("Lancement des tests unitaire")
                             sh("mvn test -Dspring.profiles.active=test " +
-                                    "-Dsurefire.report.directory=${WORKSPACE}/target/surefire-reports")
+                                    "-Dsurefire.report.directory=${env.WORKSPACE}/target/surefire-reports")
                             sh 'pwd'
                             sh 'ls -al target/surefire-reports || echo "surefire-reports non trouvé"'
                         }
@@ -307,7 +273,7 @@ pipeline {
                             echo("Lancement des tests d'intégration et end to end")
                             catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                                 sh("mvn verify -P integration -Dspring.profiles.active=test " +
-                                        "-Dfailsafe.report.directory=${WORKSPACE}/target/failsafe-reports")
+                                        "-Dfailsafe.report.directory=${env.WORKSPACE}/target/failsafe-reports")
                                 sh 'pwd'
                                 sh 'ls -al target/failsafe-reports || echo "failsafe-reports non trouvé"'
                             }
@@ -330,7 +296,7 @@ pipeline {
                             echo("Lancement des tests d'intégration et end to end")
                             catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
                                 sh "mvn verify -P e2e -Dspring.profiles.active=test " +
-                                        "-Dfailsafe.report.directory=${WORKSPACE}/target/failsafe-reports"
+                                        "-Dfailsafe.report.directory=${env.WORKSPACE}/target/failsafe-reports"
                                 sh 'pwd'
                                 sh 'ls -al target/failsafe-reports || echo "failsafe-reports non trouvé"'
                             }
@@ -341,16 +307,35 @@ pipeline {
             }
         }
 
+        stage('Maven Compilation') {
+            when {
+                expression { env.SKIP_BUILD }
+            }
+            agent {
+                docker {
+                    image 'maven:3.8.5-jdk-8-slim'
+                    args '-v /var/jenkins_home/maven/.m2:/root/.m2' +
+                            ' -v /var/run/docker.sock:/var/run/docker.sock'
+                }
+            }
+            steps {
+                script {
+                    echo("Compilation du service ms-article sous le profile Spring ${env.BRANCH_NAME}")
+                    sh("mvn package -Dspring.profiles.active=${env.BRANCH_NAME} " +
+                            "-DSERVICE_CONFIG_DOCKER=${env.SERVICE_CONFIG_URI}")
+
+                }
+            }
+        }
+
         stage('Build Docker Image') {
             when {
-                expression { !env.SKIP_BUILD }
+                expression { env.SKIP_BUILD }
             }
             agent any
             steps {
                 script {
-                    // déséralisation des données
-                    def dk = new JsonSlurper().parseText(env.DOCKER)
-                    echo("Création de l'image Docker : ${dk.img}")
+                    echo("Création de l'image Docker : ${dockers.img}")
                     sh("docker compose build --no-cache")
                 }
             }
@@ -364,108 +349,93 @@ pipeline {
             steps {
                 script {
                     echo(LINE)
-                    // déséralisation des données
-                    def dk = new JsonSlurper().parseText(env.DOCKER)
-
                     // TAG de l'image vers la version spécifier beta / relase
-                    echo("Tag de l'image docker ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION} vers ${dk.img}")
-                    sh(script: "docker tag ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION} ${dk.img}")
-                    echo("push de l'image ${dk.img} vers le dépôt Docker Nexus")
-                    sh(script: "docker push ${dk.img}")
+                    echo("Tag de l'image docker ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION} vers ${dockers.img}")
+                    sh(script: "docker tag ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION} ${dockers.img}")
+                    echo("push de l'image ${dockers.img} vers le dépôt Docker Nexus")
+                    sh(script: "docker push ${dockers.img}")
                 }
             }
         }
 
         stage('Pull du projet') {
+            when {
+                expression { env.SKIP_BUILD }
+            }
             agent any
             steps {
                 script {
                     echo(LINE)
                     echo("Mise à jours du projet ms-article sur le serveur ${env.BRANCH_NAME}")
-                    utilsGit.gitPullSsh(this, new JsonSlurper().parseText(env.REMOTE),
-                            "cd ${DOCKER.pathProjet} " +
-                                    "&& git checkout ${env.BRANCH_NAME} " +
-                                    "&& git pull origin ${env.BRANCH_NAME}")
+                    utilsGit.gitPullSsh(this, remote, "cd ${dockers.pathProjet} " +
+                            "&& git checkout ${env.BRANCH_NAME} && git pull origin ${env.BRANCH_NAME}")
                 }
             }
         }
 
         stage('Pull Docker Images dépôt Nexus') {
             when {
-                expression { !env.SKIP_BUILD }
+                expression { env.SKIP_BUILD }
             }
             agent any
             steps {
                 script {
                     echo(LINE)
-                    // déséralisation des données
-                    def dk = new JsonSlurper().parseText(env.DOCKER)
-                    def remote = new JsonSlurper().parseText(env.REMOTE)
-
-                    echo("Pull de l'image docker: ${dk.img} sur le serveur: ${env.BRANCH_NAME}")
-
-                    if (!utilsDocker.pullImg(this, dk.img, remote)) {
-                        error("Une erreur est survenu pendant le pull de l'imges sur le serveur !")
-                    }
+                    echo("Pull de l'image docker: ${dockers.img} sur le serveur: ${env.BRANCH_NAME}")
+                    utilsDocker.pullImg(this, dockers.img, remote)
 
                     echo("Affiche la liste des images Docker sur le serveur ${env.BRANCH_NAME}")
-                    utilsDocker.getImg(this, dk.img)
-
+                    utilsDocker.getImg(this, dockers.img, remote)
 
                 }
             }
         }
 
         stage('Status Stack en cours') {
+            when {
+                expression { env.SKIP_BUILD }
+            }
             agent any
             steps {
                 script {
                     echo(LINE)
-                    // déséralisation des données
-                    def dk = new JsonSlurper().parseText(env.DOCKER)
-                    def remote = new JsonSlurper().parseText(env.REMOTE)
+                    echo("Vérifi si la stack ${dockers.stackName} est deployer ou mettre à jours ")
+                    env.STATUS_STACK = utilsDocker.statusStack(this, dockers.stackName, remote)
 
-                    echo("Vérifi si la stack ${dk.stackName} est deployer ou mettre à jours ")
-
-                    env.STATUS_STACK = utilsDocker.statusStack(this, dk.stackName, remote)
-                    echo("La stack ${dk.stackName} sera a " + (env.STATUS_STACK ? "mettre à jours" : "déployée") +
+                    echo("La stack ${dockers.stackName} sera a " + (env.STATUS_STACK ? "mettre à jours" : "déployée") +
                             " sur le serveur ${env.BRANCH_NAME}")
                 }
             }
         }
 
-        stage('Update / Deploy ms-article') {
+        stage('Update / Deploy blog') {
+            when {
+                expression { env.SKIP_BUILD }
+            }
             agent any
             steps {
                 script {
                     echo(LINE)
-
-                    // déséralisation des données
-                    def dk = new JsonSlurper().parseText(env.DOCKER)
-                    def remote = new JsonSlurper().parseText(env.REMOTE)
-
-                    echo("Deploiment sur le serveur: ${env.BRANCH_NAME}, en version: ${params.BUILD}")
-                    String commande = "cd ${dk.pathProjet} && " +
-                            "export PROFILES=${env.BRANCH_NAME} && " +
-                            "./script/deploy.sh ${params.BUILD}";
-                    utilsDocker.deployStack(this, commande, remote)
+                    echo("Deploiment sur le serveur: ${env.BRANCH_NAME} , en version: ${params.BUILD}")
+                    string commande = "cd ${dockers.pathProjet} && " +
+                            "export PROFILES=${env.BRANCH_NAME} && ./script/deploy.sh ${params.BUILD}"
+                    utilsSwarm.deployStack(this, commande, remote)
                 }
             }
         }
 
 
         stage('Vérification de disponibilité') {
+            when {
+                expression { env.SKIP_BUILD }
+            }
             agent any
             steps {
                 script {
                     status = true
-                    // déséralisation des données
-                    def dk = new JsonSlurper().parseText(env.DOCKER)
-                    def remote = new JsonSlurper().parseText(env.REMOTE)
-
                     for (int index = 0; index < 10; index++) {
 
-                        echo("Requet CURL n° ${index} du service : ${env.NAME_SERVICE}")
+                        echo("Requet CURL n° ${index} du service : ${NAME_SERVICE}")
                         echo("à l'adresse : http://${remote.host}:${PORT}/actuator/health ")
 
                         String result = sh(script: "curl -s http://${remote.host}:${PORT}/actuator/health | " +
@@ -475,13 +445,6 @@ pipeline {
                             echo("sorti : ${result}")
                             echo("La mise en service de ${env.NAME_SERVICE} à été réalisé avec Succès ")
                             status = false
-
-                            echo("Liste des processus en cours sur stack : ${env.STACK_NAME}")
-                            utilsDocker.getPsStack(this, env.NAME_SERVICE, remote)
-
-                            echo("Docker log de la stack : ${STACK_NAME}")
-                            utilsDocker.getServiceLogs(this, env.NAME_SERVICE, remote)
-
                             break
                         } else {
                             echo("sorti : ${result}")
@@ -499,7 +462,7 @@ pipeline {
 
         stage('Publication du projet sur Github') {
             when {
-                expression { !env.SKIP_BUILD }
+                expression { env.SKIP_BUILD }
             }
             agent any
             steps {
@@ -531,7 +494,7 @@ pipeline {
 
                     } catch (Exception ex) {
                         error("Une erreur est survenu pendant le processus de création de publication " +
-                                "de la version ${env.IMAGE_TAG} , message: ${ex}")
+                                "de la version ${env.IMAGE_TAG} , message: ${ex.getMessage()}")
                     }
 
                 }
@@ -539,27 +502,23 @@ pipeline {
         }
     }
 
+
     post {
         always {
             script {
                 echo(LINE)
-                // déséralisation des données
-                def dk = new JsonSlurper().parseText(env.DOCKER)
-                def remote = new JsonSlurper().parseText(env.REMOTE)
-                def nexus = new JsonSlurper().parseText(env.NEXUS)
-
                 try {
-                    echo("Déconnection du dépôt entre le serveur ${env.BRANCH_NAME} et le dépôt nexus")
+                    echo("Déconnection au dépôt nexus docker entre le serveur ${env.BRANCH_NAME} et le dépôt nexus")
                     utilsDocker.logoutDepot(this, nexus.domain, remote)
 
                     echo("Fermeture de la connection au dépôt nexus depuis Jenkins")
                     utilsDocker.logoutDepot(this, nexus.domain)
 
-                    echo("Nettoyage de l'images de base : ${env.IMAGE_NAME}")
+                    echo("Nettoyage de l'images de base : ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION}")
                     utilsDocker.rmi(this, env.IMAGE_NAME)
 
-                    echo("Nettoyage de l'images beta / relase : ${dk.img}")
-                    utilsDocker.rmi(this, dk.img)
+                    echo("Nettoyage de l'images beta / relase : ${dockers.img}")
+                    utilsDocker.rmi(this, dockers.img)
 
                     sh 'pwd'
                     sh 'ls -al target/surefire-reports || echo "surefire-reports non trouvé"'
@@ -571,8 +530,9 @@ pipeline {
                     echo "Collecte des rapports JUnit pour les tests d'intégration et E2E."
                     junit testResults: "target/failsafe-reports/*.xml", allowEmptyResults: true
 
-                    def testResults = sh(script: "grep -H '<testsuite' ${WORKSPACE}/target/surefire-reports/*.xml " +
-                            "|| echo 'Aucun résultat trouvé'", returnStdout: true).trim()
+
+                    def testResults = sh(script: "grep -H '<testsuite' ${env.WORKSPACE}/target/surefire-reports/*.xml || " +
+                            "echo 'Aucun résultat trouvé'", returnStdout: true).trim()
                     if (testResults) {
                         echo "Résumé des résultats des tests :"
                         echo testResults
@@ -596,26 +556,21 @@ pipeline {
         failure {
             script {
                 echo(LINE)
-                // déséralisation des données
-                def dk = new JsonSlurper().parseText(env.DOCKER)
-                def remote = new JsonSlurper().parseText(env.REMOTE)
-                def nexus = new JsonSlurper().parseText(env.NEXUS)
+                echo("Échec !")
 
-                echo("Échec du déploiement. Effectuer un rollback.")
-
-                if (!env.STATUS_STACK) {
-                    echo("Échec du déploiement de la stack ${dk.stackName}")
-                    echo("Suppression de la stack ${dk.stackName} sur le serveur distant")
-                    utilsDocker.rmStack(this, dk.stackName, remote)
+                if (!STATUS_STACK) {
+                    echo("Échec du déploiement de la stack ${dockers.stackName}")
+                    echo("Suppression de la stack ${dockers.stackName} sur le serveur distant")
+                    utilsDocker.rmStack(this, dockers.stackName, remote)
                 } else {
-                    echo("Échec de la mise à jour de la stack ${dk.stackName}")
-                    echo("ROLLBACK de la stack ${dk.stackName}")
+                    echo("Échec de la mise à jour de la stack ${dockers.stackName}")
+                    echo("ROLLBACK de la stack ${dockers.stackName}")
                     utilsDocker.rollbackService(this, env.NAME_SERVICE, false)
                 }
                 def time = 15
-                echo "Suppression de l'image en échec ${dk.img} sur le serveur dans ${time} secondes ..."
+                echo "Suppression de l'image en échec ${dockers.img} sur le serveur dans ${time} secondes ..."
                 sleep time: time, unit: 'SECONDS'
-                utilsDocker.rmi(this, dk.img, remote)
+                utilsDocker.rmi(this, dockers.img, remote)
             }
         }
     }
