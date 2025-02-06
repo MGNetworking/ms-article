@@ -18,7 +18,7 @@ pipeline {
     }
 
     parameters {
-        booleanParam(name: 'VERSION', defaultValue: false, description: 'Par défaut la version sera beta')
+        booleanParam(name: 'VERSION', defaultValue: true, description: 'Par défaut la version sera beta')
         string defaultValue: '', description: 'Entrez votre message de Publication', name: 'PUBLIC_MESSAGE'
     }
 
@@ -162,15 +162,21 @@ pipeline {
                     def version_exists = (http_status_beta == "200" || http_status_release == "200")
 
                     // check des versions sur le serveur Nexus
-                    if (env.IMAGE_TAG == version_beta && http_status_beta.equals("404")) {
-                        echo("La version beta suivant : ${version_beta} n'existe pas dans le dépôt nexus")
-                        echo("Donc le build peut être lancer !")
-                        env.SKIP_BUILD = true
+                    if (env.IMAGE_TAG == version_beta) {
 
-                    } else if (env.IMAGE_TAG == version_release && http_status_release.equals("404")) {
-                        echo("La version relase suivant : ${version_release} n'existe pas dans le dépôt nexus")
-                        echo("Donc le build peut être lancer !")
-                        env.SKIP_BUILD = true
+                        if (http_status_beta.equals("404")) {
+                            echo("La version beta suivant : ${version_beta} n'existe pas dans le dépôt nexus")
+                            echo("Donc le build peut être lancer !")
+                            env.SKIP_BUILD = true
+                        }
+
+                    } else if (env.IMAGE_TAG == version_release) {
+
+                        if (http_status_release.equals("404")) {
+                            echo("La version relase suivant : ${version_release} n'existe pas dans le dépôt nexus")
+                            echo("Donc le build peut être lancer !")
+                            env.SKIP_BUILD = true
+                        }
 
                     } else if (version_exists) {
                         echo("La version: ${env.IMAGE_TAG} est déjà présente sur le serveur Nexus")
