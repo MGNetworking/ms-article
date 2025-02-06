@@ -101,9 +101,10 @@ pipeline {
 
                     // déséralisation des données
                     def dk = new JsonSlurper().parseText(env.DOCKER)
+                    def remote = new JsonSlurper().parseText(env.DOCKER)
 
-                    echo "DEBUG: env.DOCKER après affectation = ${env.DOCKER}"
-                    echo "DEBUG: env.REMOTE après affectation = ${env.REMOTE}"
+                    echo "DEBUG: env.DOCKER après affectation = ${dk}"
+                    echo "DEBUG: env.REMOTE après affectation = ${remote}"
                     echo("Version de l'images docker : ${dk.img}")
                 }
             }
