@@ -141,19 +141,21 @@ pipeline {
             steps {
                 script {
                     echo(LINE)
+                    // déséralisation des données
+                    def nexus = new JsonSlurper().parseText(env.NEXUS)
 
                     // La version recherché exemple: 1.0.25-release
                     version_beta = "${env.IMAGE_VERSION}-beta"        // Version beta de recherche
                     version_release = "${env.IMAGE_VERSION}-release"  // Version release de recherche
 
                     def http_status_beta = sh(script: """
-                        curl -s -o /dev/null -w "%{http_code}" -u ${env.NEXUS.user}:${env.NEXUS.pass} \
-                        https://${env.NEXUS.domain}/repository/docker-private/v2/${env.PATH_NEXUS}/manifests/${version_beta}
+                        curl -s -o /dev/null -w "%{http_code}" -u ${nexus.user}:${nexus.pass} \
+                        https://${nexus.domain}/repository/docker-private/v2/${env.PATH_NEXUS}/manifests/${version_beta}
                       """, returnStdout: true).trim()
 
                     def http_status_release = sh(script: """
-                        curl -s -o /dev/null -w "%{http_code}" -u ${env.NEXUS.user}:${env.NEXUS.pass} \
-                        https://${env.NEXUS.domain}/repository/docker-private/v2/${env.PATH_NEXUS}/manifests/${version_release}
+                        curl -s -o /dev/null -w "%{http_code}" -u ${nexus.user}:${nexus.pass} \
+                        https://${nexus.domain}/repository/docker-private/v2/${env.PATH_NEXUS}/manifests/${version_release}
                       """, returnStdout: true).trim()
 
                     echo("HTTP Status beta: $http_status_beta et HTTP Status release: $http_status_release")
@@ -188,11 +190,14 @@ pipeline {
             steps {
                 script {
 
+                    // déséralisation des données
+                    def remote = new JsonSlurper().parseText(env.REMOTE)
+
                     echo("Vérifie que le service ms-configuration fonctionne " +
                             "correctement sur le serveur ${env.BRANCH_NAME}")
 
                     echo "Initilaisation de l'adresse du service ms-configuration";
-                    env.SERVICE_CONFIG_URI = "http://${env.REMOTE.host}:8089"
+                    env.SERVICE_CONFIG_URI = "http://${remote.host}:8089"
                     status = false
 
                     for (int index = 0; index < 10; index++) {
@@ -225,11 +230,14 @@ pipeline {
         stage("Open connection Nexus: Docker repository") {
             steps {
                 script {
+                    // déséralisation des données
+                    def nexus = new JsonSlurper().parseText(env.NEXUS)
+
                     echo("Ouverture de la connection au dépôt nexus sur le serveur ${env.BRANCH_NAME}")
-                    utilsDocker.loginDepot(this, env.NEXUS.user, env.NEXUS.pass, env.NEXUS.domain, REMOTE)
+                    utilsDocker.loginDepot(this, nexus.user, nexus.pass, nexus.domain, REMOTE)
 
                     echo("Ouverture de la connection au dépôt nexus depuis Jenkins")
-                    utilsDocker.loginDepot(this, env.NEXUS.user, env.NEXUS.pass, env.NEXUS.domain)
+                    utilsDocker.loginDepot(this, nexus.user, nexus.pass, nexus.domain)
                 }
             }
         }
@@ -333,7 +341,9 @@ pipeline {
             agent any
             steps {
                 script {
-                    echo("Création de l'image Docker : ${env.DOCKER.img}")
+                    // déséralisation des données
+                    def dk = new JsonSlurper().parseText(env.DOCKER)
+                    echo("Création de l'image Docker : ${dk.img}")
                     sh("docker compose build --no-cache")
                 }
             }
@@ -347,11 +357,14 @@ pipeline {
             steps {
                 script {
                     echo(LINE)
+                    // déséralisation des données
+                    def dk = new JsonSlurper().parseText(env.DOCKER)
+
                     // TAG de l'image vers la version spécifier beta / relase
-                    echo("Tag de l'image docker ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION} vers ${env.DOCKER.img}")
-                    sh(script: "docker tag ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION} ${env.DOCKER.img}")
-                    echo("push de l'image ${env.DOCKER.img} vers le dépôt Docker Nexus")
-                    sh(script: "docker push ${env.DOCKER.img}")
+                    echo("Tag de l'image docker ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION} vers ${dk.img}")
+                    sh(script: "docker tag ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION} ${dk.img}")
+                    echo("push de l'image ${dk.img} vers le dépôt Docker Nexus")
+                    sh(script: "docker push ${dk.img}")
                 }
             }
         }
@@ -362,9 +375,10 @@ pipeline {
                 script {
                     echo(LINE)
                     echo("Mise à jours du projet ms-article sur le serveur ${env.BRANCH_NAME}")
-                    utilsGit.gitPullSsh(this, env.REMOTE, "cd ${DOCKER.pathProjet} " +
-                            "&& git checkout ${env.BRANCH_NAME} " +
-                            "&& git pull origin ${env.BRANCH_NAME}")
+                    utilsGit.gitPullSsh(this, new JsonSlurper().parseText(env.REMOTE),
+                            "cd ${DOCKER.pathProjet} " +
+                                    "&& git checkout ${env.BRANCH_NAME} " +
+                                    "&& git pull origin ${env.BRANCH_NAME}")
                 }
             }
         }
@@ -377,14 +391,18 @@ pipeline {
             steps {
                 script {
                     echo(LINE)
-                    echo("Pull de l'image docker: ${env.DOCKER.img} sur le serveur: ${env.BRANCH_NAME}")
+                    // déséralisation des données
+                    def dk = new JsonSlurper().parseText(env.DOCKER)
+                    def remote = new JsonSlurper().parseText(env.REMOTE)
 
-                    if (!utilsDocker.pullImg(this, env.DOCKER.img, env.REMOTE)) {
+                    echo("Pull de l'image docker: ${dk.img} sur le serveur: ${env.BRANCH_NAME}")
+
+                    if (!utilsDocker.pullImg(this, dk.img, remote)) {
                         error("Une erreur est survenu pendant le pull de l'imges sur le serveur !")
                     }
 
                     echo("Affiche la liste des images Docker sur le serveur ${env.BRANCH_NAME}")
-                    utilsDocker.getImg(this, env.DOCKER.img)
+                    utilsDocker.getImg(this, dk.img)
 
 
                 }
@@ -396,9 +414,14 @@ pipeline {
             steps {
                 script {
                     echo(LINE)
-                    echo("Vérifi si la stack ${env.DOCKER.stackName} est deployer ou mettre à jours ")
-                    env.STATUS_STACK = utilsDocker.statusStack(this, env.DOCKER.stackName, env.REMOTE)
-                    echo("La stack ${env.DOCKER.stackName} sera a " + (env.STATUS_STACK ? "mettre à jours" : "déployée") +
+                    // déséralisation des données
+                    def dk = new JsonSlurper().parseText(env.DOCKER)
+                    def remote = new JsonSlurper().parseText(env.REMOTE)
+
+                    echo("Vérifi si la stack ${dk.stackName} est deployer ou mettre à jours ")
+
+                    env.STATUS_STACK = utilsDocker.statusStack(this, dk.stackName, remote)
+                    echo("La stack ${dk.stackName} sera a " + (env.STATUS_STACK ? "mettre à jours" : "déployée") +
                             " sur le serveur ${env.BRANCH_NAME}")
                 }
             }
@@ -409,11 +432,16 @@ pipeline {
             steps {
                 script {
                     echo(LINE)
+
+                    // déséralisation des données
+                    def dk = new JsonSlurper().parseText(env.DOCKER)
+                    def remote = new JsonSlurper().parseText(env.REMOTE)
+
                     echo("Deploiment sur le serveur: ${env.BRANCH_NAME}, en version: ${params.BUILD}")
-                    String commande = "cd ${env.DOCKER.pathProjet} && " +
+                    String commande = "cd ${dk.pathProjet} && " +
                             "export PROFILES=${env.BRANCH_NAME} && " +
                             "./script/deploy.sh ${params.BUILD}";
-                    utilsDocker.deployStack(this, commande, env.REMOTE)
+                    utilsDocker.deployStack(this, commande, remote)
                 }
             }
         }
@@ -423,19 +451,23 @@ pipeline {
             agent any
             steps {
                 script {
-                    status = false
+                    status = true
+                    // déséralisation des données
+                    def dk = new JsonSlurper().parseText(env.DOCKER)
+                    def remote = new JsonSlurper().parseText(env.REMOTE)
+
                     for (int index = 0; index < 10; index++) {
 
                         echo("Requet CURL n° ${index} du service : ${env.NAME_SERVICE}")
-                        echo("à l'adresse : http://${env.REMOTE.host}:${PORT}/actuator/health ")
+                        echo("à l'adresse : http://${remote.host}:${PORT}/actuator/health ")
 
-                        String result = sh(script: "curl -s http://${env.REMOTE.host}:${PORT}/actuator/health | " +
+                        String result = sh(script: "curl -s http://${remote.host}:${PORT}/actuator/health | " +
                                 "jq -r '.status'", returnStdout: true, returnStatus: false)
 
                         if (result.contains("UP")) {
                             echo("sorti : ${result}")
                             echo("La mise en service de ${env.NAME_SERVICE} à été réalisé avec Succès ")
-                            status = "SUCCESS"
+                            status = false
 
                             echo("Liste des processus en cours sur stack : ${env.STACK_NAME}")
                             utilsDocker.getPsStack(this, env.NAME_SERVICE, remote)
@@ -451,7 +483,7 @@ pipeline {
                             sleep time: 15, unit: 'SECONDS'
                         }
                     }
-                    if (status != "SUCCESS") {
+                    if (status) {
                         error("Le service ${NAME_SERVICE} est en echec !!!")
                     }
                 }
@@ -500,23 +532,27 @@ pipeline {
         }
     }
 
-
     post {
         always {
             script {
                 echo(LINE)
+                // déséralisation des données
+                def dk = new JsonSlurper().parseText(env.DOCKER)
+                def remote = new JsonSlurper().parseText(env.REMOTE)
+                def nexus = new JsonSlurper().parseText(env.NEXUS)
+
                 try {
                     echo("Déconnection du dépôt entre le serveur ${env.BRANCH_NAME} et le dépôt nexus")
-                    utilsDocker.logoutDepot(this, env.NEXUS.domain, env.REMOTE)
+                    utilsDocker.logoutDepot(this, nexus.domain, remote)
 
                     echo("Fermeture de la connection au dépôt nexus depuis Jenkins")
-                    utilsDocker.logoutDepot(this, env.NEXUS.domain)
+                    utilsDocker.logoutDepot(this, nexus.domain)
 
                     echo("Nettoyage de l'images de base : ${env.IMAGE_NAME}")
                     utilsDocker.rmi(this, env.IMAGE_NAME)
 
-                    echo("Nettoyage de l'images beta / relase : ${env.DOCKER.img}")
-                    utilsDocker.rmi(this, env.DOCKER.img)
+                    echo("Nettoyage de l'images beta / relase : ${dk.img}")
+                    utilsDocker.rmi(this, dk.img)
 
                     sh 'pwd'
                     sh 'ls -al target/surefire-reports || echo "surefire-reports non trouvé"'
@@ -553,21 +589,26 @@ pipeline {
         failure {
             script {
                 echo(LINE)
+                // déséralisation des données
+                def dk = new JsonSlurper().parseText(env.DOCKER)
+                def remote = new JsonSlurper().parseText(env.REMOTE)
+                def nexus = new JsonSlurper().parseText(env.NEXUS)
+
                 echo("Échec du déploiement. Effectuer un rollback.")
 
                 if (!env.STATUS_STACK) {
-                    echo("Échec du déploiement de la stack ${env.DOCKER.stackName}")
-                    echo("Suppression de la stack ${env.DOCKER.stackName} sur le serveur distant")
-                    utilsDocker.rmStack(this, env.DOCKER.stackName, env.REMOTE)
+                    echo("Échec du déploiement de la stack ${dk.stackName}")
+                    echo("Suppression de la stack ${dk.stackName} sur le serveur distant")
+                    utilsDocker.rmStack(this, dk.stackName, remote)
                 } else {
-                    echo("Échec de la mise à jour de la stack ${env.DOCKER.stackName}")
-                    echo("ROLLBACK de la stack ${env.DOCKER.stackName}")
+                    echo("Échec de la mise à jour de la stack ${dk.stackName}")
+                    echo("ROLLBACK de la stack ${dk.stackName}")
                     utilsDocker.rollbackService(this, env.NAME_SERVICE, false)
                 }
                 def time = 15
-                echo "Suppression de l'image en échec ${env.DOCKER.img} sur le serveur dans ${time} secondes ..."
+                echo "Suppression de l'image en échec ${dk.img} sur le serveur dans ${time} secondes ..."
                 sleep time: time, unit: 'SECONDS'
-                utilsDocker.rmi(this, env.DOCKER.img, env.REMOTE)
+                utilsDocker.rmi(this, dk.img, remote)
             }
         }
     }
