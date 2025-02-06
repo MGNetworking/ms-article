@@ -4,13 +4,13 @@
 def remote
 def nexus
 def dockers
-def VERSION_Docker
 def LINE
 
 pipeline {
     agent any
 
     environment {
+        LINE = "------------------------------";
         Nas_CREDS = credentials('NAS')
         Prod_CREDS = credentials('PROD')
         Nexus_CREDS = credentials('nexus-credentials')
@@ -18,7 +18,7 @@ pipeline {
     }
 
     parameters {
-        booleanParam(name: 'BETA', defaultValue: false, description: 'Par défaut la version sera beta')
+        booleanParam(name: 'RELEASE', defaultValue: false, description: 'Par défaut la version sera beta')
         string defaultValue: '', description: 'Entrez votre message de Publication', name: 'PUBLIC_MESSAGE'
     }
 
@@ -60,14 +60,14 @@ pipeline {
                     echo("Message de publication: ${params.PUBLIC_MESSAGE}")
 
                     // Type 2.0.0-beta
-                    env.IMAGE_TAG = "${env.IMAGE_VERSION}-${params.BETA ? 'beta' : 'release'}"
+                    env.IMAGE_TAG = "${env.IMAGE_VERSION}-${params.RELEASE ? 'beta' : 'release'}"
 
                     // Type sonatype-nexus.backhole.ovh/ms-article-service:2.0.0-beta
                     env.IMAGE_NAME = "${env.DOCKER_IMAGE_NAME}:${env.IMAGE_TAG}"
                     echo("Nom de l'image docker : ${env.IMAGE_NAME}")
 
                     if (!env.IMAGE_TAG?.trim()) {
-                        error("La version de l'image est obligatoire ...")
+                        error("La version de l'image est obligatoire : ${env.IMAGE_TAG}")
                     }
 
                 }
@@ -88,7 +88,7 @@ pipeline {
 
                     // Les données dockers projet
                     dockers = utilsServeur.dockers(
-                            "${env.VERSION_Docker}",           // img
+                            env.IMAGE_NAME,                    // img
                             '/volume1/docker/ms-article',      // pathProjet
                             env.STACK_NAME                     // stackName
                     )
@@ -122,9 +122,9 @@ pipeline {
 
                     // les données dockers projet
                     dockers = utilsServeur.dockers(
-                            "${env.VERSION_Docker}",                  // img
+                            env.IMAGE_NAME,                       // img
                             '/home/max/docker_home/ms-article',   // pathProjet
-                            "${env.STACK_NAME}")                  // stackName
+                            env.STACK_NAME)                         // stackName
 
                     // les données de connection serveur
                     remote = utilsServeur.remote(
@@ -145,23 +145,23 @@ pipeline {
                 script {
                     echo(LINE)
 
-                    version_beta = "${env.IMAGE_VERSION}-beta"        // Version de recherche
-                    version_release = "${env.IMAGE_VERSION}-release"  // Version de recherche
-                    path = "ms-article-service"                                     // Référence au dossier projet
+                    version_beta = "${env.IMAGE_VERSION}-beta"
+                    version_release = "${env.IMAGE_VERSION}-release"
 
                     def http_status_beta = sh(script: """
                         curl -s -o /dev/null -w "%{http_code}" -u ${nexus.user}:${nexus.pass} \
-                        https://${nexus.domain}/repository/docker-private/v2/${path}/manifests/${version_beta}
+                        https://${nexus.domain}/repository/docker-private/v2/${env.PATH_NEXUS}/manifests/${version_beta}
                       """, returnStdout: true).trim()
 
                     def http_status_release = sh(script: """
                         curl -s -o /dev/null -w "%{http_code}" -u ${nexus.user}:${nexus.pass} \
-                        https://${nexus.domain}/repository/docker-private/v2/${path}/manifests/${version_release}
+                        https://${nexus.domain}/repository/docker-private/v2/${env.PATH_NEXUS}/manifests/${version_release}
                       """, returnStdout: true).trim()
 
                     echo("HTTP Status beta: $http_status_beta et HTTP Status release: $http_status_release")
                     def version_exists = (http_status_beta == "200" || http_status_release == "200")
 
+                    // TODO
                     // check des versions sur le serveur Nexus
                     if (env.IMAGE_TAG == version_beta && http_status_beta.equals("404")) {
                         echo("La version beta suivant : ${version_beta} n'existe pas dans le dépôt nexus")
