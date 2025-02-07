@@ -370,8 +370,10 @@ pipeline {
                 script {
                     echo(LINE)
                     echo("Mise à jours du projet ms-article sur le serveur ${env.BRANCH_NAME}")
-                    utilsGit.gitPullSsh(this, remote, "cd ${dockers.pathProjet} " +
-                            "&& git checkout ${env.BRANCH_NAME} && git pull origin ${env.BRANCH_NAME}")
+                    String commande = "cd ${dockers.pathProjet} && " +
+                            "git checkout ${env.BRANCH_NAME} && " +
+                            "git pull origin ${env.BRANCH_NAME}"
+                    utilsGit.gitPullSsh(this, remote, commande)
                 }
             }
         }
@@ -421,7 +423,8 @@ pipeline {
                     echo(LINE)
                     echo("Deploiment sur le serveur: ${env.BRANCH_NAME} , en version: ${env.BUILD}")
                     string commande = "cd ${dockers.pathProjet} && " +
-                            "export PROFILES=${env.BRANCH_NAME} && ./script/deploy.sh ${env.BUILD}"
+                            "export PROFILES=${env.BRANCH_NAME} && " +
+                            "./script/deploy.sh ${env.BUILD}"
                     utilsDocker.deployStack(this, commande, remote)
                 }
             }
@@ -445,19 +448,19 @@ pipeline {
                                 "jq -r '.status'", returnStdout: true, returnStatus: false)
 
                         if (result.contains("UP")) {
-                            echo("sorti : ${result}")
-                            echo("La mise en service de ${env.NAME_SERVICE} à été réalisé avec Succès ")
+                            echo("Sorti : ${result}")
+                            echo("✅ La mise en service de ${env.NAME_SERVICE} à été réalisé avec Succès ")
                             status = false
                             break
                         } else {
-                            echo("sorti : ${result}")
+                            echo("Sorti : ${result}")
                             echo "Le service n'est pas encore UP. Attente de 15 secondes..."
                             echo "Tentative n° $index"
                             sleep time: 15, unit: 'SECONDS'
                         }
                     }
                     if (status) {
-                        error("Le service ${NAME_SERVICE} est en echec !!!")
+                        error("❌ Le service ${NAME_SERVICE} est en echec !!!")
                     }
                 }
             }
@@ -490,19 +493,37 @@ pipeline {
                                     GITHUB_TOKEN,
                                     params.PUBLIC_MESSAGE)
                         } else {
-                            error("Les paramètres de la version son manquantes. Il ne peux y avoir " +
-                                    "une publication vers le dépôt ! version: ${env.IMAGE_TAG} , " +
-                                    "message de publication: ${params.PUBLIC_MESSAGE}")
+                            echo "❌ Les paramètres de la version son manquantes."
+                            echo "❌ Il ne peux y avoir une publication vers le dépôt !"
+                            echo "❌ Version: ${env.IMAGE_TAG}, "
+                            echo "❌ Message de publication: ${params.PUBLIC_MESSAGE}"
+                            currentBuild.result = 'FAILURE'
                         }
 
                     } catch (Exception ex) {
-                        error("Une erreur est survenu pendant le processus de création de publication " +
-                                "de la version ${env.IMAGE_TAG} , message: ${ex.getMessage()}")
+
+                        echo "❌ Une erreur est survenu pendant le processus de création de publication"
+                        echo "❌ Message : ${ex.getMessage()}"
+                        echo "❌ Version : ${env.IMAGE_TAG}"
+                        currentBuild.result = 'FAILURE'
                     }
 
                 }
             }
         }
+
+/*        stage('Notification') {
+            steps {
+                script {
+                    if (currentBuild.result == 'FAILURE') {
+                        // TODO
+                        echo "📢 Envoi d'une notification d'échec..."
+
+                    }
+                }
+            }
+        }*/
+
     }
 
 
