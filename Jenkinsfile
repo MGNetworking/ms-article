@@ -312,7 +312,7 @@ pipeline {
 
         stage('Maven Compilation') {
             when {
-                expression { env.SKIP_BUILD }
+                expression { env.SKIP_BUILD?.toBoolean() }
             }
             agent {
                 docker {
@@ -333,7 +333,7 @@ pipeline {
 
         stage('Build Docker Image') {
             when {
-                expression { env.SKIP_BUILD }
+                expression { env.SKIP_BUILD?.toBoolean() }
             }
             agent any
             steps {
@@ -346,7 +346,7 @@ pipeline {
 
         stage('Tag / Push Docker Images dépôt Nexus') {
             when {
-                expression { env.SKIP_BUILD }
+                expression { env.SKIP_BUILD?.toBoolean() }
             }
             agent any
             steps {
@@ -363,7 +363,7 @@ pipeline {
 
         stage('Pull du projet') {
             when {
-                expression { env.SKIP_BUILD }
+                expression { env.SKIP_BUILD?.toBoolean() }
             }
             agent any
             steps {
@@ -378,7 +378,7 @@ pipeline {
 
         stage('Pull Docker Images dépôt Nexus') {
             when {
-                expression { env.SKIP_BUILD }
+                expression { env.SKIP_BUILD?.toBoolean() }
             }
             agent any
             steps {
@@ -396,7 +396,7 @@ pipeline {
 
         stage('Status Stack en cours') {
             when {
-                expression { env.SKIP_BUILD }
+                expression { env.SKIP_BUILD?.toBoolean() }
             }
             agent any
             steps {
@@ -413,7 +413,7 @@ pipeline {
 
         stage('Update / Deploy blog') {
             when {
-                expression { env.SKIP_BUILD }
+                expression { env.SKIP_BUILD?.toBoolean() }
             }
             agent any
             steps {
@@ -430,7 +430,7 @@ pipeline {
 
         stage('Vérification de disponibilité') {
             when {
-                expression { env.SKIP_BUILD }
+                expression { env.SKIP_BUILD?.toBoolean() }
             }
             agent any
             steps {
@@ -465,7 +465,7 @@ pipeline {
 
         stage('Publication du projet sur Github') {
             when {
-                expression { env.SKIP_BUILD }
+                expression { env.SKIP_BUILD?.toBoolean() }
             }
             agent any
             steps {
