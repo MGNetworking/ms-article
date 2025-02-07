@@ -478,7 +478,7 @@ pipeline {
                                     this,
                                     env.IMAGE_TAG,
                                     env.REPO_NAME,
-                                    credentials('Github'),
+                                    GITHUB_TOKEN,
                                     params.PUBLIC_MESSAGE)
 
                         } else if (env.BUILD == 'release') {
@@ -487,7 +487,7 @@ pipeline {
                                     this,
                                     env.IMAGE_TAG,
                                     env.REPO_NAME,
-                                    credentials('Github'),
+                                    GITHUB_TOKEN,
                                     params.PUBLIC_MESSAGE)
                         } else {
                             error("Les paramètres de la version son manquantes. Il ne peux y avoir " +
