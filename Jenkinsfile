@@ -472,7 +472,7 @@ pipeline {
                 script {
                     echo(LINE)
                     try {
-                        if (params.BUILD == 'beta') {
+                        if (env.BUILD == 'beta') {
 
                             utilsGit.createOrUpdatePreRelease(
                                     this,
@@ -481,7 +481,7 @@ pipeline {
                                     credentials('Github'),
                                     params.PUBLIC_MESSAGE)
 
-                        } else if (params.BUILD == 'release') {
+                        } else if (env.BUILD == 'release') {
 
                             utilsGit.createOrUpdateRelease(
                                     this,
