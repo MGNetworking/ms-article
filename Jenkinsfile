@@ -538,11 +538,15 @@ pipeline {
                     echo("Fermeture de la connection au dépôt nexus depuis Jenkins")
                     utilsDocker.logoutDepot(this, nexus.domain)
 
-                    echo("Nettoyage de l'images de base : ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION}")
-                    utilsDocker.rmi(this, env.IMAGE_NAME)
+                    if (!env.SKIP_BUILD?.toBoolean()) {
+                        echo("Nettoyage de l'images de base : ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION}")
+                        utilsDocker.rmi(this, env.IMAGE_NAME)
 
-                    echo("Nettoyage de l'images beta / relase : ${dockers.img}")
-                    utilsDocker.rmi(this, dockers.img)
+                        echo("Nettoyage de l'images beta / relase : ${dockers.img}")
+                        utilsDocker.rmi(this, dockers.img)
+                    } else {
+                        echo "Aucun nettoyage a réalisé, puisqu'il n'y a eu aucune compilation!"
+                    }
 
                     sh 'pwd'
                     sh 'ls -al target/surefire-reports || echo "surefire-reports non trouvé"'
