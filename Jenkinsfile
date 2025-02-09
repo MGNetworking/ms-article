@@ -232,10 +232,10 @@ pipeline {
             steps {
                 script {
                     echo("Ouverture de la connection au dépôt nexus sur le serveur ${env.BRANCH_NAME}")
-                    utilsDocker.loginDepot(this, nexus, remote)
+                    utilsDocker.loginDepot(nexus: nexus, profile: true, remote: remote)
 
                     echo("Ouverture de la connection au dépôt nexus depuis Jenkins")
-                    utilsDocker.loginDepot(this, nexus)
+                    utilsDocker.loginDepot(nexus: nexus, profile: false)
                 }
             }
         }
@@ -373,7 +373,7 @@ pipeline {
                     String commande = "cd ${dockers.pathProjet} && " +
                             "git checkout ${env.BRANCH_NAME} && " +
                             "git pull origin ${env.BRANCH_NAME}"
-                    utilsGit.gitPullSsh(this, remote, commande)
+                    utilsGit.gitPullSsh(remote: remote, commande: commande)
                 }
             }
         }
@@ -387,11 +387,10 @@ pipeline {
                 script {
                     echo(LINE)
                     echo("Pull de l'image docker: ${dockers.img} sur le serveur: ${env.BRANCH_NAME}")
-                    utilsDocker.pullImg(this, dockers.img, remote)
+                    utilsDocker.pullImg(dockersImg: dockers.img, profile: true, remote: remote)
 
                     echo("Affiche la liste des images Docker sur le serveur ${env.BRANCH_NAME}")
-                    utilsDocker.getImg(this, dockers.img, remote)
-
+                    utilsDocker.dockerlsImg(profile: true, remote: remote)
                 }
             }
         }
@@ -404,8 +403,11 @@ pipeline {
             steps {
                 script {
                     echo(LINE)
+                    echo("Affiche le status ${dockers.stackName} de la stack en cours ")
+                    utilsDocker.getPsStack(serviceName: dockers.stackName, profile: true, remote: remote)
+
                     echo("Vérifi si la stack ${dockers.stackName} est deployer ou mettre à jours ")
-                    env.STATUS_STACK = utilsDocker.statusStack(this, dockers.stackName, remote)
+                    env.STATUS_STACK = utilsDocker.statusStack(stackName: dockers.stackName, profile: true, remote: remote)
 
                     echo("La stack ${dockers.stackName} sera a " + (env.STATUS_STACK ? "mettre à jours" : "déployée") +
                             " sur le serveur ${env.BRANCH_NAME}")
@@ -425,11 +427,10 @@ pipeline {
                     string commande = "cd ${dockers.pathProjet} && " +
                             "export PROFILES=${env.BRANCH_NAME} && " +
                             "./script/deploy.sh ${env.BUILD}"
-                    utilsDocker.deployStack(this, commande, remote)
+                    utilsDocker.deployStack(commandeUser: commande, profile: true, remote: remote)
                 }
             }
         }
-
 
         stage('Vérification de disponibilité') {
             when {
@@ -512,18 +513,6 @@ pipeline {
             }
         }
 
-/*        stage('Notification') {
-            steps {
-                script {
-                    if (currentBuild.result == 'FAILURE') {
-                        // TODO
-                        echo "📢 Envoi d'une notification d'échec..."
-
-                    }
-                }
-            }
-        }*/
-
     }
 
 
@@ -533,17 +522,17 @@ pipeline {
                 echo(LINE)
                 try {
                     echo("Déconnection au dépôt nexus docker entre le serveur ${env.BRANCH_NAME} et le dépôt nexus")
-                    utilsDocker.logoutDepot(this, nexus.domain, remote)
+                    utilsDocker.logoutDepot(nexusDomain: nexus.domain, profile: true, remote: remote)
 
                     echo("Fermeture de la connection au dépôt nexus depuis Jenkins")
-                    utilsDocker.logoutDepot(this, nexus.domain)
+                    utilsDocker.logoutDepot(nexusDomain: nexus.domain)
 
                     if (!env.SKIP_BUILD?.toBoolean()) {
-                        echo("Nettoyage de l'images de base : ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION}")
-                        utilsDocker.rmi(this, env.IMAGE_NAME)
+                        echo("Nettoyage de l'images de base : ${env.IMAGE_NAME}")
+                        utilsDocker.rmi(nameImg: env.IMAGE_NAME)
 
                         echo("Nettoyage de l'images beta / relase : ${dockers.img}")
-                        utilsDocker.rmi(this, dockers.img)
+                        utilsDocker.rmi(nameImg: dockers.img)
                     } else {
                         echo "Aucun nettoyage a réalisé, puisqu'il n'y a eu aucune compilation!"
                     }
@@ -589,11 +578,11 @@ pipeline {
                 if (!STATUS_STACK) {
                     echo("Échec du déploiement de la stack ${dockers.stackName}")
                     echo("Suppression de la stack ${dockers.stackName} sur le serveur distant")
-                    utilsDocker.rmStack(this, dockers.stackName, remote)
+                    utilsDocker.rmStack(stackName: dockers.stackName, profile: true, remote: remote)
                 } else {
                     echo("Échec de la mise à jour de la stack ${dockers.stackName}")
                     echo("ROLLBACK de la stack ${dockers.stackName}")
-                    utilsDocker.rollbackService(this, env.NAME_SERVICE, false)
+                    utilsDocker.rollbackService(serviceName: env.NAME_SERVICE, profile: true, remote: remote)
                 }
                 def time = 15
                 echo "Suppression de l'image en échec ${dockers.img} sur le serveur dans ${time} secondes ..."
