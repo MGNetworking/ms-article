@@ -231,12 +231,18 @@ pipeline {
         stage("Open connection Nexus: Docker repository") {
             steps {
                 script {
-                    echo("Ouverture de la connection au dépôt nexus sur le serveur ${env.BRANCH_NAME}")
-                    echo("nexus : ${nexus} , remote : ${remote}")
-                    utilsDocker.loginDepot(nexus: nexus, profile: true, remote: remote)
+                    try {
+                        echo("Ouverture de la connection au dépôt nexus sur le serveur ${env.BRANCH_NAME}")
+                        echo("nexus : ${nexus} , remote : ${remote}")
+                        utilsDocker.loginDepot(nexus: nexus, profile: true, remote: remote)
 
-                    echo("Ouverture de la connection au dépôt nexus depuis Jenkins")
-                    utilsDocker.loginDepot(nexus: nexus, profile: false)
+                        echo("Ouverture de la connection au dépôt nexus depuis Jenkins")
+                        utilsDocker.loginDepot(nexus: nexus, profile: false)
+                    } catch (Exception e) {
+                        echo "⛔ ERREUR DÉTECTÉE : ${e.message}"
+                        e.printStackTrace()
+                        error("🚨 Pipeline arrêté suite à une exception.")
+                    }
                 }
             }
         }
