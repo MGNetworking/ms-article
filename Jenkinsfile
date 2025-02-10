@@ -234,7 +234,12 @@ pipeline {
                     try {
                         echo("Ouverture de la connection au dépôt nexus sur le serveur ${env.BRANCH_NAME}")
                         echo("nexus : ${nexus} , remote : ${remote}")
-                        utilsDocker.loginDepot(nexus, true, remote)
+                        def nexusData = [user: nexus.user, pass: nexus.pass, domain: nexus.domain]
+                        def remoteData = [user: remote.user, password: remote.password, name: remote.name, host: remote.host, allowAnyHosts: remote.allowAnyHosts, port: remote.port]
+
+                        echo "🔍 DEBUG - Nexus avant loginDepot: ${nexusData}"
+                        echo "🔍 DEBUG - Remote avant loginDepot: ${remoteData}"
+                        utilsDocker.loginDepot(nexusData, true, remoteData)
 
                         echo("Ouverture de la connection au dépôt nexus depuis Jenkins")
                         utilsDocker.loginDepot(nexus, false)
