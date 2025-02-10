@@ -54,7 +54,7 @@ pipeline {
                             Nexus_CREDS_PSW,
                             'sonatype-nexus.backhole.ovh')
 
-                    env.NEXUS_DOMAIN = nexus.domain
+                    env.NEXUS_DOMAIN = 'sonatype-nexus.backhole.ovh'
 
                     echo("Valeur param version: ${params.VERSION}")
                     echo("Message de publication: ${params.PUBLIC_MESSAGE}")
