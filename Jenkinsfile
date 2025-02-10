@@ -54,7 +54,6 @@ pipeline {
                             Nexus_CREDS_PSW,
                             'sonatype-nexus.backhole.ovh')
 
-                    env.NEXUS_DOMAIN = 'sonatype-nexus.backhole.ovh'
 
                     echo("Valeur param version: ${params.VERSION}")
                     echo("Message de publication: ${params.PUBLIC_MESSAGE}")
@@ -511,10 +510,10 @@ pipeline {
                 try {
                     echo("Déconnection au dépôt nexus docker entre le serveur ${env.BRANCH_NAME} et le dépôt nexus")
                     echo ("nexus domain => ${nexus.domain}")
-                    utilsDocker.logoutDepot(env.NEXUS_DOMAIN, true, remote)
+                    utilsDocker.logoutDepot('sonatype-nexus.backhole.ovh', true, remote)
 
                     echo("Fermeture de la connection au dépôt nexus depuis Jenkins")
-                    utilsDocker.logoutDepot(env.NEXUS_DOMAIN)
+                    utilsDocker.logoutDepot('sonatype-nexus.backhole.ovh')
 
                     if (!env.SKIP_BUILD?.toBoolean()) {
                         echo("Nettoyage de l'images de base : ${env.IMAGE_NAME}")
