@@ -232,14 +232,6 @@ pipeline {
             steps {
                 script {
                     try {
-                        echo "🔍 DEBUG - Vérification utilsDocker: ${utilsDocker}"
-                        // Vérification directe sans metaClass
-                        if (utilsDocker.respondsTo("loginDepot")) {
-                            echo "✅ `loginDepot` existe bien dans utilsDocker"
-                        } else {
-                            error("❌ ERREUR : `loginDepot` n'existe pas dans utilsDocker !")
-                        }
-
                         echo("Ouverture de la connection au dépôt nexus sur le serveur ${env.BRANCH_NAME}")
                         echo("nexus : ${nexus} , remote : ${remote}")
                         def nexusData = [user: nexus.user, pass: nexus.pass, domain: nexus.domain]
