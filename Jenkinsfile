@@ -509,14 +509,14 @@ pipeline {
             script {
                 try {
                     echo("Déconnection au dépôt nexus docker entre le serveur ${env.BRANCH_NAME} et le dépôt nexus")
-                    echo("nexus domain => ${nexus.domain}")
                     //utilsDocker.logoutDepot(nexus.domain, true, remote)
 
                     String commande = "bash -c 'source ~/.profile;docker logout ${nexusDomain}'"
                     sshCommand(remote: remote, failOnError: false, sudo: false, command: commande)
 
                     echo("Fermeture de la connection au dépôt nexus depuis Jenkins")
-                    utilsDocker.logoutDepot(nexus.domain)
+                    //utilsDocker.logoutDepot(nexus.domain)
+                    sh(script: "docker login -u  ${nexus.user} -p ${nexus.pass} ${nexus.domain}", returnStdout: true)
 
                     if (!env.SKIP_BUILD?.toBoolean()) {
                         echo("Nettoyage de l'images de base : ${env.IMAGE_NAME}")
