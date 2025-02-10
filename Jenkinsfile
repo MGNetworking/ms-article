@@ -242,7 +242,7 @@ pipeline {
                         utilsDocker.loginDepot(nexusData, true, remoteData)
 
                         echo("Ouverture de la connection au dépôt nexus depuis Jenkins")
-                        utilsDocker.loginDepot(nexus, false)
+                        utilsDocker.loginDepot(nexusData, false)
                     } catch (Exception e) {
                         echo "⛔ ERREUR DÉTECTÉE : ${e.message}"
                         e.printStackTrace()
