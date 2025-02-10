@@ -2,9 +2,9 @@
 
 
 // Configurations des serveurs
-def remote
-def nexus
-def dockers
+def remote = null
+def nexus = null
+def dockers = null
 
 pipeline {
     agent any
@@ -509,11 +509,11 @@ pipeline {
             script {
                 try {
                     echo("Déconnection au dépôt nexus docker entre le serveur ${env.BRANCH_NAME} et le dépôt nexus")
-                    echo ("nexus domain => ${nexus.domain}")
-                    utilsDocker.logoutDepot('sonatype-nexus.backhole.ovh', true, remote)
+                    echo("nexus domain => ${nexus.domain}")
+                    utilsDocker.logoutDepot(nexus.domain, true, remote)
 
                     echo("Fermeture de la connection au dépôt nexus depuis Jenkins")
-                    utilsDocker.logoutDepot('sonatype-nexus.backhole.ovh')
+                    utilsDocker.logoutDepot(nexus.domain)
 
                     if (!env.SKIP_BUILD?.toBoolean()) {
                         echo("Nettoyage de l'images de base : ${env.IMAGE_NAME}")
