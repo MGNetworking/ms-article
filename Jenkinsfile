@@ -232,6 +232,9 @@ pipeline {
             steps {
                 script {
                     try {
+                        echo "🔍 DEBUG - Vérification utilsDocker: ${utilsDocker}"
+                        echo "🔍 DEBUG - Méthodes disponibles dans utilsDocker: ${utilsDocker.metaClass.methods*.name.unique().sort()}"
+
                         echo("Ouverture de la connection au dépôt nexus sur le serveur ${env.BRANCH_NAME}")
                         echo("nexus : ${nexus} , remote : ${remote}")
                         def nexusData = [user: nexus.user, pass: nexus.pass, domain: nexus.domain]
