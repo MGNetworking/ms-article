@@ -512,7 +512,7 @@ pipeline {
                     utilsDocker.logoutDepot("${nexus.domain}", true, remote)
 
                     echo("Fermeture de la connection au dépôt nexus depuis Jenkins")
-                    utilsDocker.logoutDepot(nexus.domain)
+                    utilsDocker.logoutDepot("${nexus.domain}")
 
                     if (!env.SKIP_BUILD?.toBoolean()) {
                         echo("Nettoyage de l'images de base : ${env.IMAGE_NAME}")
