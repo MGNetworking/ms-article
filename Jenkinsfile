@@ -245,7 +245,6 @@ pipeline {
                         utilsDocker.loginDepot(nexusData, false)
                     } catch (Exception e) {
                         echo "⛔ ERREUR DÉTECTÉE : ${e.message}"
-                        e.printStackTrace()
                         error("🚨 Pipeline arrêté suite à une exception.")
                     }
                 }
