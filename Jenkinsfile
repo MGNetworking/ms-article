@@ -520,10 +520,12 @@ pipeline {
 
                     if (!env.SKIP_BUILD?.toBoolean()) {
                         echo("Nettoyage de l'images de base : ${env.IMAGE_NAME}")
-                        utilsDocker.rmi(env.IMAGE_NAME)
+                        //utilsDocker.rmi(env.IMAGE_NAME)
+                        sh(script: "docker rmi ${env.IMAGE_NAME}", returnStdout: true)
 
                         echo("Nettoyage de l'images beta / relase : ${dockers.img}")
-                        utilsDocker.rmi(dockers.img)
+                        //utilsDocker.rmi(dockers.img)
+                        sh(script: "docker rmi ${dockers.img}", returnStdout: true)
                     } else {
                         echo "Aucun nettoyage a réalisé, puisqu'il n'y a eu aucune compilation!"
                     }
@@ -567,16 +569,25 @@ pipeline {
                 if (!STATUS_STACK) {
                     echo("Échec du déploiement de la stack ${dockers.stackName}")
                     echo("Suppression de la stack ${dockers.stackName} sur le serveur distant")
-                    utilsDocker.rmStack(dockers.stackName, true, remote)
+                    //utilsDocker.rmStack(dockers.stackName, true, remote)
+
+                    String commande = "bash -c 'source ~/.profile;docker stack rm ${dockers.stackName}'"
+                    sshCommand(remote: remote, failOnError: false, sudo: false, command: commande)
+
                 } else {
                     echo("Échec de la mise à jour de la stack ${dockers.stackName}")
                     echo("ROLLBACK de la stack ${dockers.stackName}")
-                    utilsDocker.rollbackService(env.NAME_SERVICE, true, remote)
+                    //utilsDocker.rollbackService(env.NAME_SERVICE, true, remote)
+
+                    String commande = "bash -c 'source ~/.profile;docker service rollback ${env.NAME_SERVICE}'"
+                    sshCommand(remote: remote, failOnError: false, sudo: false, command: commande)
                 }
                 def time = 15
                 echo "Suppression de l'image en échec ${dockers.img} sur le serveur dans ${time} secondes ..."
                 sleep time: time, unit: 'SECONDS'
-                utilsDocker.rmi(this, dockers.img, remote)
+                String commande = "bash -c 'source ~/.profile;docker rmi ${dockers.img} '"
+                sshCommand(remote: remote, failOnError: false, sudo: false, command: commande)
+                //utilsDocker.rmi(this, dockers.img, remote)
             }
         }
     }
