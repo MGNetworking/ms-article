@@ -509,7 +509,7 @@ pipeline {
             script {
                 try {
                     echo("Déconnection au dépôt nexus docker entre le serveur ${env.BRANCH_NAME} et le dépôt nexus")
-                    utilsDocker.logoutDepot(nexus.domain, true, remote)
+                    utilsDocker.logoutDepot(nexus.domain.toString(), true, remote)
 
                     echo("Fermeture de la connection au dépôt nexus depuis Jenkins")
                     utilsDocker.logoutDepot(nexus.domain)
