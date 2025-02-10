@@ -510,12 +510,10 @@ pipeline {
                 try {
                     echo("Déconnection au dépôt nexus docker entre le serveur ${env.BRANCH_NAME} et le dépôt nexus")
                     echo ("nexus domain => ${nexus.domain}")
-                    String nexuDomain = nexus.domain
-                    echo ("nexus domain => ${nexuDomain}")
-                    utilsDocker.logoutDepot(nexuDomain, true, remote)
+                    utilsDocker.logoutDepot("${nexus.domain}", true, remote)
 
                     echo("Fermeture de la connection au dépôt nexus depuis Jenkins")
-                    utilsDocker.logoutDepot(nexus.domain)
+                    utilsDocker.logoutDepot("${nexus.domain}")
 
                     if (!env.SKIP_BUILD?.toBoolean()) {
                         echo("Nettoyage de l'images de base : ${env.IMAGE_NAME}")
