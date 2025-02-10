@@ -1,10 +1,10 @@
 @Library('JenkinsLib_Shared') _
 
+
 // Configurations des serveurs
 def remote
 def nexus
 def dockers
-def LINE = "------------------------------";
 
 pipeline {
     agent any
@@ -83,9 +83,6 @@ pipeline {
             }
             steps {
                 script {
-                    echo(LINE)
-                    echo("Branche en cour ${env.BRANCH_NAME}")
-
                     // Les données dockers projet
                     dockers = utilsServeur.dockers(
                             env.IMAGE_NAME,                    // img
@@ -116,10 +113,6 @@ pipeline {
             }
             steps {
                 script {
-                    echo(LINE)
-                    echo "L'espace de travail: ${WORKSPACE}";
-                    echo("Branche en cour ${env.BRANCH_NAME}")
-
                     // les données dockers projet
                     dockers = utilsServeur.dockers(
                             env.IMAGE_NAME,                       // img
@@ -143,8 +136,6 @@ pipeline {
         stage('Check version') {
             steps {
                 script {
-                    echo(LINE)
-
                     version_beta = "${env.IMAGE_VERSION}-beta"
                     version_release = "${env.IMAGE_VERSION}-release"
 
@@ -233,19 +224,13 @@ pipeline {
                 script {
                     try {
                         echo("Ouverture de la connection au dépôt nexus sur le serveur ${env.BRANCH_NAME}")
-                        echo("nexus : ${nexus} , remote : ${remote}")
-                        def nexusData = [user: nexus.user, pass: nexus.pass, domain: nexus.domain]
-                        def remoteData = [user: remote.user, password: remote.password, name: remote.name, host: remote.host, allowAnyHosts: remote.allowAnyHosts, port: remote.port]
-
-                        echo "🔍 DEBUG - Nexus avant loginDepot: ${nexusData}"
-                        echo "🔍 DEBUG - Remote avant loginDepot: ${remoteData}"
-                        utilsDocker.loginDepot(nexusData, true, remoteData)
+                        utilsDocker.loginDepot(nexus, true, remote)
 
                         echo("Ouverture de la connection au dépôt nexus depuis Jenkins")
-                        utilsDocker.loginDepot(nexusData, false)
+                        utilsDocker.loginDepot(nexus, false)
                     } catch (Exception e) {
                         echo "⛔ ERREUR DÉTECTÉE : ${e.message}"
-                        error("🚨 Pipeline arrêté suite à une exception.")
+                        error("🚨 Pipeline arrêté suite à une exception : ${e.message}")
                     }
                 }
             }
@@ -362,7 +347,6 @@ pipeline {
             agent any
             steps {
                 script {
-                    echo(LINE)
                     // TAG de l'image vers la version spécifier beta / relase
                     echo("Tag de l'image docker ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION} vers ${dockers.img}")
                     sh(script: "docker tag ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION} ${dockers.img}")
@@ -379,12 +363,11 @@ pipeline {
             agent any
             steps {
                 script {
-                    echo(LINE)
                     echo("Mise à jours du projet ms-article sur le serveur ${env.BRANCH_NAME}")
                     String commande = "cd ${dockers.pathProjet} && " +
                             "git checkout ${env.BRANCH_NAME} && " +
                             "git pull origin ${env.BRANCH_NAME}"
-                    utilsGit.gitPullSsh(remote: remote, commande: commande)
+                    utilsGit.gitPullSsh(remote, commande)
                 }
             }
         }
@@ -396,12 +379,11 @@ pipeline {
             agent any
             steps {
                 script {
-                    echo(LINE)
                     echo("Pull de l'image docker: ${dockers.img} sur le serveur: ${env.BRANCH_NAME}")
-                    utilsDocker.pullImg(dockersImg: dockers.img, profile: true, remote: remote)
+                    utilsDocker.pullImg(dockers.img, true, remote)
 
                     echo("Affiche la liste des images Docker sur le serveur ${env.BRANCH_NAME}")
-                    utilsDocker.dockerlsImg(profile: true, remote: remote)
+                    utilsDocker.dockerlsImg(true, remote)
                 }
             }
         }
@@ -413,12 +395,11 @@ pipeline {
             agent any
             steps {
                 script {
-                    echo(LINE)
                     echo("Affiche le status ${dockers.stackName} de la stack en cours ")
-                    utilsDocker.getPsStack(serviceName: dockers.stackName, profile: true, remote: remote)
+                    utilsDocker.getPsStack(dockers.stackName, true, remote)
 
                     echo("Vérifi si la stack ${dockers.stackName} est deployer ou mettre à jours ")
-                    env.STATUS_STACK = utilsDocker.statusStack(stackName: dockers.stackName, profile: true, remote: remote)
+                    env.STATUS_STACK = utilsDocker.statusStack(dockers.stackName, true, remote)
 
                     echo("La stack ${dockers.stackName} sera a " + (env.STATUS_STACK ? "mettre à jours" : "déployée") +
                             " sur le serveur ${env.BRANCH_NAME}")
@@ -433,12 +414,11 @@ pipeline {
             agent any
             steps {
                 script {
-                    echo(LINE)
                     echo("Deploiment sur le serveur: ${env.BRANCH_NAME} , en version: ${env.BUILD}")
                     string commande = "cd ${dockers.pathProjet} && " +
                             "export PROFILES=${env.BRANCH_NAME} && " +
                             "./script/deploy.sh ${env.BUILD}"
-                    utilsDocker.deployStack(commandeUser: commande, profile: true, remote: remote)
+                    utilsDocker.deployStack(commande, true, remote)
                 }
             }
         }
@@ -485,12 +465,10 @@ pipeline {
             agent any
             steps {
                 script {
-                    echo(LINE)
                     try {
                         if (env.BUILD == 'beta') {
 
                             utilsGit.createOrUpdatePreRelease(
-                                    this,
                                     env.IMAGE_TAG,
                                     env.REPO_NAME,
                                     GITHUB_TOKEN,
@@ -499,7 +477,6 @@ pipeline {
                         } else if (env.BUILD == 'release') {
 
                             utilsGit.createOrUpdateRelease(
-                                    this,
                                     env.IMAGE_TAG,
                                     env.REPO_NAME,
                                     GITHUB_TOKEN,
@@ -530,20 +507,19 @@ pipeline {
     post {
         always {
             script {
-                echo(LINE)
                 try {
                     echo("Déconnection au dépôt nexus docker entre le serveur ${env.BRANCH_NAME} et le dépôt nexus")
-                    utilsDocker.logoutDepot(nexusDomain: nexus.domain, profile: true, remote: remote)
+                    utilsDocker.logoutDepot(nexus.domain, true, remote)
 
                     echo("Fermeture de la connection au dépôt nexus depuis Jenkins")
-                    utilsDocker.logoutDepot(nexusDomain: nexus.domain)
+                    utilsDocker.logoutDepot(nexus.domain)
 
                     if (!env.SKIP_BUILD?.toBoolean()) {
                         echo("Nettoyage de l'images de base : ${env.IMAGE_NAME}")
-                        utilsDocker.rmi(nameImg: env.IMAGE_NAME)
+                        utilsDocker.rmi(env.IMAGE_NAME)
 
                         echo("Nettoyage de l'images beta / relase : ${dockers.img}")
-                        utilsDocker.rmi(nameImg: dockers.img)
+                        utilsDocker.rmi(dockers.img)
                     } else {
                         echo "Aucun nettoyage a réalisé, puisqu'il n'y a eu aucune compilation!"
                     }
@@ -575,7 +551,6 @@ pipeline {
         }
         success {
             script {
-                echo(LINE)
                 def stack = "du déploiement de la stack avec la version du service ${env.IMAGE_VERSION}"
                 def service = "de la mise à jour du service a la version ${env.IMAGE_VERSION}"
                 echo('Fin ' + (env.STATUS_STACK ? stack : service))
@@ -583,17 +558,16 @@ pipeline {
         }
         failure {
             script {
-                echo(LINE)
                 echo("Échec !")
 
                 if (!STATUS_STACK) {
                     echo("Échec du déploiement de la stack ${dockers.stackName}")
                     echo("Suppression de la stack ${dockers.stackName} sur le serveur distant")
-                    utilsDocker.rmStack(stackName: dockers.stackName, profile: true, remote: remote)
+                    utilsDocker.rmStack(dockers.stackName, true, remote)
                 } else {
                     echo("Échec de la mise à jour de la stack ${dockers.stackName}")
                     echo("ROLLBACK de la stack ${dockers.stackName}")
-                    utilsDocker.rollbackService(serviceName: env.NAME_SERVICE, profile: true, remote: remote)
+                    utilsDocker.rollbackService(env.NAME_SERVICE, true, remote)
                 }
                 def time = 15
                 echo "Suppression de l'image en échec ${dockers.img} sur le serveur dans ${time} secondes ..."
