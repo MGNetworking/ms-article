@@ -177,7 +177,7 @@ pipeline {
                         }
 
                     } catch (Exception e) {
-                        echo "⛔ ERREUR DÉTECTÉE : ${e.message}"
+                        echo "❌ FAILURE - ${e.message}"
                     }
 
                 }
@@ -219,7 +219,7 @@ pipeline {
                         }
 
                     } catch (Exception e) {
-                        echo "⛔ ERREUR DÉTECTÉE : ${e.message}"
+                        echo "❌ FAILURE - ${e.message}"
                     }
                 }
             }
@@ -236,7 +236,7 @@ pipeline {
                         echo("Ouverture de la connection au dépôt nexus depuis Jenkins")
                         utilsDocker.loginDepot(nexus, false)
                     } catch (Exception e) {
-                        error("🚨 ERREUR DÉTECTÉE : Pipeline arrêté suite à une exception : ${e.message}")
+                        error("⛔ ERROR - Pipeline arrêté suite à une exception : ${e.message}")
                     }
                 }
             }
@@ -371,13 +371,15 @@ pipeline {
                 script {
                     try {
                         echo("Mise à jours du projet ms-article sur le serveur ${env.BRANCH_NAME}")
+
                         String commande = "cd ${dockers.pathProjet} && " +
                                 "git checkout ${env.BRANCH_NAME} && " +
                                 "git pull origin ${env.BRANCH_NAME}"
+
                         utilsGit.gitPullSsh(remote, commande)
 
                     } catch (Exception e) {
-                        echo "⛔ ERREUR DÉTECTÉE : ${e.message}"
+                        echo "❌ FAILURE - ${e.message}"
                     }
                 }
             }
@@ -398,7 +400,7 @@ pipeline {
                         utilsDocker.dockerlsImg(true, remote)
 
                     } catch (Exception e) {
-                        echo "⛔ ERREUR DÉTECTÉE : ${e.message}"
+                        echo "❌ FAILURE - ${e.message}"
                     }
                 }
             }
@@ -422,7 +424,7 @@ pipeline {
                                 " sur le serveur ${env.BRANCH_NAME}")
 
                     } catch (Exception e) {
-                        echo "⛔ ERREUR DÉTECTÉE : ${e.message}"
+                        echo "❌ FAILURE - ${e.message}"
                     }
                 }
             }
@@ -437,13 +439,15 @@ pipeline {
                 script {
                     try {
                         echo("Deploiment sur le serveur: ${env.BRANCH_NAME} , en version: ${env.BUILD}")
+
                         string commande = "cd ${dockers.pathProjet} && " +
                                 "export PROFILES=${env.BRANCH_NAME} && " +
                                 "./script/deploy.sh ${env.BUILD}"
+
                         utilsDocker.deployStack(commande, true, remote)
 
                     } catch (Exception e) {
-                        echo "⛔ ERREUR DÉTECTÉE : ${e.message}"
+                        echo "❌ FAILURE - ${e.message}"
                     }
                 }
             }
@@ -467,7 +471,7 @@ pipeline {
 
                         if (result.contains("UP")) {
                             echo("Sorti : ${result}")
-                            echo("✅ La mise en service de ${env.NAME_SERVICE} à été réalisé avec Succès ")
+                            echo("✅ SUCCESS - La mise en service de ${env.NAME_SERVICE} à été réalisé avec Succès ")
                             status = false
                             break
                         } else {
@@ -478,7 +482,7 @@ pipeline {
                         }
                     }
                     if (status) {
-                        error("❌ Le service ${NAME_SERVICE} est en echec !!!")
+                        error("⛔ ERROR - Le service ${NAME_SERVICE} est en echec !!!")
                     }
                 }
             }
@@ -508,17 +512,16 @@ pipeline {
                                     GITHUB_TOKEN,
                                     params.PUBLIC_MESSAGE)
                         } else {
-                            echo "⛔ Les paramètres de la version son manquantes."
-                            echo "⛔ Il ne peux y avoir une publication vers le dépôt !"
-                            echo "⛔ Version: ${env.IMAGE_TAG}, "
-                            echo "⛔ Message de publication: ${params.PUBLIC_MESSAGE}"
+
+                            echo "❌ FAILURE - Les paramètres de la version son manquantes. " +
+                                    "Il ne peux y avoir une publication vers le dépôt !"
+                            echo "❌ FAILURE - Version: ${env.IMAGE_TAG},  publication: ${params.PUBLIC_MESSAGE}"
                             currentBuild.result = 'FAILURE'
                         }
 
                     } catch (Exception ex) {
-                        echo "⛔ Une erreur est survenu pendant le processus de création de publication"
-                        echo "⛔ Version : ${env.IMAGE_TAG}"
-                        echo "⛔ ERREUR DÉTECTÉE : ${e.message}"
+                        echo "❌ FAILURE - Une erreur est survenu pendant le processus de création de publication, " +
+                                " Version : ${env.IMAGE_TAG} , message : ${e.message}"
                         currentBuild.result = 'FAILURE'
                     }
 
@@ -537,7 +540,7 @@ pipeline {
                         echo("Déconnection du dépôt nexus et Jenkins")
                         utilsDocker.logoutDepot(nexus)
                     } catch (Exception e) {
-                        echo "⛔ ERREUR DÉTECTÉE : ${e.message}"
+                        echo "⛔ EXCEPTION : ${e.message}"
                     }
                 }
             }
