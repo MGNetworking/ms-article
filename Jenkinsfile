@@ -1,7 +1,5 @@
 @Library('JenkinsLib_Shared') _
 
-
-// Configurations des serveurs
 def remote = [:]
 def nexus = [:]
 def dockers = [:]
@@ -117,7 +115,7 @@ pipeline {
                     dockers = utilsServeur.dockers(
                             env.IMAGE_NAME,                       // img
                             '/home/max/docker_home/ms-article',   // pathProjet
-                            env.STACK_NAME)                         // stackName
+                            env.STACK_NAME)                       // stackName
 
                     // les données de connection serveur
                     remote = utilsServeur.remote(
@@ -136,45 +134,50 @@ pipeline {
         stage('Check version') {
             steps {
                 script {
-                    version_beta = "${env.IMAGE_VERSION}-beta"
-                    version_release = "${env.IMAGE_VERSION}-release"
+                    try {
+                        version_beta = "${env.IMAGE_VERSION}-beta"
+                        version_release = "${env.IMAGE_VERSION}-release"
 
-                    def http_status_beta = sh(script: """
+                        def http_status_beta = sh(script: """
                         curl -s -o /dev/null -w "%{http_code}" -u ${nexus.user}:${nexus.pass} \
                         https://${nexus.domain}/repository/docker-private/v2/${env.PATH_NEXUS}/manifests/${version_beta}
                       """, returnStdout: true).trim()
 
-                    def http_status_release = sh(script: """
+                        def http_status_release = sh(script: """
                         curl -s -o /dev/null -w "%{http_code}" -u ${nexus.user}:${nexus.pass} \
                         https://${nexus.domain}/repository/docker-private/v2/${env.PATH_NEXUS}/manifests/${version_release}
                       """, returnStdout: true).trim()
 
-                    echo("HTTP Status beta: $http_status_beta et HTTP Status release: $http_status_release")
+                        echo("HTTP Status beta: $http_status_beta et HTTP Status release: $http_status_release")
 
 
-                    if (env.IMAGE_TAG == version_beta) {
+                        if (env.IMAGE_TAG == version_beta) {
 
-                        if (http_status_beta.equals("404")) {
-                            echo("La version beta suivant : ${version_beta} n'existe pas dans le dépôt nexus")
-                            echo("Donc le build peut être lancer !")
-                            env.SKIP_BUILD = true
-                        } else {
-                            echo("La version beta suivant : ${env.IMAGE_TAG} est déjà présente sur le serveur Nexus")
-                            echo("Excécution des test unitaire uniquement !")
-                            env.SKIP_BUILD = false
+                            if (http_status_beta.equals("404")) {
+                                echo("La version beta suivant : ${version_beta} n'existe pas dans le dépôt nexus")
+                                echo("Donc le build peut être lancer !")
+                                env.SKIP_BUILD = true
+                            } else {
+                                echo("La version beta suivant : ${env.IMAGE_TAG} est déjà présente sur le serveur Nexus")
+                                echo("Excécution des test unitaire uniquement !")
+                                env.SKIP_BUILD = false
+                            }
+
+                        } else if (env.IMAGE_TAG == version_release) {
+
+                            if (http_status_release.equals("404")) {
+                                echo("La version release suivant : ${version_release} n'existe pas dans le dépôt nexus")
+                                echo("Donc le build peut être lancer !")
+                                env.SKIP_BUILD = true
+                            } else {
+                                echo("La version release suivant : ${env.IMAGE_TAG} est déjà présente sur le serveur Nexus")
+                                echo("Excécution des tests unitaires uniquement !")
+                                env.SKIP_BUILD = false
+                            }
                         }
 
-                    } else if (env.IMAGE_TAG == version_release) {
-
-                        if (http_status_release.equals("404")) {
-                            echo("La version release suivant : ${version_release} n'existe pas dans le dépôt nexus")
-                            echo("Donc le build peut être lancer !")
-                            env.SKIP_BUILD = true
-                        } else {
-                            echo("La version release suivant : ${env.IMAGE_TAG} est déjà présente sur le serveur Nexus")
-                            echo("Excécution des tests unitaires uniquement !")
-                            env.SKIP_BUILD = false
-                        }
+                    } catch (Exception e) {
+                        echo "⛔ ERREUR DÉTECTÉE : ${e.message}"
                     }
 
                 }
@@ -184,35 +187,39 @@ pipeline {
         stage("Test : service ms-configuration") {
             steps {
                 script {
+                    try {
+                        echo("Vérifie que le service ms-configuration fonctionne " +
+                                "correctement sur le serveur ${env.BRANCH_NAME}")
 
-                    echo("Vérifie que le service ms-configuration fonctionne " +
-                            "correctement sur le serveur ${env.BRANCH_NAME}")
+                        echo "Initilaisation de l'adresse du service ms-configuration";
+                        env.SERVICE_CONFIG_URI = "http://${remote.host}:8089"
+                        status = false
 
-                    echo "Initilaisation de l'adresse du service ms-configuration";
-                    env.SERVICE_CONFIG_URI = "http://${remote.host}:8089"
-                    status = false
+                        for (int index = 0; index < 10; index++) {
 
-                    for (int index = 0; index < 10; index++) {
+                            echo("Requet CURL n° $index du service : ms-configuration a l'adresse : " +
+                                    "${env.SERVICE_CONFIG_URI}/actuator/health ")
 
-                        echo("Requet CURL n° $index du service : ms-configuration a l'adresse : " +
-                                "${env.SERVICE_CONFIG_URI}/actuator/health ")
+                            String result = sh(script: "curl -s ${env.SERVICE_CONFIG_URI}/actuator/health | " +
+                                    "jq -r '.status'", returnStdout: true, returnStatus: false)
 
-                        String result = sh(script: "curl -s ${env.SERVICE_CONFIG_URI}/actuator/health | " +
-                                "jq -r '.status'", returnStdout: true, returnStatus: false)
-
-                        if (result.contains("UP")) {
-                            echo("Le service ms-configuration est bien cours d'exécution, sorti: $result")
-                            status = "SUCCESS"
-                            break
-                        } else {
-                            echo("Le service ms-configuration n'est pas cours d'exécution, sorti: $result")
-                            echo "Tentative n° $index"
-                            sleep time: 5, unit: 'SECONDS'
+                            if (result.contains("UP")) {
+                                echo("Le service ms-configuration est bien cours d'exécution, sorti: $result")
+                                status = "SUCCESS"
+                                break
+                            } else {
+                                echo("Le service ms-configuration n'est pas cours d'exécution, sorti: $result")
+                                echo "Tentative n° $index"
+                                sleep time: 5, unit: 'SECONDS'
+                            }
                         }
-                    }
 
-                    if (status != "SUCCESS") {
-                        error("Le service ms-configuration n'est pas actif !!!")
+                        if (status != "SUCCESS") {
+                            error("Le service ms-configuration n'est pas actif !!!")
+                        }
+
+                    } catch (Exception e) {
+                        echo "⛔ ERREUR DÉTECTÉE : ${e.message}"
                     }
                 }
             }
@@ -229,8 +236,7 @@ pipeline {
                         echo("Ouverture de la connection au dépôt nexus depuis Jenkins")
                         utilsDocker.loginDepot(nexus, false)
                     } catch (Exception e) {
-                        echo "⛔ ERREUR DÉTECTÉE : ${e.message}"
-                        error("🚨 Pipeline arrêté suite à une exception : ${e.message}")
+                        error("🚨 ERREUR DÉTECTÉE : Pipeline arrêté suite à une exception : ${e.message}")
                     }
                 }
             }
@@ -363,11 +369,16 @@ pipeline {
             agent any
             steps {
                 script {
-                    echo("Mise à jours du projet ms-article sur le serveur ${env.BRANCH_NAME}")
-                    String commande = "cd ${dockers.pathProjet} && " +
-                            "git checkout ${env.BRANCH_NAME} && " +
-                            "git pull origin ${env.BRANCH_NAME}"
-                    utilsGit.gitPullSsh(remote, commande)
+                    try {
+                        echo("Mise à jours du projet ms-article sur le serveur ${env.BRANCH_NAME}")
+                        String commande = "cd ${dockers.pathProjet} && " +
+                                "git checkout ${env.BRANCH_NAME} && " +
+                                "git pull origin ${env.BRANCH_NAME}"
+                        utilsGit.gitPullSsh(remote, commande)
+
+                    } catch (Exception e) {
+                        echo "⛔ ERREUR DÉTECTÉE : ${e.message}"
+                    }
                 }
             }
         }
@@ -379,11 +390,16 @@ pipeline {
             agent any
             steps {
                 script {
-                    echo("Pull de l'image docker: ${dockers.img} sur le serveur: ${env.BRANCH_NAME}")
-                    utilsDocker.pullImg(dockers.img, true, remote)
+                    try {
+                        echo("Pull de l'image docker: ${dockers.img} sur le serveur: ${env.BRANCH_NAME}")
+                        utilsDocker.pullImg(dockers.img, true, remote)
 
-                    echo("Affiche la liste des images Docker sur le serveur ${env.BRANCH_NAME}")
-                    utilsDocker.dockerlsImg(true, remote)
+                        echo("Affiche la liste des images Docker sur le serveur ${env.BRANCH_NAME}")
+                        utilsDocker.dockerlsImg(true, remote)
+
+                    } catch (Exception e) {
+                        echo "⛔ ERREUR DÉTECTÉE : ${e.message}"
+                    }
                 }
             }
         }
@@ -395,14 +411,19 @@ pipeline {
             agent any
             steps {
                 script {
-                    echo("Affiche le status ${dockers.stackName} de la stack en cours ")
-                    utilsDocker.getPsStack(dockers.stackName, true, remote)
+                    try {
+                        echo("Affiche le status ${dockers.stackName} de la stack en cours ")
+                        utilsDocker.getPsStack(dockers.stackName, true, remote)
 
-                    echo("Vérifi si la stack ${dockers.stackName} est deployer ou mettre à jours ")
-                    env.STATUS_STACK = utilsDocker.statusStack(dockers.stackName, true, remote)
+                        echo("Vérifi si la stack ${dockers.stackName} est deployer ou mettre à jours ")
+                        env.STATUS_STACK = utilsDocker.statusStack(dockers.stackName, true, remote)
 
-                    echo("La stack ${dockers.stackName} sera a " + (env.STATUS_STACK ? "mettre à jours" : "déployée") +
-                            " sur le serveur ${env.BRANCH_NAME}")
+                        echo("La stack ${dockers.stackName} sera a " + (env.STATUS_STACK ? "mettre à jours" : "déployée") +
+                                " sur le serveur ${env.BRANCH_NAME}")
+
+                    } catch (Exception e) {
+                        echo "⛔ ERREUR DÉTECTÉE : ${e.message}"
+                    }
                 }
             }
         }
@@ -414,11 +435,16 @@ pipeline {
             agent any
             steps {
                 script {
-                    echo("Deploiment sur le serveur: ${env.BRANCH_NAME} , en version: ${env.BUILD}")
-                    string commande = "cd ${dockers.pathProjet} && " +
-                            "export PROFILES=${env.BRANCH_NAME} && " +
-                            "./script/deploy.sh ${env.BUILD}"
-                    utilsDocker.deployStack(commande, true, remote)
+                    try {
+                        echo("Deploiment sur le serveur: ${env.BRANCH_NAME} , en version: ${env.BUILD}")
+                        string commande = "cd ${dockers.pathProjet} && " +
+                                "export PROFILES=${env.BRANCH_NAME} && " +
+                                "./script/deploy.sh ${env.BUILD}"
+                        utilsDocker.deployStack(commande, true, remote)
+
+                    } catch (Exception e) {
+                        echo "⛔ ERREUR DÉTECTÉE : ${e.message}"
+                    }
                 }
             }
         }
@@ -482,18 +508,17 @@ pipeline {
                                     GITHUB_TOKEN,
                                     params.PUBLIC_MESSAGE)
                         } else {
-                            echo "❌ Les paramètres de la version son manquantes."
-                            echo "❌ Il ne peux y avoir une publication vers le dépôt !"
-                            echo "❌ Version: ${env.IMAGE_TAG}, "
-                            echo "❌ Message de publication: ${params.PUBLIC_MESSAGE}"
+                            echo "⛔ Les paramètres de la version son manquantes."
+                            echo "⛔ Il ne peux y avoir une publication vers le dépôt !"
+                            echo "⛔ Version: ${env.IMAGE_TAG}, "
+                            echo "⛔ Message de publication: ${params.PUBLIC_MESSAGE}"
                             currentBuild.result = 'FAILURE'
                         }
 
                     } catch (Exception ex) {
-
-                        echo "❌ Une erreur est survenu pendant le processus de création de publication"
-                        echo "❌ Message : ${ex.getMessage()}"
-                        echo "❌ Version : ${env.IMAGE_TAG}"
+                        echo "⛔ Une erreur est survenu pendant le processus de création de publication"
+                        echo "⛔ Version : ${env.IMAGE_TAG}"
+                        echo "⛔ ERREUR DÉTECTÉE : ${e.message}"
                         currentBuild.result = 'FAILURE'
                     }
 
@@ -507,19 +532,18 @@ pipeline {
                 script {
                     try {
                         echo("Déconnection du dépôt nexus et le serveur ${env.BRANCH_NAME}")
-                        utilsDocker.logoutDepot(nexus.domain, true, remote)
+                        utilsDocker.logoutDepot(nexus, true, remote)
 
                         echo("Déconnection du dépôt nexus et Jenkins")
-                        utilsDocker.logoutDepot(nexus.domain)
+                        utilsDocker.logoutDepot(nexus)
                     } catch (Exception e) {
                         echo "⛔ ERREUR DÉTECTÉE : ${e.message}"
-                        error("🚨 Pipeline arrêté suite à une exception : ${e.message}")
                     }
                 }
             }
         }
 
-        stage('Clean images ') {
+        stage('Clean images') {
             agent any
             when {
                 expression { env.SKIP_BUILD?.toBoolean() }
@@ -529,14 +553,11 @@ pipeline {
                     try {
                         echo("Nettoyage de l'images de base : ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION}")
                         utilsDocker.rmi(env.IMAGE_NAME)
-                        //sh(script: "docker rmi ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION}", returnStdout: true)
 
                         echo("Nettoyage de l'images beta / relase : ${dockers.img}")
                         utilsDocker.rmi(dockers.img)
-                        //sh(script: "docker rmi ${dockers.img}", returnStdout: true)
                     } catch (Exception e) {
                         echo "⛔ ERREUR DÉTECTÉE : ${e.message}"
-                        error("🚨 Pipeline arrêté suite à une exception : ${e.message}")
                     }
                 }
             }
@@ -549,26 +570,6 @@ pipeline {
         always {
             script {
                 try {
-
-                    //echo("Déconnection du dépôt nexus et le serveur ${env.BRANCH_NAME}")
-                    //String commande = "bash -c 'source ~/.profile;docker logout ${nexus.domain}'"
-                    //sshCommand(remote: remote, failOnError: false, sudo: false, command: commande)
-
-                    //echo("Déconnection du dépôt nexus et Jenkins")
-                    //utilsDocker.logoutDepot(nexus.domain)
-                    //sh(script: "docker logout ${nexus.domain}", returnStdout: true)
-
-/*                    if (env.SKIP_BUILD) {
-                        echo("Nettoyage de l'images de base : ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION}")
-                        //utilsDocker.rmi(env.IMAGE_NAME)
-                        sh(script: "docker rmi ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION}", returnStdout: true)
-
-                        echo("Nettoyage de l'images beta / relase : ${dockers.img}")
-                        //utilsDocker.rmi(dockers.img)
-                        sh(script: "docker rmi ${dockers.img}", returnStdout: true)
-                    } else {
-                        echo "Aucun nettoyage a réalisé, puisqu'il n'y a eu aucune compilation!"
-                    }*/
 
                     echo "Localisation des fichiers de test."
                     sh 'pwd'
@@ -592,7 +593,7 @@ pipeline {
                     }
 
                 } catch (Exception e) {
-                    echo("Une erreur est survenu dans la parti POST always, message : ${e.message}")
+                    echo("⛔ ERREUR DÉTECTÉE : dans la parti POST always, message : ${e.message}")
                 }
             }
         }
@@ -605,7 +606,7 @@ pipeline {
         }
         failure {
             script {
-                echo("Échec !")
+                echo("Échec pipeline ")
 
                 if (!STATUS_STACK) {
                     echo("Échec du déploiement de la stack ${dockers.stackName}")
