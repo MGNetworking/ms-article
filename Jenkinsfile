@@ -569,32 +569,17 @@ pipeline {
     post {
         always {
             script {
-                try {
 
-                    echo "Localisation des fichiers de test."
-                    sh 'pwd'
-                    sh 'ls -al target/surefire-reports || echo "surefire-reports non trouvé"'
-                    sh 'ls -al target/failsafe-reports || echo "failsafe-reports non trouvé"'
+                echo "Gestion des rapports JUnit."
+                sh 'pwd'
+                sh 'ls -al target/surefire-reports || echo "surefire-reports non trouvé"'
+                sh 'ls -al target/failsafe-reports || echo "failsafe-reports non trouvé"'
 
-                    echo "Collecte des rapports JUnit pour les tests unitaires."
-                    junit testResults: "target/surefire-reports/*.xml", allowEmptyResults: true
+                echo "Collecte des rapports JUnit pour les tests unitaires."
+                junit testResults: "target/surefire-reports/*.xml", allowEmptyResults: true
 
-                    echo "Collecte des rapports JUnit pour les tests d'intégration et E2E."
-                    junit testResults: "target/failsafe-reports/*.xml", allowEmptyResults: true
-
-
-                    def testResults = sh(script: "grep -H '<testsuite' ${env.WORKSPACE}/target/surefire-reports/*.xml || " +
-                            "echo 'Aucun résultat trouvé'", returnStdout: true).trim()
-                    if (testResults) {
-                        echo "Résumé des résultats des tests :"
-                        echo testResults
-                    } else {
-                        echo "Aucun résultat de test trouvé dans target/surefire-reports."
-                    }
-
-                } catch (Exception e) {
-                    echo("⛔ EXCEPTION : dans la parti POST always, message : ${e.message}")
-                }
+                echo "Collecte des rapports JUnit pour les tests d'intégration et E2E."
+                junit testResults: "target/failsafe-reports/*.xml", allowEmptyResults: true
             }
         }
         success {
