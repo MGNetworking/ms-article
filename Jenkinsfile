@@ -2,9 +2,9 @@
 
 
 // Configurations des serveurs
-def remote = null
-def nexus = null
-def dockers = null
+def remote = [:]
+def nexus = [:]
+def dockers = [:]
 
 pipeline {
     agent any
@@ -167,12 +167,12 @@ pipeline {
                     } else if (env.IMAGE_TAG == version_release) {
 
                         if (http_status_release.equals("404")) {
-                            echo("La version relase suivant : ${version_release} n'existe pas dans le dépôt nexus")
+                            echo("La version release suivant : ${version_release} n'existe pas dans le dépôt nexus")
                             echo("Donc le build peut être lancer !")
                             env.SKIP_BUILD = true
                         } else {
-                            echo("La version relase suivant : ${env.IMAGE_TAG} est déjà présente sur le serveur Nexus")
-                            echo("Excécution des test unitaire uniquement !")
+                            echo("La version release suivant : ${env.IMAGE_TAG} est déjà présente sur le serveur Nexus")
+                            echo("Excécution des tests unitaires uniquement !")
                             env.SKIP_BUILD = false
                         }
                     }
@@ -219,7 +219,7 @@ pipeline {
         }
 
 
-        stage("Open connection Nexus: Docker repository") {
+        stage("Open connection Nexus") {
             steps {
                 script {
                     try {
@@ -501,6 +501,47 @@ pipeline {
             }
         }
 
+        stage('Close connection Nexus') {
+            agent any
+            steps {
+                script {
+                    try {
+                        echo("Déconnection du dépôt nexus et le serveur ${env.BRANCH_NAME}")
+                        utilsDocker.logoutDepot(nexus.domain, true, remote)
+
+                        echo("Déconnection du dépôt nexus et Jenkins")
+                        utilsDocker.logoutDepot(nexus.domain)
+                    } catch (Exception e) {
+                        echo "⛔ ERREUR DÉTECTÉE : ${e.message}"
+                        error("🚨 Pipeline arrêté suite à une exception : ${e.message}")
+                    }
+                }
+            }
+        }
+
+        stage('Clean images ') {
+            agent any
+            when {
+                expression { env.SKIP_BUILD?.toBoolean() }
+            }
+            steps {
+                script {
+                    try {
+                        echo("Nettoyage de l'images de base : ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION}")
+                        utilsDocker.rmi(env.IMAGE_NAME)
+                        //sh(script: "docker rmi ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION}", returnStdout: true)
+
+                        echo("Nettoyage de l'images beta / relase : ${dockers.img}")
+                        utilsDocker.rmi(dockers.img)
+                        //sh(script: "docker rmi ${dockers.img}", returnStdout: true)
+                    } catch (Exception e) {
+                        echo "⛔ ERREUR DÉTECTÉE : ${e.message}"
+                        error("🚨 Pipeline arrêté suite à une exception : ${e.message}")
+                    }
+                }
+            }
+        }
+
     }
 
 
@@ -508,28 +549,28 @@ pipeline {
         always {
             script {
                 try {
-                    echo("Déconnection au dépôt nexus docker entre le serveur ${env.BRANCH_NAME} et le dépôt nexus")
-                    //utilsDocker.logoutDepot(nexus.domain, true, remote)
 
-                    String commande = "bash -c 'source ~/.profile;docker logout ${nexus.domain}'"
-                    sshCommand(remote: remote, failOnError: false, sudo: false, command: commande)
+                    //echo("Déconnection du dépôt nexus et le serveur ${env.BRANCH_NAME}")
+                    //String commande = "bash -c 'source ~/.profile;docker logout ${nexus.domain}'"
+                    //sshCommand(remote: remote, failOnError: false, sudo: false, command: commande)
 
-                    echo("Fermeture de la connection au dépôt nexus depuis Jenkins")
+                    //echo("Déconnection du dépôt nexus et Jenkins")
                     //utilsDocker.logoutDepot(nexus.domain)
-                    sh(script: "docker logout ${nexus.domain}", returnStdout: true)
+                    //sh(script: "docker logout ${nexus.domain}", returnStdout: true)
 
-                    if (!env.SKIP_BUILD?.toBoolean()) {
-                        echo("Nettoyage de l'images de base : ${env.IMAGE_NAME}")
+/*                    if (env.SKIP_BUILD) {
+                        echo("Nettoyage de l'images de base : ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION}")
                         //utilsDocker.rmi(env.IMAGE_NAME)
-                        sh(script: "docker rmi ${env.IMAGE_NAME}", returnStdout: true)
+                        sh(script: "docker rmi ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION}", returnStdout: true)
 
                         echo("Nettoyage de l'images beta / relase : ${dockers.img}")
                         //utilsDocker.rmi(dockers.img)
                         sh(script: "docker rmi ${dockers.img}", returnStdout: true)
                     } else {
                         echo "Aucun nettoyage a réalisé, puisqu'il n'y a eu aucune compilation!"
-                    }
+                    }*/
 
+                    echo "Localisation des fichiers de test."
                     sh 'pwd'
                     sh 'ls -al target/surefire-reports || echo "surefire-reports non trouvé"'
                     sh 'ls -al target/failsafe-reports || echo "failsafe-reports non trouvé"'
