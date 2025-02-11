@@ -557,7 +557,7 @@ pipeline {
                         echo("Nettoyage de l'images beta / relase : ${dockers.img}")
                         utilsDocker.rmi(dockers.img)
                     } catch (Exception e) {
-                        echo "⛔ ERREUR DÉTECTÉE : ${e.message}"
+                        echo "⛔ EXCEPTION : ${e.message}"
                     }
                 }
             }
@@ -593,7 +593,7 @@ pipeline {
                     }
 
                 } catch (Exception e) {
-                    echo("⛔ ERREUR DÉTECTÉE : dans la parti POST always, message : ${e.message}")
+                    echo("⛔ EXCEPTION : dans la parti POST always, message : ${e.message}")
                 }
             }
         }
@@ -611,25 +611,18 @@ pipeline {
                 if (!STATUS_STACK) {
                     echo("Échec du déploiement de la stack ${dockers.stackName}")
                     echo("Suppression de la stack ${dockers.stackName} sur le serveur distant")
-                    //utilsDocker.rmStack(dockers.stackName, true, remote)
-
-                    String commande = "bash -c 'source ~/.profile;docker stack rm ${dockers.stackName}'"
-                    sshCommand(remote: remote, failOnError: false, sudo: false, command: commande)
+                    utilsDocker.rmStack(dockers.stackName, true, remote)
 
                 } else {
                     echo("Échec de la mise à jour de la stack ${dockers.stackName}")
                     echo("ROLLBACK de la stack ${dockers.stackName}")
-                    //utilsDocker.rollbackService(env.NAME_SERVICE, true, remote)
-
-                    String commande = "bash -c 'source ~/.profile;docker service rollback ${env.NAME_SERVICE}'"
-                    sshCommand(remote: remote, failOnError: false, sudo: false, command: commande)
+                    utilsDocker.rollbackService(env.NAME_SERVICE, true, remote)
                 }
                 def time = 15
                 echo "Suppression de l'image en échec ${dockers.img} sur le serveur dans ${time} secondes ..."
                 sleep time: time, unit: 'SECONDS'
-                String commande = "bash -c 'source ~/.profile;docker rmi ${dockers.img} '"
-                sshCommand(remote: remote, failOnError: false, sudo: false, command: commande)
-                //utilsDocker.rmi(this, dockers.img, remote)
+
+                utilsDocker.rmi(dockers.img, remote)
             }
         }
     }
