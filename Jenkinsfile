@@ -430,7 +430,7 @@ pipeline {
             }
         }
 
-        stage('Update / Deploy blog') {
+        stage('Update / Deploy') {
             when {
                 expression { env.SKIP_BUILD?.toBoolean() }
             }
