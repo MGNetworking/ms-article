@@ -340,7 +340,7 @@ pipeline {
 
         stage('Build Docker Image') {
             when {
-                expression { env.SKIP_BUILD?.toBoolean() }
+                expression { env.SKIP_BUILD?.toBoolean() || params.FORCE?.toBoolean()}
             }
             agent any
             steps {
