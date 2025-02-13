@@ -515,16 +515,15 @@ pipeline {
                                     params.PUBLIC_MESSAGE)
                         } else {
 
-                            echo "❌ FAILURE - Les paramètres de la version son manquantes. " +
-                                    "Il ne peux y avoir une publication vers le dépôt !"
-                            echo "❌ FAILURE - Version: ${env.IMAGE_TAG},  publication: ${params.PUBLIC_MESSAGE}"
-                            currentBuild.result = 'FAILURE'
+                            echo "⚠️ UNSTABLE - Les paramètres de la version sont manquants."
+                            echo "⚠️ UNSTABLE - Version: ${env.IMAGE_TAG}, Publication: ${params.PUBLIC_MESSAGE}"
+                            currentBuild.result = 'UNSTABLE'
                         }
 
                     } catch (Exception ex) {
-                        echo "❌ FAILURE - Une erreur est survenu pendant le processus de création de publication, " +
-                                " Version : ${env.IMAGE_TAG} , message : ${e.message}"
-                        currentBuild.result = 'FAILURE'
+                        echo "⚠️ UNSTABLE - Une erreur est survenue pendant la création de la publication."
+                        echo "⚠️ UNSTABLE - Version : ${env.IMAGE_TAG}, Message : ${ex.message}"
+                        currentBuild.result = 'UNSTABLE'
                     }
 
                 }
