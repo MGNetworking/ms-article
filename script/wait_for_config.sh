@@ -1,29 +1,30 @@
 #!/bin/bash
 
-echo  "Lancement du script wait_for_config en cours ... "
+  echo "Lancement du script wait_for_config en cours ... PROFILE_ACTIF_SPRING='$PROFILE_ACTIF_SPRING"
 
-# Dans le cas d'un déploiement sur le nas
-if [ -z "$PROFILE_ACTIF_SPRING" ] || [ -z "$SERVICE_CONFIG_DOCKER" ] || [ -z "$IP"  ]; then
+if [ "$PROFILE_ACTIF_SPRING" = "devDocker" ]; then
+      echo "Lancement du service ms-article avec le profile devDocker ..."
+      java -jar app.jar --spring.profiles.active=$PROFILE_ACTIF_SPRING
+else
 
-  echo  "Les variables de configuration sont absente, initialisation Nas lancer"
+  # Dans le cas d'un déploiement sur le nas
+  if [ -z "$PROFILE_ACTIF_SPRING" ] || [ -z "$SERVICE_CONFIG_URI" ] || [ -z "$IP"  ]; then
 
-  echo "La variable PROFILE_ACTIF_SPRING => $PROFILE_ACTIF_SPRING <="
-  echo "L'adresse IP du service configuration sur le réseau Overlay: $SERVICE_CONFIG_DOCKER <="
-  echo "valeur de l'adresse IP de connection à la base de données  $IP <="
+    echo "Les variables de configuration sont absente, initialisation Nas lancer"
+    echo "La variable PROFILE_ACTIF_SPRING => $PROFILE_ACTIF_SPRING <="
+    echo "L'adresse IP du service configuration sur le réseau Overlay: $SERVICE_CONFIG_DOCKER <="
 
-  PROFILE_ACTIF_SPRING=nas
-  IP=172.17.0.1
-  SERVICE_CONFIG_DOCKER=http://ms-configuration:8089
+    PROFILE_ACTIF_SPRING=nas
+    SERVICE_CONFIG_URI=http://ms-configuration:8089
 
-  echo "Les variables de configuration sont initialiser"
-  echo "La variable PROFILE_ACTIF_SPRING => $PROFILE_ACTIF_SPRING <="
-  echo "L'adresse IP du service configuration sur le réseau Overlay: $SERVICE_CONFIG_DOCKER <="
-  echo "valeur de l'adresse IP de connection à la base de données  $IP <="
-fi
+    echo "Les variables de configuration sont initialiser"
+    echo "La variable PROFILE_ACTIF_SPRING => $PROFILE_ACTIF_SPRING <="
+    echo "L'adresse IP du service configuration sur le réseau Overlay: $SERVICE_CONFIG_DOCKER <="
+  fi
 
 
   while true; do
-    response=$(curl -s $SERVICE_CONFIG_DOCKER/msarticle/$PROFILE_ACTIF_SPRING)
+    response=$(curl -s $SERVICE_CONFIG_URI/msarticle/$PROFILE_ACTIF_SPRING)
 
     echo "request vers : $SERVICE_CONFIG_DOCKER/msarticle/$PROFILE_ACTIF_SPRING"
 
@@ -35,7 +36,7 @@ fi
     if [ -n "$response" ]; then
       echo "Le service ms-configuration est en cours d'exécution."
       echo "Lancement du service ms-article ..."
-      java -jar app.jar --spring.profiles.active=$PROFILE_ACTIF_SPRING --IP=$IP
+      java -jar app.jar --spring.profiles.active=$PROFILE_ACTIF_SPRING
 
       break  # Sortir de la boucle si le service est opérationnel
     else
@@ -44,3 +45,5 @@ fi
     fi
 
   done
+
+fi
