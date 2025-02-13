@@ -22,7 +22,7 @@ run_stack(){
 compilation_Maven(){
 
     echo "Compilation du projet $STACK_NAME via Maven"
-    mvn clean package "-Dspring.profiles.active="$PROFILES "-DEUREKA_DEFAULTZONE="http://localhost:8099/eureka "-DSERVICE_CONFIG_DOCKER="$SERVICE_CONFIG_DOCKER
+    mvn clean package "-Dspring.profiles.active="$PROFILES "-DEUREKA_DEFAULTZONE="http://localhost:8099/eureka
 
     echo "Création de l'images : $STACK_NAME"
     docker compose -f docker-compose.yml build --no-cache || handle_error "Construction de l'image Docker"
@@ -33,7 +33,7 @@ compilation_Maven(){
 
     echo "---------------------------"
     echo "deploiement de la stack: $STACK_NAME en version beta"
-    ./script/deploy.sh beta || handle_error "Exécution du script de Déploiement en version $version_beta"
+    ./script/deploy.sh beta $PROFILES || handle_error "Exécution du script de Déploiement en version $version_beta"
 
 }
 
@@ -58,7 +58,6 @@ fi
 
 echo "---------------------------"
 export $(cat .env)
-export SERVICE_CONFIG_DOCKER="http://localhost:8089"
 export PROFILES=devDocker
 version_beta="$DOCKER_IMAGE_NAME:$IMAGE_VERSION-beta"
 

@@ -1,70 +1,63 @@
 #!/bin/bash
 
-# export des variable du fichier .env
-export $(cat .env)
+# export des variable du fichier .options
+#export $(cat .env)
+export $(grep -v '^#' .env | xargs)
 version_beta=$DOCKER_IMAGE_NAME:$IMAGE_VERSION-beta
 
 handle_error() {
-  echo "Une erreur et survenu lors de l'exécution de la commande : $1"
+  echo "Une erreur est survenue : $1"
   echo "Fin du script"
   exit 1
 }
 
 delete_images() {
-  echo "delete image docker "
+  echo "Suppression des images Docker..."
 
+  # Vérifier si la stack est encore présente
   if docker stack ls | grep -q $STACK_NAME ; then
-    handle_error "la stack est toujours en cours d'exécution vous ne pouvez supprimer les images"
+    handle_error "La stack est encore active, impossible de supprimer les images"
   fi
 
   docker rmi $version_beta >/dev/null 2>&1
-  docker images -f "reference=$1" >/dev/null 2>&1
-  img1=$?
+  docker rmi "$DOCKER_IMAGE_NAME:$IMAGE_VERSION" >/dev/null 2>&1
 
-  docker rmi $DOCKER_IMAGE_NAME:$IMAGE_VERSION >/dev/null 2>&1
-  docker images -f "reference=$1" >/dev/null 2>&1
-  img2=$?
+  sleep 3  # Laisser un court délai pour éviter des suppressions asynchrones
 
-  # verification le code de retour de la suppression de l'image
-  if [[ img1 -eq 0 ]] && [[ img2 -eq 0 ]]; then
-    echo "Les images docker ont bien été supprimer"
+  echo "Vérification après suppression..."
+  if [[ -z $(docker images "$version_beta" -q) && -z $(docker images "$DOCKER_IMAGE_NAME:$IMAGE_VERSION" -q) ]]; then
+    echo "✅ Les images ont été supprimées avec succès"
   else
-    echo "Les images docker n'ont pas été supprimer"
+    echo "❌ Échec de la suppression des images !"
+    docker images | grep "$DOCKER_IMAGE_NAME"
   fi
+
 }
 
+delete_stack() {
 
-delete_all() {
+  echo "Suppression de la stack : $STACK_NAME"
 
-  echo "delete stack : $STACK_NAME "
-  docker stack ls | grep $STACK_NAME || handle_error "La stack est déjà supprimer !"
+  if ! docker stack ls | grep -q "$STACK_NAME"; then
+    handle_error "La stack est déjà supprimée !"
+  fi
+
   docker stack rm $STACK_NAME
 
+  # Attente de la suppression complète
   echo "delete image : $DOCKER_IMAGE_NAME:$IMAGE_VERSION et $version_beta"
-  sleep 20
 
-  docker rmi $version_beta
-  docker images -f "reference=$1"
-  img1=$?
-  echo "Sorti $img1"
+  sleep 10
+  while docker ps -a | grep -q "$STACK_NAME"; do
+    sleep 5
+  done
 
-  docker rmi $DOCKER_IMAGE_NAME:$IMAGE_VERSION
-  docker images -f "reference=$1"
-  img2=$?
-  echo "Sorti $img2"
-
-  # verification le code de retour de la suppression de l'image
-  if [[ img1 -eq 0 ]] && [[ img2 -eq 0 ]]; then
-    echo "Les images docker sont supprimer"
-  else
-    echo "Les images docker ne sont pas supprimer"
-  fi
+  echo "Stack supprimée."
 }
 
-delete_stack(){
-  echo "delete stack : $STACK_NAME "
-  docker stack ls | grep $STACK_NAME || handle_error "La stack est déjà supprimer !"
-  docker stack rm $STACK_NAME
+delete_all(){
+  delete_stack
+  delete_images
 }
 
 info(){
@@ -73,23 +66,23 @@ info(){
   docker ps -a
 
   echo "---------------------------"
-  echo "Liste des images déployées"
+  echo "Liste des images disponibles :"
   docker images
 
   echo "---------------------------"
-  echo "List des réseaux"
+  echo "Liste des réseaux Docker :"
   docker network ls
 }
 
 
 # interface user
-env=("Delete stack" "Delete stack and image" "Delete image" "Info docker and continu ...")
+options=("Delete stack" "Delete stack and image" "Delete image" "Info docker and continu ...")
 echo "Lancement de la compilation (Mode Dev) "
 echo "Choisissez votre suppression :"
 
 affichage=""
-for i in "${!env[@]}"; do
-  affichage+="[$i] ${env[$i]} \n"
+for i in "${!options[@]}"; do
+  affichage+="[$i] ${options[$i]} \n"
 done
 
 # Affiche a l'utilisateur tout des options disponibles
@@ -99,9 +92,9 @@ read choix
 trouver=false
 selection=""
 # recherche du choix sélectionné
-if [ -n "${env[$choix]}" ]; then
-  echo "-------------[ ${env[$choix]} ]--------------"
-  selection=${env[$choix]}
+if [ -n "${options[$choix]}" ]; then
+  echo "-------------[ ${options[$choix]} ]--------------"
+  selection=${options[$choix]}
   trouver=true
 fi
 

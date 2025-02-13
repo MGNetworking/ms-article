@@ -1,9 +1,13 @@
 #!/bin/bash
 
-echo "export des variables "
-export $(cat .env)
+BUILD=$1
+PROFILES=$2
 
-# Vérifier si le fichier ~/.profile existe avant de le charger
+echo "Exportation des variables"
+export $(cat .env)
+export PROFILES
+
+######### Vérifier si le fichier ~/.profile existe avant de le charger
 if [ -f ~/.profile ]; then
     echo "Chargement et application des variables d’environnement, "
     echo "définies dans le fichier .profile de la session utilisateur"
@@ -13,32 +17,14 @@ else
     echo "⚠️ Fichier ~/.profile introuvable, chargement ignoré."
 fi
 
-
+######### Gestion des droits sur le système host
 echo "Chargement des droites utilisateur du système host"
 USER_ID=$(id -u)
 GROUP_ID=$(id -g)
 export USER_ID
 export GROUP_ID
 
-echo "Déploiement / update de la stack : $STACK_NAME"
-echo "PROFILES : $PROFILES"
-
-# Demander le suffixe à ajouter (ou utiliser une variable pour le définir)
-if [ -z "$1" ]; then
-  echo "Aucun suffixe n'a était spécifié. Utilisation du suffixe par défaut 'release' "
-  SUFFIX="release"
-else
-  SUFFIX="$1"
-  echo "Utilisation du suffixe spécifié pour la modification du nom de la version: $SUFFIX"
-fi
-
-# Modifier la version de l'image avec le suffixe
-export IMAGE_VERSION="${IMAGE_VERSION}-${SUFFIX}"
-echo "Modification du nom de la version: $IMAGE_VERSION"
-echo "Le nom de la stack: $STACK_NAME"
-echo "PROFILES: $PROFILES"
-
-echo "Vérification et création du dossier logs"
+echo "Vérification et/ou création du dossier logs"
 LOGS_DIR="$(pwd)/logs"
 
 if [ ! -d "$LOGS_DIR" ]; then
@@ -53,9 +39,20 @@ else
     echo "✅ Le dossier logs existe déjà."
 fi
 
-# Le déploiement sur le serveur
+######## Check la version du build
+if [ -z "$BUILD" ]; then
+  echo "Aucun suffixe n'a était spécifié. Utilisation du suffixe par défaut 'release' "
+  BUILD="release"
+fi
+
+echo "Création et export du tag de l'images ${IMAGE_VERSION} sur le version ${BUILD}"
+export IMAGE_VERSION="${IMAGE_VERSION}-${BUILD}"
+echo "Modification du nom de la version: $IMAGE_VERSION"
+
+echo "Déploiement avec BUILD=$BUILD et PROFILES=$PROFILES de la stack=$STACK_NAME"
+
+######### Le déploiement sur le serveur
 echo "🚀 Deploiement avec le PROFILES : " $PROFILES
-echo "Commande de déploiement sur le serveur $PROFILES"
 echo "docker stack deploy -c ./docker-compose-swarm.yml $STACK_NAME"
 docker stack deploy -c ./docker-compose-swarm.yml $STACK_NAME
 
