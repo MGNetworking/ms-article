@@ -56,13 +56,17 @@ pipeline {
                     echo("Valeur param version: ${params.VERSION}")
                     echo("Message de publication: ${params.PUBLIC_MESSAGE}")
 
-                    // Type 2.0.0-beta
-                    env.BUILD = params.VERSION ? 'beta' : 'release'
-                    env.IMAGE_TAG = "${env.IMAGE_VERSION}-${params.VERSION ? 'beta' : 'release'}"
+                    echo "Création de l'image de base "
+                    env.IMAGE_NAME_BASE = "${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION}"
+                    echo("Nom de l'image docker de base : ${env.IMAGE_NAME}")
 
-                    // Type sonatype-nexus.backhole.ovh/ms-article-service:2.0.0-beta
+                    // Type 2.0.0-beta
+                    echo "Création du nom de l'images avec sa version de construction"
+                    env.BUILD = params.VERSION ? 'beta' : 'release'
+                    env.IMAGE_TAG = "${env.IMAGE_VERSION}-${env.BUILD}"
                     env.IMAGE_NAME = "${env.DOCKER_IMAGE_NAME}:${env.IMAGE_TAG}"
-                    echo("Nom de l'image docker : ${env.IMAGE_NAME}")
+                    echo("Nom de l'image docker avec sa version : ${env.IMAGE_NAME}")
+
 
                     if (!env.IMAGE_TAG?.trim()) {
                         error("La version de l'image est obligatoire : ${env.IMAGE_TAG}")
@@ -552,8 +556,8 @@ pipeline {
             steps {
                 script {
                     try {
-                        echo("Nettoyage de l'images de base : ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_VERSION}")
-                        utilsDocker.rmi(env.IMAGE_NAME)
+                        echo("Nettoyage de l'images de base : ${env.IMAGE_NAME_BASE}")
+                        utilsDocker.rmi(env.IMAGE_NAME_BASE)
 
                         echo("Nettoyage de l'images beta / relase : ${dockers.img}")
                         utilsDocker.rmi(dockers.img)
