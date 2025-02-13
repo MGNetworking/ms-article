@@ -10,7 +10,7 @@ services:
       - .env
     environment: # Variable utilise dans le fichier wait_for_config.sh
       PROFILE_ACTIF_SPRING: ${PROFILES}
-      SERVICE_CONFIG_DOCKER: http://ms-configuration:8089
+      SERVICE_CONFIG_DOCKER: ${SERVICE_CONFIG_URI:-http://ms-configuration:8089}
       IP: 172.17.0.1             # Ip Docker0 pour la communication interne vers la BD postgres (Variable dans le fichier de .properties
     deploy:
       replicas: 1
