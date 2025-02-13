@@ -2,7 +2,7 @@
 
   echo "Lancement du script wait_for_config en cours ..."
   echo "DEBUG - PROFILE_ACTIF_SPRING=$PROFILE_ACTIF_SPRING"
-  echo "DEBUG - SERVICE_CONFIG_URI=$SERVICE_CONFIG_URI"
+  echo "DEBUG - SERVICE_CONFIG_URI=$SERVICE_CONFIG_DOCKER"
 
 # Lancement en mode devDocker. N'a pas besoin dus service config
 if [ "$PROFILE_ACTIF_SPRING" = "devDocker" ]; then
@@ -11,18 +11,19 @@ if [ "$PROFILE_ACTIF_SPRING" = "devDocker" ]; then
 else
 
   while true; do
-    response=$(curl -s $SERVICE_CONFIG_URI/msarticle/$PROFILE_ACTIF_SPRING)
-
-    echo "request vers : $SERVICE_CONFIG_DOCKER/msarticle/$PROFILE_ACTIF_SPRING"
+    response=$(curl -s $SERVICE_CONFIG_DOCKER:8089/actuator/health | jq -r '.status')
+    echo "request vers : $SERVICE_CONFIG_DOCKER:8089/actuator/health"
 
     echo "**********************************"
     echo "Liste des variables d'environnement"
     env
     echo "**********************************"
 
-    if [ -n "$response" ]; then
-      echo "Le service ms-configuration est en cours d'exécution."
+
+    if [ "$response" == "UP" ]; then
+      echo "Le service ms-configuration est prêt."
       echo "Lancement du service ms-article ..."
+
       exec java -jar app.jar --spring.profiles.active=$PROFILE_ACTIF_SPRING
 
       break  # Sortir de la boucle si le service est opérationnel
