@@ -438,13 +438,11 @@ pipeline {
             steps {
                 script {
                     try {
-                        echo("Deploiment sur le serveur: ${env.BRANCH_NAME} , en version: ${env.BUILD}")
+                        echo("Deploiment sur le serveur: ${env.BRANCH_NAME}, en version: ${env.BUILD}")
 
-                        string commande = "cd ${dockers.pathProjet} && " +
-                                "export PROFILES=${env.BRANCH_NAME} && " +
-                                "./script/deploy.sh ${env.BUILD}"
+                        string cd = "cd ${dockers.pathProjet} && ./script/deploy.sh ${env.BUILD} ${env.BRANCH_NAME}"
 
-                        utilsDocker.deployStack(commande, true, remote)
+                        utilsDocker.deployStack(cd, true, remote)
 
                     } catch (Exception e) {
                         echo "❌ FAILURE - ${e.message}"
