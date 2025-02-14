@@ -11,8 +11,8 @@ if [ "$PROFILE_ACTIF_SPRING" = "devDocker" ]; then
 else
 
   while true; do
-    response=$(curl -s $SERVICE_CONFIG_DOCKER:8089/actuator/health | jq -r '.status')
-    echo "request vers : $SERVICE_CONFIG_DOCKER:8089/actuator/health"
+    response=$(curl -s $SERVICE_CONFIG_DOCKER/actuator/health | jq -r '.status')
+    echo "request vers : $SERVICE_CONFIG_DOCKER/actuator/health"
 
     echo "**********************************"
     echo "Liste des variables d'environnement"
