@@ -2,7 +2,7 @@
 
   echo "Lancement du script wait_for_config en cours ..."
   echo "DEBUG - PROFILE_ACTIF_SPRING=$PROFILE_ACTIF_SPRING"
-  echo "DEBUG - SERVICE_CONFIG_URI=$SERVICE_CONFIG_DOCKER"
+  echo "DEBUG - SERVICE_CONFIG_DOCKER=$SERVICE_CONFIG_DOCKER"
 
 # Lancement en mode devDocker. N'a pas besoin dus service config
 if [ "$PROFILE_ACTIF_SPRING" = "devDocker" ]; then
