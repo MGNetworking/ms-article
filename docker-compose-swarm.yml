@@ -11,13 +11,12 @@ services:
     environment: # Variable utilise dans le fichier wait_for_config.sh
       PROFILE_ACTIF_SPRING: ${PROFILES}
       SERVICE_CONFIG_DOCKER: ${SERVICE_CONFIG_URI:-http://ms-configuration:8089}
-      IP: 172.17.0.1             # Ip Docker0 pour la communication interne vers la BD postgres (Variable dans le fichier de .properties
     deploy:
       replicas: 1
-#      resources:
-#        limits: # spécifie les limites de ressources pour le service
-#          cpus: '0.5'   # limite maximale (CPU) '0.5' signifierait 50% d'utilisation maximale du CPU
-#          memory: 512M  # limite maximale de la mémoire RAM
+      #      resources:
+      #        limits: # spécifie les limites de ressources pour le service
+      #          cpus: '0.5'   # limite maximale (CPU) '0.5' signifierait 50% d'utilisation maximale du CPU
+      #          memory: 512M  # limite maximale de la mémoire RAM
       labels:
         - "lb.service=ms-article-service"
       update_config: #  Configure la stratégie de mise à jour.
