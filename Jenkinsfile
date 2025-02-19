@@ -340,7 +340,7 @@ pipeline {
 
         stage('Build Docker Image') {
             when {
-                expression { env.SKIP_BUILD?.toBoolean() || params.FORCE?.toBoolean()}
+                expression { env.SKIP_BUILD?.toBoolean() || params.FORCE?.toBoolean() }
             }
             agent any
             steps {
@@ -612,7 +612,11 @@ pipeline {
                 echo "Suppression de l'image en échec ${dockers.img} sur le serveur dans ${time} secondes ..."
                 sleep time: time, unit: 'SECONDS'
 
-                utilsDocker.rmi(dockers.img, remote)
+                if (env.BRANCH_NAME == 'nas') {
+                    utilsDocker.rmi(dockers.img, true, remote)
+                } else {
+                    utilsDocker.rmi(dockers.img, false, remote)
+                }
             }
         }
     }
