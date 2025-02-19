@@ -1,4 +1,4 @@
-package ArticleWebService.web.unitaire;
+package ArticleWebService.unitaire;
 
 import static org.junit.jupiter.api.Assertions.*;
 

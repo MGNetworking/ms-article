@@ -1,4 +1,4 @@
-package ArticleWebService.web.unitaire;
+package ArticleWebService.unitaire;
 
 import ArticleWebService.dto.ErrorDetail;
 import ArticleWebService.handler.Exception.ArticleException;

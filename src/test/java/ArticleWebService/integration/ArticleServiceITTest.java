@@ -1,4 +1,4 @@
-package ArticleWebService.web.integration;
+package ArticleWebService.integration;
 
 import ArticleWebService.dto.ArticleDto;
 import ArticleWebService.service.ArticleServiceImpl;
