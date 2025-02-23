@@ -1,4 +1,4 @@
-package ArticleWebService;
+package ArticleWebService.controler;
 
 import ArticleWebService.component.ConfigurationArticle;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +16,7 @@ public class ControllerArticleConfig {
     ConfigurationArticle configurationArticle;
 
     @GetMapping(value = "/config-service")
-    public ConfigurationArticle getConfigurationService(){
+    public ConfigurationArticle getConfigurationService() {
         return configurationArticle;
     }
 }

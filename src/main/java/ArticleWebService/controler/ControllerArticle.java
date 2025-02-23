@@ -1,4 +1,5 @@
-package ArticleWebService;
+package ArticleWebService.controler;
+
 
 import ArticleWebService.handler.Exception.ArticleException;
 import ArticleWebService.dto.ArticleDtoSave;
@@ -9,20 +10,13 @@ import ArticleWebService.handler.Exception.InvalidPathVariableException;
 import ArticleWebService.handler.response.GenericApiResponse;
 import ArticleWebService.handler.response.ResponseHandler;
 import ArticleWebService.service.ArticleService;
-//import io.swagger.annotations.ApiOperation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.keycloak.authorization.client.util.Http;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.Max;
@@ -30,10 +24,6 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.UUID;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 
 @Slf4j
 @RestController
