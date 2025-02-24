@@ -62,6 +62,8 @@ public class ArticleDtoUpdate {
     private Timestamp dateCreation;
 
     // Variable mise à jour en BD après update
+    @JsonSerialize(using = DateSerialisation.class)
+    @JsonDeserialize(using = DateDeserializer.class)
     private Timestamp dateMaj;
 
 }
