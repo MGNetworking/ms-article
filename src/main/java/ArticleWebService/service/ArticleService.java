@@ -5,6 +5,7 @@ import ArticleWebService.dto.ArticleDto;
 import ArticleWebService.dto.ArticleDtoSave;
 import ArticleWebService.dto.ArticleDtoUpdate;
 import ArticleWebService.entities.*;
+import ArticleWebService.projection.ArticleProjection;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -40,6 +41,7 @@ public interface ArticleService {
      */
     Page<ArticleDto> findArticlesPaginationSection(int page, int size, Integer sectionId);
 
+    Page<ArticleProjection> findByPortfoliotrueWithProjection(int page, int size);
     /**
      * Récuéper l'article complet par son ID
      *

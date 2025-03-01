@@ -9,6 +9,7 @@ import ArticleWebService.dto.ArticleDto;
 import ArticleWebService.handler.Exception.InvalidPathVariableException;
 import ArticleWebService.handler.response.GenericApiResponse;
 import ArticleWebService.handler.response.ResponseHandler;
+import ArticleWebService.projection.ArticleProjection;
 import ArticleWebService.service.ArticleService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -17,6 +18,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.Max;
@@ -27,7 +29,7 @@ import java.util.UUID;
 
 @Slf4j
 @RestController
-@RequestMapping("/article")
+@RequestMapping("/articles")
 public class ControllerArticle {
 
     private final ArticleService articleService;
@@ -46,7 +48,7 @@ public class ControllerArticle {
      * Le statut HTTP sera HttpStatus.OK si l'article est trouvé.
      * @throws ArticleException si aucun article correspondant à l'identifiant spécifié n'est trouvé.
      */
-    @GetMapping(path = "/getArticle/{id}")
+    @GetMapping(path = "/{id}")
     public ResponseEntity<GenericApiResponse<Article>> getArticle(
             @PathVariable("id") Integer id, HttpServletRequest request) {
 
@@ -71,7 +73,7 @@ public class ControllerArticle {
      * @return un objet ResponseEntity contenant une réponse API avec une page d'articles (ArticleDto).
      * Le statut HTTP sera HttpStatus.OK en cas de succès.
      */
-    @GetMapping(path = "/getAllArticles")
+    @GetMapping(path = "/list")
     public ResponseEntity<GenericApiResponse<Page<ArticleDto>>> getlistArticlePagination(
             @RequestParam(defaultValue = "0", name = "page") @Min(0) @Max(10) Integer page,
             @RequestParam(defaultValue = "10", name = "size") @Min(0) @Max(10) Integer size,
@@ -94,7 +96,7 @@ public class ControllerArticle {
      * @return un objet de type ResponseEntity contenant une réponse API avec
      * une page d'articles (ArticleDto) triés par identifiant
      */
-    @GetMapping(path = "/getAllArticlesOrderById")
+    @GetMapping(path = "/sorted")
     public ResponseEntity<GenericApiResponse<Page<ArticleDto>>> getlistArticlePaginationOrdreBy(
             @RequestParam(defaultValue = "0", name = "page") @Min(0) @Max(10) Integer page,
             @RequestParam(defaultValue = "10", name = "size") @Min(0) @Max(10) Integer size,
@@ -117,7 +119,7 @@ public class ControllerArticle {
      * @return ResponseEntity<Page < ArticleDto>> Un objet ResponseEntity contenant une page d'articles.
      * Le statut sera HttpStatus.OK en cas de succès.
      */
-    @GetMapping(path = "/getAllArticlesSection")
+    @GetMapping(path = "/section")
     public ResponseEntity<GenericApiResponse<Page<ArticleDto>>> getlistArticleWithPagination(
             @RequestParam(defaultValue = "0", name = "page") @Min(0) @Max(10) Integer page,
             @RequestParam(defaultValue = "10", name = "size") @Min(0) @Max(10) Integer size,
@@ -132,6 +134,26 @@ public class ControllerArticle {
 
     }
 
+    /**
+     * Récupère une liste paginée de portfolio.
+     *
+     * @param page
+     * @param size
+     * @param request
+     * @return
+     */
+    @GetMapping(path = "/portfolio")
+    public ResponseEntity<GenericApiResponse<Page<ArticleProjection>>> getPaginationArticleProjection(
+            @RequestParam(defaultValue = "0", name = "page") @Min(0) @Max(10) Integer page,
+            @RequestParam(defaultValue = "10", name = "size") @Min(0) @Max(10) Integer size,
+            HttpServletRequest request) {
+        return ResponseHandler.generateResponse(
+                String.format("Page %d nombre d'élement %d", page, size),
+                HttpStatus.OK,
+                request.getRequestURI(),
+                this.articleService.findByPortfoliotrueWithProjection(page, size));
+    }
+
 
     /**
      * Sauvegarde les données d'un article dans le système.
@@ -143,7 +165,7 @@ public class ControllerArticle {
      * @param request        l'objet de requête HTTP en cours.
      * @return un objet ResponseEntity contenant l'article sauvegardé avec un statut HTTP 200 (OK) en cas de succès.
      */
-    @PostMapping(path = "/saveArticle",
+    @PostMapping(path = "/save",
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     @PreAuthorize("@access.isAuthorization(#articleDtoSave.idUser)")
@@ -170,7 +192,7 @@ public class ControllerArticle {
      * @param request          l'objet de requête HTTP en cours.
      * @return un objet ResponseEntity contenant l'article mis à jour avec un statut HTTP 200 (OK) en cas de succès.
      */
-    @PutMapping(path = "/updateArticle",
+    @PutMapping(path = "/update",
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     @PreAuthorize("@access.isAuthorization(#articleDtoUpdate.idUser)")
@@ -195,7 +217,7 @@ public class ControllerArticle {
      * @param request   l'objet de requête HTTP en cours.
      * @return un objet ResponseEntity contenant l'identifiant de l'article supprimé avec un statut HTTP 200 (OK) en cas de succès.
      */
-    @DeleteMapping(path = "/deleteArticle/{idArticle}/{idUser}")
+    @DeleteMapping(path = "/delete/{idArticle}/{idUser}")
     @PreAuthorize("@access.isAuthorization(#idUser)")
     public ResponseEntity<GenericApiResponse<Integer>> deteleArticle(
             @PathVariable @NotNull @Min(1) Integer idArticle,
@@ -225,7 +247,7 @@ public class ControllerArticle {
      *
      * @return une liste de tous les domaines avec leurs sections associées.
      */
-    @GetMapping(path = "/getAllDomain")
+    @GetMapping(path = "/domain")
     public ResponseEntity<GenericApiResponse<List<Domain>>> getAllDomain(HttpServletRequest request) {
         return ResponseHandler.generateResponse(
                 "La liste des Domain",

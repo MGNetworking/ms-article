@@ -126,12 +126,12 @@ public class ControllerArticleE2ETest {
 
     @Test
     @Order(1)
-    @DisplayName("GET /article/getArticle/{id} - Success")
+    @DisplayName("GET /article/{id} - Success")
     public void getArticleById() throws Exception {
 
         int idArticle = 1;
 
-        MvcResult result = this.mockMvc.perform(get("/article/getArticle/{id}", idArticle)
+        MvcResult result = this.mockMvc.perform(get("/articles/{id}", idArticle)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andDo(print())
@@ -158,24 +158,24 @@ public class ControllerArticleE2ETest {
 
     @Test
     @Order(2)
-    @DisplayName("GET /article/getArticle/{id} - ID négatif")
+    @DisplayName("GET /articles/{id} - ID négatif")
     public void getArticleById_BadRequest() throws Exception {
-        this.mockMvc.perform(get("/article/getArticle/{id}", -1)
+        this.mockMvc.perform(get("/articles/{id}", -1)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status")
                         .value(404))
                 .andExpect(jsonPath("$.path")
-                        .value("/article/getArticle/-1"));
+                        .value("/articles/-1"));
     }
 
 
     @Test
     @Order(3)
-    @DisplayName("GET /article/getArticle/{id} - Invalid ID - MethodArgumentTypeMismatchException")
+    @DisplayName("GET /articles/{id} - Invalid ID - MethodArgumentTypeMismatchException")
     public void testValidationErrors() throws Exception {
-        this.mockMvc.perform(get("/article/getArticle/{id}", "invalid-id")
+        this.mockMvc.perform(get("/articles/{id}", "invalid-id")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isBadRequest()) // Vérifie que le statut est 400
@@ -192,9 +192,9 @@ public class ControllerArticleE2ETest {
 
     @Test
     @Order(4)
-    @DisplayName("GET /article/getAllArticles - ID manquant")
-    public void getArticleById_NullId() throws Exception {
-        this.mockMvc.perform(get("/article/getArticle/")
+    @DisplayName("GET /articles/{id} - ID manquant")
+    public void articleById_NullId() throws Exception {
+        this.mockMvc.perform(get("/articles/") // ne rien mettre
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isNotFound()); // Vérifie le statut 404
@@ -203,11 +203,11 @@ public class ControllerArticleE2ETest {
 
     @Test
     @Order(5)
-    @DisplayName("GET /article/getAllArticles - Article Not found - ArticleException")
-    public void getArticle_ById_NotFound() throws Exception {
+    @DisplayName("GET /articles/{id} - Article Not found - ArticleException")
+    public void articleById_NotFound() throws Exception {
 
         this.mockMvc.perform(MockMvcRequestBuilders
-                        .get("/article/getArticle/{id}", 5000))
+                        .get("/articles/{id}", 5000))
                 .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status")
@@ -224,12 +224,12 @@ public class ControllerArticleE2ETest {
 
     @Test
     @Order(6)
-    @DisplayName("GET /article/getAllArticles - Recherche reussi une pagination d'article status 200")
-    public void getAllArticles_pageble_OK() throws Exception {
+    @DisplayName("GET /articles/list - Recherche reussi une pagination d'article status 200")
+    public void articlesList_pageble_OK() throws Exception {
 
         int page = 0, size = 10;
 
-        MvcResult result = this.mockMvc.perform(get("/article/getAllArticles")
+        MvcResult result = this.mockMvc.perform(get("/articles/list")
                         .param("page", Integer.toString(page))
                         .param("size", Integer.toString(size))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -266,13 +266,13 @@ public class ControllerArticleE2ETest {
 
     @Test
     @Order(7)
-    @DisplayName("GET /article/getAllArticles - Success")
-    public void getAllArticles_pageble_IsEmpty() throws Exception {
+    @DisplayName("GET /articles/list - Success")
+    public void articlesList_pageble_IsEmpty() throws Exception {
 
         int page = 99, size = 66;
 
         this.mockMvc.perform(MockMvcRequestBuilders
-                        .get("/article/getAllArticles")
+                        .get("/articles/list")
                         .param("page", Integer.toString(page))
                         .param("size", Integer.toString(size))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -282,7 +282,7 @@ public class ControllerArticleE2ETest {
                 .andExpect(jsonPath("$.message")
                         .value(String.format("La page %d et le nombre d'éléments %d", page, size)))
                 .andExpect(jsonPath("$.status").value(200))
-                .andExpect(jsonPath("$.path").value("/article/getAllArticles"))
+                .andExpect(jsonPath("$.path").value("/articles/list"))
                 .andExpect(jsonPath("$.data.content").isArray()) // Vérifie que 'content' est un tableau
                 .andExpect(jsonPath("$.data.content").isEmpty()) // Vérifie que 'content' est vide
                 .andExpect(jsonPath("$.data.pageable").exists()) // Vérifie que 'pagination' existe
@@ -291,12 +291,12 @@ public class ControllerArticleE2ETest {
 
     @Test
     @Order(8)
-    @DisplayName("GET /article/getAllArticlesSection - Success")
-    public void getArticleSection_pageble_OK() throws Exception {
+    @DisplayName("GET /articles/section - Success")
+    public void articleSection_pageble_OK() throws Exception {
 
         int page = 0, size = 6, section = 1;
         this.mockMvc.perform(MockMvcRequestBuilders
-                        .get("/article/getAllArticlesSection")
+                        .get("/articles/section")
                         .param("page", String.valueOf(page))
                         .param("size", String.valueOf(size))
                         .param("sectionId", String.valueOf(section)))
@@ -306,7 +306,7 @@ public class ControllerArticleE2ETest {
                 .andExpect(jsonPath("$.message")
                         .value(String.format("Page %d nombre d'élement %d", page, size)))
                 .andExpect(jsonPath("$.status").value(200))
-                .andExpect(jsonPath("$.path").value("/article/getAllArticlesSection"))
+                .andExpect(jsonPath("$.path").value("/articles/section"))
                 .andExpect(jsonPath("$.data.content").isArray()) // Vérifie que 'content' est un tableau
                 .andExpect(jsonPath("$.data.content").isNotEmpty()) // Vérifie que 'content' est vide
                 .andExpect(jsonPath("$.data.pageable").exists()) // Vérifie que 'pagination' existe
@@ -316,12 +316,12 @@ public class ControllerArticleE2ETest {
 
     @Test
     @Order(9)
-    @DisplayName("GET /article/getAllArticlesSection - Success")
-    public void getArticleSection_pageble_IsEmpty() throws Exception {
+    @DisplayName("GET /articles/section - Success")
+    public void articleSection_pageble_IsEmpty() throws Exception {
 
         int page = 99, size = 66, section = 1;
         this.mockMvc.perform(MockMvcRequestBuilders
-                        .get("/article/getAllArticlesSection")
+                        .get("/articles/section")
                         .param("page", String.valueOf(page))
                         .param("size", String.valueOf(size))
                         .param("sectionId", String.valueOf(section)))
@@ -331,7 +331,71 @@ public class ControllerArticleE2ETest {
                 .andExpect(jsonPath("$.message")
                         .value(String.format("Page %d nombre d'élement %d", page, size)))
                 .andExpect(jsonPath("$.status").value(200))
-                .andExpect(jsonPath("$.path").value("/article/getAllArticlesSection"))
+                .andExpect(jsonPath("$.path").value("/articles/section"))
+                .andExpect(jsonPath("$.data.content").isArray()) // Vérifie que 'content' est un tableau
+                .andExpect(jsonPath("$.data.content").isEmpty()) // Vérifie que 'content' est vide
+                .andExpect(jsonPath("$.data.pageable").exists()) // Vérifie que 'pagination' existe
+                .andDo(print());
+
+    }
+
+    @Test
+    @Order(9)
+    @DisplayName("GET /articles/portfolio - Success")
+    public void articleportfolio_pageble_OK() throws Exception {
+
+        int page = 0, size = 6, section = 1;
+        this.mockMvc.perform(MockMvcRequestBuilders
+                        .get("/articles/portfolio")
+                        .param("page", String.valueOf(page))
+                        .param("size", String.valueOf(size)))
+                .andDo(MockMvcResultHandlers.print())
+                // Vérification du statut et structure de base de la réponse
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.message")
+                        .value(String.format("Page %d nombre d'élement %d", page, size)))
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.path").value("/articles/portfolio"))
+
+                // Vérification de la structure des données de pagination
+                .andExpect(jsonPath("$.data.content").isArray())
+                .andExpect(jsonPath("$.data.content").isNotEmpty())  // Vérifie que des articles sont présents
+                .andExpect(jsonPath("$.data.content.length()").value(size))  // Vérifie que le nombre d'articles correspond à la taille demandée
+
+                // Vérification des métadonnées de pagination
+                .andExpect(jsonPath("$.data.pageable").exists())
+                .andExpect(jsonPath("$.data.totalElements").exists())
+                .andExpect(jsonPath("$.data.totalPages").exists())
+                .andExpect(jsonPath("$.data.number").value(page))  // Vérifie que c'est bien la page demandée
+
+                // Vérification de la structure d'un article (premier élément)
+                .andExpect(jsonPath("$.data.content[0].idArticle").exists())
+                .andExpect(jsonPath("$.data.content[0].titre").exists())
+                .andExpect(jsonPath("$.data.content[0].description").exists())
+                .andExpect(jsonPath("$.data.content[0].portfolio").value(true))  // Vérifie que c'est bien un article du portfolio
+
+                .andDo(print());;
+
+    }
+
+    @Test
+    @Order(9)
+    @DisplayName("GET /articles/portfolio - Success")
+    public void articleportfolio_pageble_IsEmpty() throws Exception {
+
+        int page = 99, size = 66, section = 1;
+        this.mockMvc.perform(MockMvcRequestBuilders
+                        .get("/articles/portfolio")
+                        .param("page", String.valueOf(page))
+                        .param("size", String.valueOf(size)))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.message")
+                        .value(String.format("Page %d nombre d'élement %d", page, size)))
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.path").value("/articles/portfolio"))
                 .andExpect(jsonPath("$.data.content").isArray()) // Vérifie que 'content' est un tableau
                 .andExpect(jsonPath("$.data.content").isEmpty()) // Vérifie que 'content' est vide
                 .andExpect(jsonPath("$.data.pageable").exists()) // Vérifie que 'pagination' existe
@@ -341,22 +405,22 @@ public class ControllerArticleE2ETest {
 
     @Test
     @Order(10)
-    @DisplayName("GET /article/getAllDomain - Success")
+    @DisplayName("GET /articles/domain - Success")
     public void getAllDomain() throws Exception {
 
         this.mockMvc.perform(MockMvcRequestBuilders
-                        .get("/article/getAllDomain"))
+                        .get("/articles/domain"))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isOk());
     }
 
     @Test
     @Order(11)
-    @DisplayName("POST /article/saveArticle - Success")
+    @DisplayName("POST /articles/save - Success")
     void shouldCreateArticleWhenValidRequest() throws Exception {
 
         // Exécuter l'appel à l'API et capturer la réponse
-        MvcResult mvcResult = this.mockMvc.perform(post("/article/saveArticle")
+        MvcResult mvcResult = this.mockMvc.perform(post("/articles/save")
                         .header("Authorization", "Bearer " + tokenMax) // Ajout du token
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(articleDtoSave)))
@@ -382,10 +446,10 @@ public class ControllerArticleE2ETest {
 
     @Test
     @Order(12)
-    @DisplayName("POST /article/saveArticle - Forbidden")
+    @DisplayName("POST /articles/save - Forbidden")
     void shouldReturnForbiddenWhenUpdatingArticle() throws Exception {
 
-        mockMvc.perform(post("/article/saveArticle")
+        mockMvc.perform(post("/articles/save")
                         .header("Authorization", "Bearer " + tokenMaximus)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(articleDtoSave)))
@@ -395,10 +459,10 @@ public class ControllerArticleE2ETest {
 
     @Test
     @Order(13)
-    @DisplayName("POST /article/saveArticle - Unauthoriezed")
+    @DisplayName("POST /articles/save - Unauthoriezed")
     void shouldReturnUnauthorizedWhenUpdatingArticle() throws Exception {
 
-        mockMvc.perform(post("/article/saveArticle")
+        mockMvc.perform(post("/articles/save")
                         .header("Authorization", "Bearer token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(articleDtoSave)))
@@ -408,7 +472,7 @@ public class ControllerArticleE2ETest {
 
     @Test
     @Order(14)
-    @DisplayName("PUT /article/updateArticle - Is created")
+    @DisplayName("PUT /articles/update - Is created")
     void shouldReturnCreateWhenUpdatingArticle() throws Exception {
 
         this.articleDtoUpdate = new ArticleDtoUpdate(
@@ -427,7 +491,7 @@ public class ControllerArticleE2ETest {
         );
 
         // Appel le end point
-        mockMvc.perform(put("/article/updateArticle")
+        mockMvc.perform(put("/articles/update")
                         .header("Authorization", "Bearer " + tokenMax)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(this.articleDtoUpdate)))
@@ -437,10 +501,10 @@ public class ControllerArticleE2ETest {
 
     @Test
     @Order(15)
-    @DisplayName("DELETE /article/deleteArticle/{idArticle}/{idUser} - Is Forbidden")
+    @DisplayName("DELETE /articles/delete/{idArticle}/{idUser} - Is Forbidden")
     void shouldReturnFalseAfterDeleteArticle() throws Exception {
 
-        this.mockMvc.perform(delete("/article/deleteArticle/{idArticle}/{idUser}",
+        this.mockMvc.perform(delete("/articles/delete/{idArticle}/{idUser}",
                         this.articleId, this.userMax)
                         .header("Authorization", "Bearer " + tokenMaximus)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -452,9 +516,9 @@ public class ControllerArticleE2ETest {
 
     @Test
     @Order(16)
-    @DisplayName("DELETE /article/deleteArticle/{idArticle}/{idUser} - Success")
+    @DisplayName("DELETE /articles/delete/{idArticle}/{idUser} - Success")
     void shouldReturnTrueAfterDeleteArticle() throws Exception {
-        this.mockMvc.perform(delete("/article/deleteArticle/{idArticle}/{idUser}"
+        this.mockMvc.perform(delete("/articles/delete/{idArticle}/{idUser}"
                         , this.articleId, this.userMaximus)
                         .header("Authorization", "Bearer " + this.tokenMax)
                         .contentType(MediaType.APPLICATION_JSON)

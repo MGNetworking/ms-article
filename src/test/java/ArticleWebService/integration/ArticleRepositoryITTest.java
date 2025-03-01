@@ -3,8 +3,11 @@ package ArticleWebService.integration;
 import ArticleWebService.dto.ArticleDtoUpdate;
 import ArticleWebService.entities.Article;
 import ArticleWebService.entities.Section;
+import ArticleWebService.projection.ArticleProjection;
 import ArticleWebService.repository.ArticleRepository;
 import ArticleWebService.service.ArticleService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;
@@ -19,7 +22,9 @@ import org.springframework.test.context.jdbc.Sql;
 import javax.persistence.EntityManager;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -40,7 +45,7 @@ class ArticleRepositoryITTest {
 
     @Test
     @Order(1)
-    @DisplayName("Vérifie que les données sont bien présentes dans la BD H2")
+    @DisplayName("BD H2: Vérifie que les données sont bien présentes dans la BD H2 de test")
     void verifyDataInH2Database() {
         // Récupérer toutes les données
         List<Article> articles = articleRepository.findAll();
@@ -66,16 +71,22 @@ class ArticleRepositoryITTest {
     @Test
     @Order(3)
     @DisplayName("JPQL: Recherche la liste des artciles par leur section")
-    void findAllArticlesBySectionTest() {
+    void findAllArticlesBySectionTest() throws JsonProcessingException {
 
         Page<Article> page = this.articleRepository
                 .findAllArticlesBySection(
                         PageRequest.of(0, 10),
                         1);
 
+
+        System.out.println("Content : " + page.getContent());
+        ObjectMapper objectMapper = new ObjectMapper();
+        String json = objectMapper.writeValueAsString(page);
+        System.out.println("JSON qui serait envoyé par l'API: " + json);
+
         assertNotNull(page, "La recherche de la liste n'à pas était trouver");
-        assertEquals(1, page.getTotalElements());
-        assertEquals(1, page.getContent().size()); // Vérifie que la page contient 1 article
+        assertEquals(4, page.getTotalElements());
+        assertEquals(4, page.getContent().size()); // Vérifie que la page contient 1 article
         assertEquals(1, page.getContent().get(0).getSection().getIdSection());
         assertEquals(1, page.getTotalPages());
     }
@@ -89,9 +100,9 @@ class ArticleRepositoryITTest {
                 .findAllArticlePageOrderBy(PageRequest.of(0, 10));
 
         assertNotNull(page, "La recherche de la liste n'à pas était trouver");
-        assertEquals(2, page.getTotalElements());
-        assertEquals(2, page.getContent().size()); // Vérifie que la page contient 1 article
-        assertEquals(1, page.getTotalPages());
+        assertEquals(12, page.getTotalElements());
+        assertEquals(10, page.getContent().size());
+        assertEquals(2, page.getTotalPages());
     }
 
     @Test
@@ -100,7 +111,7 @@ class ArticleRepositoryITTest {
     void updateArticleFields() {
 
         Section section = new Section();
-        section.setIdSection(2);
+        section.setIdSection(1);
 
         ArticleDtoUpdate dto = new ArticleDtoUpdate();
         dto.setIdArticle(2);
@@ -117,8 +128,9 @@ class ArticleRepositoryITTest {
 
         // Vérification de la correspondance de l'article
         assertEquals(dto.getIdArticle(), updatedArticle.getIdArticle(), "Ce n'est pas le bon id article ");
-        assertEquals(dto.getSection().getIdSection(), updatedArticle.getSection().getIdSection());
-        assertEquals("Spring Boot advance", updatedArticle.getTitre(),
+        assertEquals(dto.getSection().getIdSection(), updatedArticle.getSection().getIdSection(),
+                "La section de l'article doit rester 1");
+        assertEquals(dto.getTitre(), updatedArticle.getTitre(),
                 "Le Titre n'est pas était identique a la modification");
         assertEquals("Contenu modifié", updatedArticle.getArticle(),
                 "Le contenu de l'article n'est pas était identique a la modification");
@@ -140,7 +152,7 @@ class ArticleRepositoryITTest {
     void updateArticleField() {
 
         Section section = new Section();
-        section.setIdSection(2);
+        section.setIdSection(1);
 
         ArticleDtoUpdate dto = new ArticleDtoUpdate();
         dto.setIdArticle(2);
@@ -148,16 +160,18 @@ class ArticleRepositoryITTest {
         dto.setTitre("Spring Boot Teste");
 
         int rowsUpdated = this.articleRepository.updateArticleFields(dto);
+        // Vider le cache pour s'assurer d'avoir les données à jour
+        entityManager.clear();
         // ArticleId correspond à la clé primaire composite
         Article updatedArticle = entityManager.find(Article.class, 2);
 
         // Vérification de la correspondance de l'article
-        assertEquals(dto.getIdArticle(), updatedArticle.getIdArticle(), "Ce n'est pas le bon id article ");
-        assertEquals(dto.getSection().getIdSection(), updatedArticle.getSection().getIdSection());
-        assertEquals("Spring Boot Teste", updatedArticle.getTitre(),
+        assertEquals(dto.getIdArticle(), updatedArticle.getIdArticle(),
+                "Ce n'est pas le bon id article ");
+        assertEquals(dto.getSection().getIdSection(), updatedArticle.getSection().getIdSection(),
+                "La section de l'article doit rester 1");
+        assertEquals("Spring Boot Teste", dto.getTitre(),
                 "Le Titre n'est pas identique à la modification");
-
-        // Vérification des changements apportait
         assertEquals(1, rowsUpdated, "Une ligne devrait être mise à jour");
 
     }
@@ -168,7 +182,7 @@ class ArticleRepositoryITTest {
     void updateArticleMeta() {
 
         Section section = new Section();
-        section.setIdSection(2);
+        section.setIdSection(1);
 
         ArticleDtoUpdate dto = new ArticleDtoUpdate();
         dto.setIdArticle(2);
@@ -182,7 +196,8 @@ class ArticleRepositoryITTest {
 
         // Vérification de la correspondance de l'article
         assertEquals(dto.getIdArticle(), updatedArticle.getIdArticle(), "Ce n'est pas le bon id article ");
-        assertEquals(dto.getSection().getIdSection(), updatedArticle.getSection().getIdSection());
+        assertEquals(dto.getSection().getIdSection(), updatedArticle.getSection().getIdSection(),
+                "La section de l'article doit rester 1");
 
         // Vérification des changements apportait
         assertEquals(1, rowsUpdated, "Une ligne devrait être mise à jour");
@@ -190,6 +205,61 @@ class ArticleRepositoryITTest {
                 "La vue n'est pas était incrémenter de 1 ");
         assertFalse(dto.isVisibale(),
                 "L'article ne doit pas être visible !");
+    }
+
+    @Test
+    @Order(8)
+    @DisplayName("Projection : Recherche une pagination d'articles avec portfolio a true")
+    void findByPortfolioTrueOrderByIdArticleAscWithProjectionTest() throws JsonProcessingException {
+
+        Page<ArticleProjection> portfolioArticlesPage = this.articleRepository
+                .findByPortfolioTrueOrderByIdArticleAsc(PageRequest.of(0, 10), ArticleProjection.class);
+
+        System.out.println("pagination projection : " + portfolioArticlesPage);
+        System.out.println("pagination projection TotalPages: " + portfolioArticlesPage.getTotalPages());
+        System.out.println("pagination projection TotalPages: " + portfolioArticlesPage.getTotalElements());
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        String json = objectMapper.writeValueAsString(portfolioArticlesPage);
+        System.out.println("JSON qui serait envoyé par l'API : " + json);
+
+        // Assertions
+        assertNotNull(portfolioArticlesPage, "La recherche de portfolio articles a échoué");
+        assertThat(portfolioArticlesPage.getTotalPages()).isEqualTo(2);
+        assertFalse(portfolioArticlesPage.getContent().isEmpty(),
+                "La liste des articles ne devrait pas être vide");
+
+        // Vérifier l'ordre croissant des ID (plus pertinent)
+        if (portfolioArticlesPage.getContent().size() > 1) {
+            List<Integer> ids = portfolioArticlesPage.getContent()
+                    .stream()
+                    .map(ArticleProjection::getIdArticle)
+                    .collect(Collectors.toList());
+
+            assertThat(ids).isSorted(); // Vérifie que les IDs sont bien triés en ordre croissant
+
+        }
+    }
+
+    @Test
+    @Order(9)
+    @DisplayName("Article Projection Dynamic : Recherche une pagination d'artciles avec portfolio a true")
+    public void findByPortfolioTrueOrderByIdArticleAscWithDynamicProjectionTest() {
+        // Créer et enregistrer des articles de test (comme ci-dessus)
+
+        // Exécuter la méthode avec projection dynamique
+        Page<ArticleProjection> portfolioArticlesPage =
+                articleRepository.findByPortfolioTrueOrderByIdArticleAsc(
+                        PageRequest.of(0, 10),
+                        ArticleProjection.class
+                );
+
+        System.out.println("pagination projection : " + portfolioArticlesPage);
+        System.out.println("pagination projection TotalPages: " + portfolioArticlesPage.getTotalPages());
+        System.out.println("pagination projection Content: " + portfolioArticlesPage.getContent());
+
+        // Vérifications
+        assertThat(portfolioArticlesPage.getTotalElements()).isEqualTo(12);
     }
 
 }

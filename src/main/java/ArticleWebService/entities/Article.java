@@ -71,6 +71,9 @@ public class Article implements Serializable {
     @Column(name = "vue", nullable = true)
     private int vue;
 
+    @Column(name = "portfolio", nullable = false)
+    private boolean portfolio;
+
     @JsonSerialize(using = DateSerialisation.class)
     @JsonDeserialize(using = DateDeserializer.class)
     @CreationTimestamp
@@ -81,19 +84,5 @@ public class Article implements Serializable {
     @JsonDeserialize(using = DateDeserializer.class)
     @Column(name = "date_maj", nullable = true)
     private Timestamp dateMaj;
-
-
-/*
-    @Column(name = "id_commentaire", nullable = true)
-    private Integer idCommentaire;
-
-    @Column(name = "id_source", nullable = true)
-    private Integer idSource;
-
-    @Column(name = "id_note", nullable = true)
-    private Integer idNote;
-
-*/
-
 
 }

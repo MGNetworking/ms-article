@@ -5,7 +5,7 @@ import ArticleWebService.dto.ArticleDto;
 import ArticleWebService.dto.ArticleDtoSave;
 import ArticleWebService.dto.ArticleDtoUpdate;
 import ArticleWebService.entities.*;
-import ArticleWebService.handler.response.ResponseHandler;
+import ArticleWebService.projection.ArticleProjection;
 import ArticleWebService.repository.ArticleRepository;
 import ArticleWebService.repository.DomainRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -21,9 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 
 import javax.persistence.EntityManager;
-import javax.persistence.PersistenceException;
-import javax.swing.text.html.Option;
-import javax.validation.ConstraintViolationException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -73,6 +70,13 @@ public class ArticleServiceImpl implements ArticleService {
 
     }
 
+    /**
+     * TODO utilisé
+     * Permet de récupérer les données
+     * @param page le numéro de la page.
+     * @param size le nombre d'articles.
+     * @return
+     */
     @Override
     public Page<ArticleDto> findAllArticlePageOrderBy(int page, int size) {
         try {
@@ -114,6 +118,26 @@ public class ArticleServiceImpl implements ArticleService {
             String message = String
                     .format("Erreur lors de la récupération de la page %d élément %d section %s message %s",
                             page, size, sectionId, ex.getMessage());
+
+            log.error(message);
+            throw new ArticleException(String.format(message), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+    }
+
+
+    @Override
+    public Page<ArticleProjection> findByPortfoliotrueWithProjection(int page, int size) {
+
+        try {
+
+            return this.articleRepository
+                    .findByPortfolioTrueOrderByIdArticleAsc(PageRequest.of(page, size), ArticleProjection.class);
+        } catch (DataAccessException ex) {
+
+            String message = String
+                    .format("Erreur lors de la récupération sur la projection d'article de la page %d élément %d section %s message %s",
+                            page, size, ex.getMessage());
 
             log.error(message);
             throw new ArticleException(String.format(message), HttpStatus.INTERNAL_SERVER_ERROR);

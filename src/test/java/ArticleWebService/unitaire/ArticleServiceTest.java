@@ -2,6 +2,7 @@ package ArticleWebService.unitaire;
 
 import ArticleWebService.entities.Article;
 import ArticleWebService.handler.Exception.ArticleException;
+import ArticleWebService.projection.ArticleProjection;
 import ArticleWebService.repository.ArticleRepository;
 import ArticleWebService.repository.DomainRepository;
 import ArticleWebService.service.ArticleServiceImpl;
@@ -12,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import javax.persistence.EntityManager;
