@@ -56,7 +56,7 @@ public class ThreadBlockingITTest {
             completionService.submit(() -> {
                 long startTime = System.currentTimeMillis();
                 try {
-                    ResponseEntity<String> response = restTemplate.getForEntity("/article/getArticle/1", String.class);
+                    ResponseEntity<String> response = restTemplate.getForEntity("/articles/1", String.class);
                     if (response.getStatusCode() == HttpStatus.OK) {
                         successCount.incrementAndGet();
                     } else {
