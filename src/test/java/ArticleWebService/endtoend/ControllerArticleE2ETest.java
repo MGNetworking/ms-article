@@ -340,7 +340,7 @@ public class ControllerArticleE2ETest {
     }
 
     @Test
-    @Order(9)
+    @Order(10)
     @DisplayName("GET /articles/portfolio - Success")
     public void articleportfolio_pageble_OK() throws Exception {
 
@@ -375,12 +375,13 @@ public class ControllerArticleE2ETest {
                 .andExpect(jsonPath("$.data.content[0].description").exists())
                 .andExpect(jsonPath("$.data.content[0].portfolio").value(true))  // Vérifie que c'est bien un article du portfolio
 
-                .andDo(print());;
+                .andDo(print());
+        ;
 
     }
 
     @Test
-    @Order(9)
+    @Order(11)
     @DisplayName("GET /articles/portfolio - Success")
     public void articleportfolio_pageble_IsEmpty() throws Exception {
 
@@ -404,7 +405,7 @@ public class ControllerArticleE2ETest {
     }
 
     @Test
-    @Order(10)
+    @Order(12)
     @DisplayName("GET /articles/domain - Success")
     public void getAllDomain() throws Exception {
 
@@ -415,7 +416,7 @@ public class ControllerArticleE2ETest {
     }
 
     @Test
-    @Order(11)
+    @Order(13)
     @DisplayName("POST /articles/save - Success")
     void shouldCreateArticleWhenValidRequest() throws Exception {
 
@@ -445,7 +446,7 @@ public class ControllerArticleE2ETest {
     }
 
     @Test
-    @Order(12)
+    @Order(14)
     @DisplayName("POST /articles/save - Forbidden")
     void shouldReturnForbiddenWhenUpdatingArticle() throws Exception {
 
@@ -458,7 +459,7 @@ public class ControllerArticleE2ETest {
     }
 
     @Test
-    @Order(13)
+    @Order(15)
     @DisplayName("POST /articles/save - Unauthoriezed")
     void shouldReturnUnauthorizedWhenUpdatingArticle() throws Exception {
 
@@ -471,7 +472,7 @@ public class ControllerArticleE2ETest {
     }
 
     @Test
-    @Order(14)
+    @Order(16)
     @DisplayName("PUT /articles/update - Is created")
     void shouldReturnCreateWhenUpdatingArticle() throws Exception {
 
@@ -500,7 +501,7 @@ public class ControllerArticleE2ETest {
     }
 
     @Test
-    @Order(15)
+    @Order(17)
     @DisplayName("DELETE /articles/delete/{idArticle}/{idUser} - Is Forbidden")
     void shouldReturnFalseAfterDeleteArticle() throws Exception {
 
@@ -515,7 +516,7 @@ public class ControllerArticleE2ETest {
     }
 
     @Test
-    @Order(16)
+    @Order(19)
     @DisplayName("DELETE /articles/delete/{idArticle}/{idUser} - Success")
     void shouldReturnTrueAfterDeleteArticle() throws Exception {
         this.mockMvc.perform(delete("/articles/delete/{idArticle}/{idUser}"
