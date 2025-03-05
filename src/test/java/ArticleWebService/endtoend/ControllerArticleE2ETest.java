@@ -119,7 +119,8 @@ public class ControllerArticleE2ETest {
                 "Ceci est une description",
                 "description de l'article",
                 "Ceci est le contenu de l'article",
-                true
+                true,
+                false
         );
 
     }
@@ -486,6 +487,7 @@ public class ControllerArticleE2ETest {
                 "Ceci est une description d'article",
                 "Ceci est le contenu de l'article",
                 true,
+                false,
                 1,
                 this.dateCreation,
                 null

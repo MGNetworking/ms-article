@@ -56,11 +56,12 @@ public class ArticleValidatorDtoSaveTest {
                 new Section(1, "Java"),
                 "user123",
                 "Titre valide",
-                "image.png",
+                "https://image.png",
                 "Ceci est une description",
                 "description de l'article",
                 "Un article qui contient du text",
-                true
+                true,
+                false
         );
 
         // Simulez la validation manuelle
@@ -90,8 +91,8 @@ public class ArticleValidatorDtoSaveTest {
                 "",
                 "",
                 "",
-                true
-        );
+                true,
+                false);
 
         // Simulez la validation manuelle
         Set<ConstraintViolation<ArticleDtoSave>> violations = validator.validate(articleValidation);
@@ -123,7 +124,8 @@ public class ArticleValidatorDtoSaveTest {
 
         assertTrue(errorsByField.containsKey("imgUrl"),
                 "Le champ 'imgUrl' devrait être en erreur. Erreurs trouvées : " + errorsByField);
-        assertTrue(errorsByField.get("imgUrl").contains("l'URL de l'image n'est pas présent"),
+        assertTrue(errorsByField.get("imgUrl").contains("l'URL de l'image n'est pas présent")
+                        && errorsByField.get("imgUrl").contains("L'URL de l'image doit être une URL valide"),
                 "Le message attendu pour 'imgUrl' est manquant. Erreurs trouvées : " + errorsByField.get("imgUrl"));
 
         assertTrue(errorsByField.containsKey("imgDescription"),
@@ -142,7 +144,7 @@ public class ArticleValidatorDtoSaveTest {
                 "Le message attendu pour 'article' est manquant. Erreurs trouvées : " + errorsByField.get("article"));
 
         // Vérifiez le nombre total d'erreurs
-        assertEquals(8, violations.size(),
+        assertEquals(9, violations.size(),
                 "Nombre d'erreurs attendu incorrect. Erreurs trouvées : " + errorsByField);
 
     }
@@ -158,11 +160,12 @@ public class ArticleValidatorDtoSaveTest {
                 new Section(1, "Java"),
                 "user123",
                 "ab",
-                "image.png",
+                "https://image.png",
                 "Ceci est une description",
                 "description de l'article",
                 "",
-                true
+                true,
+                false
         );
 
         // Simulez la validation manuelle
@@ -198,7 +201,8 @@ public class ArticleValidatorDtoSaveTest {
                 "Ceci est une description",
                 "description de l'article",
                 "",
-                true
+                true,
+                false
         );
 
         // Simulez la validation manuelle
