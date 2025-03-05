@@ -92,15 +92,18 @@ public class KeycloakSecurityService extends KeycloakWebSecurityConfigurerAdapte
                 .cors().disable()
                 .csrf().disable()
                 .authorizeRequests()
-                .antMatchers("/article/getAllArticles",
-                        "/article/saveImages",
-                        "/article/upload",
-                        "/article/getAllArticlesSection",
-                        "/article/getAllDomain")
+                .antMatchers("/articles/getAllArticles",
+                        "/articles/saveImages",
+                        "/articles/upload",
+                        "/articles/getAllArticlesSection",
+                        "/articles/getAllDomain")
                 .permitAll()
-                .antMatchers("/article/saveArticle")
+                .antMatchers("/articles/saveArticle")
                 .hasAuthority("user")
-                .antMatchers("/article/updateArticle", "/article/deleteArticle/*")
+                .antMatchers(
+                        "/articles/updateArticle",
+                        "/articles/deleteArticle/*",
+                        "/articles/update/*")
                 .hasAnyAuthority("admin", "user")
                 .and()
                 .addFilterBefore(new PreApiFilter(), BasicAuthenticationFilter.class)
