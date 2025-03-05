@@ -71,8 +71,8 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     /**
-     * TODO utilisé
-     * Permet de récupérer les données
+     * Permet la recherche d'une pagination d'article par ordre croissant
+     *
      * @param page le numéro de la page.
      * @param size le nombre d'articles.
      * @return
@@ -100,6 +100,14 @@ public class ArticleServiceImpl implements ArticleService {
 
     }
 
+    /**
+     * Permet la recherche d'une pagination d'article sur un section ciblé
+     *
+     * @param page      le numéro de la page.
+     * @param size      le nombre d'articles.
+     * @param sectionId la section visée.
+     * @return
+     */
     @Override
     public Page<ArticleDto> findArticlesPaginationSection(int page, int size, Integer sectionId) {
         try {
@@ -125,12 +133,17 @@ public class ArticleServiceImpl implements ArticleService {
 
     }
 
-
+    /**
+     * Permet la recherche d'une pagination d'article contenant un nombre de properties limité
+     *
+     * @param page le numéro de la page.
+     * @param size le nombre d'articles.
+     * @return
+     */
     @Override
     public Page<ArticleProjection> findByPortfoliotrueWithProjection(int page, int size) {
 
         try {
-
             return this.articleRepository
                     .findByPortfolioTrueOrderByIdArticleAsc(PageRequest.of(page, size), ArticleProjection.class);
         } catch (DataAccessException ex) {
@@ -195,7 +208,7 @@ public class ArticleServiceImpl implements ArticleService {
 
 
     @Override
-    public int updateArticleFields(ArticleDtoUpdate dto) throws ArticleException {
+    public int updateArticleFields(ArticleDto dto) throws ArticleException {
 
         int updatedRows = this.articleRepository.updateArticleFields(dto);
 
@@ -208,7 +221,7 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    public int updateArticleMeta(ArticleDtoUpdate dto) throws ArticleException {
+    public int updateArticleMeta(ArticleDto dto) throws ArticleException {
         int updatedRows = this.articleRepository.updateArticleMeta(dto);
 
         if (updatedRows == 0) {
@@ -234,9 +247,10 @@ public class ArticleServiceImpl implements ArticleService {
                                 articleDtoUpdate.getIdArticle()),
                         HttpStatus.NOT_FOUND));
 
-        // Met à jour les données
+        // Copie des données du dto vers l'object article
         this.modelMapper.map(articleDtoUpdate, article);
         article.setDateMaj(Timestamp.valueOf(LocalDateTime.now()));
+        article.setVue(articleDtoUpdate.getVue() + article.getVue());
 
         // Enregistre en base de données
         Article updateArt = this.articleRepository.save(article);

@@ -66,7 +66,7 @@ public interface ArticleService {
      * @return le nombre de lignes mise à jour, une seule ligne sera modifié et zéro en d'échec.
      * @throws ArticleException si l'article n'a pas pu être mise à jour
      */
-    int updateArticleFields(ArticleDtoUpdate dto) throws ArticleException;
+    int updateArticleFields(ArticleDto dto) throws ArticleException;
 
     /**
      * Met à jour les meta données d'un article.
@@ -75,7 +75,7 @@ public interface ArticleService {
      * @return le nombre de lignes mise à jour, une seule ligne sera modifié et zéro en d'échec.
      * @throws ArticleException si les meta données de l'article n'a pas pu être mise à jour
      */
-    int updateArticleMeta(ArticleDtoUpdate dto) throws ArticleException;
+    int updateArticleMeta(ArticleDto dto) throws ArticleException;
 
     /**
      * Met à jour un article.
