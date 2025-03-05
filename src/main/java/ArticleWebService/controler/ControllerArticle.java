@@ -209,6 +209,46 @@ public class ControllerArticle {
     }
 
     /**
+     * Met à jour de manière partial les méta données d'un article.
+     *
+     * @param articleDto les données de l'article à mettre à jour.
+     * @param request l'objet de requête HTTP en cours.
+     * @return un objet ResponseEntity contenant le nombre de lignes mis à jour avec un statut HTTP 200 (OK) en cas de succès.
+     */
+    @PatchMapping(path = "/update/fields",
+            consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
+    @PreAuthorize("@access.isAuthorization(#articleDto.idUser)")
+    public ResponseEntity<GenericApiResponse<Integer>> updateArticleFields(
+            @Valid @RequestBody ArticleDto articleDto,
+            HttpServletRequest request) {
+
+        return ResponseHandler.generateResponse(
+                "L'article a été mis à jour avec succès",
+                HttpStatus.CREATED,
+                request.getRequestURI(),
+                this.articleService.updateArticleFields(articleDto));
+
+    }
+
+    @PatchMapping(path = "/update/meta",
+            consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
+    @PreAuthorize("@access.isAuthorization(#articleDto.idUser)")
+    public ResponseEntity<GenericApiResponse<Integer>> updateArticleMeta(
+            @Valid @RequestBody ArticleDto articleDto,
+            HttpServletRequest request) {
+
+        return ResponseHandler.generateResponse(
+                "L'article a été mis à jour avec succès",
+                HttpStatus.CREATED,
+                request.getRequestURI(),
+                this.articleService.updateArticleMeta(articleDto));
+
+    }
+
+
+    /**
      * Supprime un article du système.
      * Cette opération est réservée aux utilisateurs autorisés.
      *
