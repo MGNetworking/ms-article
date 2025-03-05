@@ -1,5 +1,6 @@
 package ArticleWebService.integration;
 
+import ArticleWebService.dto.ArticleDto;
 import ArticleWebService.dto.ArticleDtoUpdate;
 import ArticleWebService.entities.Article;
 import ArticleWebService.entities.Section;
@@ -113,7 +114,7 @@ class ArticleRepositoryITTest {
         Section section = new Section();
         section.setIdSection(1);
 
-        ArticleDtoUpdate dto = new ArticleDtoUpdate();
+        ArticleDto dto = new ArticleDto();
         dto.setIdArticle(2);
         dto.setSection(section);
         dto.setTitre("Spring Boot advance");
@@ -148,13 +149,13 @@ class ArticleRepositoryITTest {
 
     @Test
     @Order(6)
-    @DisplayName("JPQL: Teste la mise à jours d'un champs d'un Article")
-    void updateArticleField() {
+    @DisplayName("JPQL: Teste la mise à jours d'un champs titre d'un Article")
+    void updateArticleFieldTitre() {
 
         Section section = new Section();
         section.setIdSection(1);
 
-        ArticleDtoUpdate dto = new ArticleDtoUpdate();
+        ArticleDto dto = new ArticleDto();
         dto.setIdArticle(2);
         dto.setSection(section);
         dto.setTitre("Spring Boot Teste");
@@ -171,7 +172,7 @@ class ArticleRepositoryITTest {
         assertEquals(dto.getSection().getIdSection(), updatedArticle.getSection().getIdSection(),
                 "La section de l'article doit rester 1");
         assertEquals("Spring Boot Teste", dto.getTitre(),
-                "Le Titre n'est pas identique à la modification");
+                "Le Titre n'a pas était modifier");
         assertEquals(1, rowsUpdated, "Une ligne devrait être mise à jour");
 
     }
@@ -184,7 +185,7 @@ class ArticleRepositoryITTest {
         Section section = new Section();
         section.setIdSection(1);
 
-        ArticleDtoUpdate dto = new ArticleDtoUpdate();
+        ArticleDto dto = new ArticleDto();
         dto.setIdArticle(2);
         dto.setSection(section);
         dto.setVisibale(false);
@@ -261,5 +262,66 @@ class ArticleRepositoryITTest {
         // Vérifications
         assertThat(portfolioArticlesPage.getTotalElements()).isEqualTo(12);
     }
+
+    @Test
+    @Order(10)
+    @DisplayName("JPQL: Teste la mise à jours d'un champs article d'un Article")
+    void updateArticleFieldArticle() {
+
+        Section section = new Section();
+        section.setIdSection(1);
+
+        ArticleDto dto = new ArticleDto();
+        dto.setIdArticle(2);
+        dto.setSection(section);
+        dto.setArticle("Test la sauvegarde d'un article produit ");
+
+        int rowsUpdated = this.articleRepository.updateArticleFields(dto);
+        // Vider le cache pour s'assurer d'avoir les données à jour
+        entityManager.clear();
+        // ArticleId correspond à la clé primaire composite
+        Article updatedArticle = entityManager.find(Article.class, 2);
+
+        // Vérification de la correspondance de l'article
+        assertEquals(dto.getIdArticle(), updatedArticle.getIdArticle(),
+                "Ce n'est pas le bon id article ");
+        assertEquals(dto.getSection().getIdSection(), updatedArticle.getSection().getIdSection(),
+                "La section de l'article doit rester 1");
+        assertEquals(dto.getArticle(), updatedArticle.getArticle(),
+                "L'article n'a pas était modifier");
+        assertEquals(1, rowsUpdated, "Une ligne devrait être mise à jour");
+
+    }
+
+    @Test
+    @Order(11)
+    @DisplayName("JPQL: Teste la mise à jours d'un champs ImgUrl d'un Article")
+    void updateArticleFieldImgUrl() {
+
+        Section section = new Section();
+        section.setIdSection(1);
+
+        ArticleDto dto = new ArticleDto();
+        dto.setIdArticle(2);
+        dto.setSection(section);
+        dto.setImgUrl("https://images.ghoverblog.ovh/blog/IMG_H7iDkFGELXBwwI265tjBOdBmvds05bWdA2AAHTOUiuA.jpg");
+
+        int rowsUpdated = this.articleRepository.updateArticleFields(dto);
+        // Vider le cache pour s'assurer d'avoir les données à jour
+        entityManager.clear();
+        // ArticleId correspond à la clé primaire composite
+        Article updatedArticle = entityManager.find(Article.class, 2);
+
+        // Vérification de la correspondance de l'article
+        assertEquals(dto.getIdArticle(), updatedArticle.getIdArticle(),
+                "Ce n'est pas le bon id article ");
+        assertEquals(dto.getSection().getIdSection(), updatedArticle.getSection().getIdSection(),
+                "La section de l'article doit rester 1");
+        assertEquals(dto.getTitre(), updatedArticle.getImgUrl(),
+                "L'url n'a pas était modifier");
+        assertEquals(1, rowsUpdated, "Une ligne devrait être mise à jour");
+
+    }
+
 
 }
