@@ -1,8 +1,7 @@
 package ArticleWebService.repository;
 
-import ArticleWebService.dto.ArticleDtoUpdate;
+import ArticleWebService.dto.ArticleDto;
 import ArticleWebService.entities.Article;
-import ArticleWebService.projection.ArticleProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -38,22 +37,23 @@ public interface ArticleRepository extends JpaRepository<Article, Integer> {
     @Modifying
     @Transactional
     @Query("UPDATE Article a SET " +
-            "a.titre = COALESCE(:#{#dto.titre}, a.titre), " +
-            "a.article = COALESCE(:#{#dto.article}, a.article), " +
-            "a.imgUrl = COALESCE(:#{#dto.imgUrl}, a.imgUrl), " +
-            "a.imgDescription = COALESCE(:#{#dto.imgDescription}, a.imgDescription), " +
-            "a.description = COALESCE(:#{#dto.description}, a.description), " +
+            "a.titre = CASE WHEN :#{#dto.titre} IS NULL THEN a.titre ELSE :#{#dto.titre} END, " +
+            "a.article = CASE WHEN :#{#dto.article} IS NULL THEN a.article ELSE :#{#dto.article} END, " +
+            "a.imgUrl = CASE WHEN :#{#dto.imgUrl} IS NULL THEN a.imgUrl ELSE :#{#dto.imgUrl} END, " +
+            "a.imgDescription = CASE WHEN :#{#dto.imgDescription} IS NULL THEN a.imgDescription ELSE :#{#dto.imgDescription} END, " +
+            "a.description = CASE WHEN :#{#dto.description} IS NULL THEN a.description ELSE :#{#dto.description} END, " +
             "a.dateMaj = CURRENT_TIMESTAMP " +
-            "WHERE a.section.idSection = :#{#dto.section.idSection} AND a.idArticle = :#{#dto.idArticle}")
-    int updateArticleFields(@Param("dto") ArticleDtoUpdate dto);
+            "WHERE a.idUser = :#{#dto.idUser} AND a.idArticle = :#{#dto.idArticle}")
+    int updateArticleFields(@Param("dto") ArticleDto dto);
 
     @Modifying
     @Transactional
     @Query("UPDATE Article a SET " +
             "a.vue = COALESCE(a.vue + :#{#dto.vue}, a.vue), " +
-            "a.isVisibale = COALESCE(:#{#dto.isVisibale}, a.isVisibale) " +
-            "WHERE a.section.idSection = :#{#dto.section.idSection} AND a.idArticle = :#{#dto.idArticle}")
-    int updateArticleMeta(@Param("dto") ArticleDtoUpdate dto);
+            "a.isVisibale = COALESCE(:#{#dto.isVisibale}, a.isVisibale), " +
+            "a.portfolio = COALESCE(:#{#dto.portfolio}, a.portfolio) " +
+            "WHERE a.idUser = :#{#dto.idUser} AND a.idArticle = :#{#dto.idArticle}")
+    int updateArticleMeta(@Param("dto") ArticleDto dto);
 
 
 }
