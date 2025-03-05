@@ -12,12 +12,6 @@ import javax.validation.constraints.*;
 import java.sql.Timestamp;
 import java.util.List;
 
-/**
- * Cette classe est utilisé pour la mise à jour des articles
- * Elle possède tous les attributs indispensables pour la mise
- * à jour d'un article avec la gestion des valeurs attendu
- * pour chacun de ses attributes.
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -37,6 +31,7 @@ public class ArticleDtoUpdate {
     private String titre;
 
     @NotBlank(message = "l'URL de l'image n'est pas présent")
+    @Pattern(regexp = "^https://.*$", message = "L'URL de l'image doit commencer par https://")
     private String imgUrl;
 
     @NotBlank(message = "La description doit être fourni")
@@ -48,8 +43,8 @@ public class ArticleDtoUpdate {
     @NotBlank(message = "L'article doit avoir un contenu")
     private String article;
 
-    @NotNull(message = "Vous devez faire un choix concernant la visibilité de l'article : true ou false")
     private boolean isVisibale ;
+    private boolean portfolio;
 
     @Min(value = -1, message = "La valeur de 'vue' doit être au moins -1")
     @Max(value = 1, message = "La valeur de 'vue' ne doit pas dépasser 1")

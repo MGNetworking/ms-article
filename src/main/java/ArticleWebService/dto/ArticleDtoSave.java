@@ -8,10 +8,6 @@ import lombok.NoArgsConstructor;
 import javax.validation.constraints.*;
 import java.util.List;
 
-/**
- * Cette classe est utilisé pour la création d'article. Elle possède tous les attributs indispensable pour la
- * création d'un article et la vérification des valeurs attendu.
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -30,6 +26,7 @@ public class ArticleDtoSave {
     private String titre;
 
     @NotBlank(message = "l'URL de l'image n'est pas présent")
+    @Pattern(regexp = "^https://.*$", message = "L'URL de l'image doit être une URL valide")
     private String imgUrl;
 
     @NotEmpty(message = "La description doit être fourni")
@@ -41,7 +38,7 @@ public class ArticleDtoSave {
     @NotBlank(message = "L'article doit avoir un contenu")
     private String article;
 
-    // Permet de rendre visible ou non un article a sa création
     private boolean isVisibale;
+    private boolean portfolio;
 
 }
