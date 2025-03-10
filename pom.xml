@@ -33,6 +33,7 @@
         <!-- Version in project -->
         <spring-cloud.version>2020.0.2</spring-cloud.version>
         <junit-jupiter.version>5.5.2</junit-jupiter.version>
+        <keycloak.version>20.0.3</keycloak.version>
 
 
     </properties>
@@ -135,6 +136,13 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Pour les test unitaires création de Mock -->
+        <dependency>
+            <groupId>org.keycloak</groupId>
+            <artifactId>keycloak-spring-security-adapter</artifactId>
+            <version>${keycloak.version}</version>
+        </dependency>
+
         <!-- DB H2  -->
         <dependency>
             <groupId>com.h2database</groupId>
@@ -142,25 +150,24 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- This 2 dependence it's useful for used keycloak -->
-        <!-- dependence for adaptateur keycloak -->
+        <!-- dépendance pour keycloak adaptateur-->
         <dependency>
             <groupId>org.keycloak</groupId>
             <artifactId>keycloak-spring-boot-starter</artifactId>
-            <version>20.0.3</version>
+            <version>${keycloak.version}</version>
         </dependency>
 
-        <!-- dependence for security -->
+        <!-- dépendance pour le context Spring security -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
-        <!-- dependence for security : Jwt to import : org.springframework.security.oauth2.jwt.Jwt -->
+
+        <!-- dépendance pour le context Spring security : Jwt to import : org.springframework.security.oauth2.jwt.Jwt -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
-            <!-- <version>3.3.0</version>-->
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.modelmapper/modelmapper -->
@@ -189,6 +196,14 @@
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-webmvc-core</artifactId>
             <version>1.7.0</version>
+        </dependency>
+
+        <!-- Permet de charge des variables du fichier env. -->
+        <dependency>
+            <groupId>io.github.cdimascio</groupId>
+            <artifactId>dotenv-java</artifactId>
+            <version>2.3.2</version>
+            <scope>test</scope>
         </dependency>
 
 

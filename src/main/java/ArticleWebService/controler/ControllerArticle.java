@@ -13,6 +13,9 @@ import ArticleWebService.projection.ArticleProjection;
 import ArticleWebService.service.ArticleService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -97,25 +100,38 @@ public class ControllerArticle {
      * une page d'articles (ArticleDto) triés par identifiant
      */
     @GetMapping(path = "/sorted")
-    public ResponseEntity<GenericApiResponse<Page<ArticleDto>>> getlistArticlePaginationOrdreBy(
+    public ResponseEntity<GenericApiResponse<Page<ArticleDto>>> getlistArticlePaginationWithVisiblityOrdreBy(
             @RequestParam(defaultValue = "0", name = "page") @Min(0) @Max(10) Integer page,
             @RequestParam(defaultValue = "10", name = "size") @Min(0) @Max(10) Integer size,
+            @RequestParam(defaultValue = "true", name = "visibility") boolean visible,
+            @RequestParam(defaultValue = "true", name = "portfolio") boolean portfolio,
             HttpServletRequest request) {
 
+
         return ResponseHandler.generateResponse(
-                String.format("Page %d nombre d'éléments %d", page, size),
+                String.format("Page %d nombre d'élement %d , Article visible %b , Portfolio visible %b", page, size, visible, portfolio),
                 HttpStatus.OK,
                 request.getRequestURI(),
-                this.articleService.findAllArticlePageOrderBy(page, size));
+                this.articleService.findAllArticleWithVisiblityPageOrderBy(
+                        visible,
+                        portfolio,
+                        PageRequest.of(
+                                page,
+                                size,
+                                Sort.by("idArticle").ascending()
+                        )));
 
     }
 
     /**
-     * Récupère une liste paginée d'articles pour une section donnée.
+     * Récupère une liste paginée d'articles pour une section donnée avec le choix de article
+     * visible ou non et des portfolios visibles ou non.
      *
-     * @param page    Le numéro de la page à récupérer (par défaut 0). Doit être un entier positif.
-     * @param size    Le nombre d'articles par page (par défaut 10). Doit être un entier positif.
-     * @param section L'identifiant de la section pour laquelle récupérer les articles (par défaut 1).
+     * @param page      Le numéro de la page à récupérer (par défaut 0). Doit être un entier positif.
+     * @param size      Le nombre d'articles par page (par défaut 10). Doit être un entier positif.
+     * @param section   L'identifiant de la section pour laquelle récupérer les articles (par défaut 1).
+     * @param visible   Le visiblité des articles
+     * @param portfolio Le visiblité des articles de type portfolio
      * @return ResponseEntity<Page < ArticleDto>> Un objet ResponseEntity contenant une page d'articles.
      * Le statut sera HttpStatus.OK en cas de succès.
      */
@@ -124,21 +140,32 @@ public class ControllerArticle {
             @RequestParam(defaultValue = "0", name = "page") @Min(0) @Max(10) Integer page,
             @RequestParam(defaultValue = "10", name = "size") @Min(0) @Max(10) Integer size,
             @RequestParam(defaultValue = "1", name = "sectionId") @Min(0) @Max(10) Integer section,
+            @RequestParam(defaultValue = "true", name = "visibility") boolean visible,
+            @RequestParam(defaultValue = "true", name = "portfolio") boolean portfolio,
             HttpServletRequest request) {
 
+
         return ResponseHandler.generateResponse(
-                String.format("Page %d nombre d'élement %d", page, size),
+                String.format("Page %d nombre d'élement %d , Article visible %b , Portfolio visible %b", page, size, visible, portfolio),
                 HttpStatus.OK,
                 request.getRequestURI(),
-                this.articleService.findArticlesPaginationSection(page, size, section));
+                this.articleService.findArticlesPaginationSection(
+                        section,
+                        visible,
+                        portfolio,
+                        PageRequest.of(
+                                page,
+                                size,
+                                Sort.by("idArticle").ascending()
+                        )));
 
     }
 
     /**
      * Récupère une liste paginée de portfolio.
      *
-     * @param page
-     * @param size
+     * @param page    Le numéro de la page à récupérer (par défaut 0). Doit être un entier positif.
+     * @param size    Le nombre d'articles par page (par défaut 10). Doit être un entier positif.
      * @param request
      * @return
      */
@@ -147,6 +174,7 @@ public class ControllerArticle {
             @RequestParam(defaultValue = "0", name = "page") @Min(0) @Max(10) Integer page,
             @RequestParam(defaultValue = "10", name = "size") @Min(0) @Max(10) Integer size,
             HttpServletRequest request) {
+
         return ResponseHandler.generateResponse(
                 String.format("Page %d nombre d'élement %d", page, size),
                 HttpStatus.OK,
@@ -212,7 +240,7 @@ public class ControllerArticle {
      * Met à jour de manière partial les méta données d'un article.
      *
      * @param articleDto les données de l'article à mettre à jour.
-     * @param request l'objet de requête HTTP en cours.
+     * @param request    l'objet de requête HTTP en cours.
      * @return un objet ResponseEntity contenant le nombre de lignes mis à jour avec un statut HTTP 200 (OK) en cas de succès.
      */
     @PatchMapping(path = "/update/fields",

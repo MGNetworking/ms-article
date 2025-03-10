@@ -16,22 +16,53 @@ import javax.transaction.Transactional;
 @Repository
 public interface ArticleRepository extends JpaRepository<Article, Integer> {
 
-    @Query(value = "SELECT art FROM Article art WHERE art.section.idSection = :sect ORDER BY art.idArticle")
-    Page<Article> findAllArticlesBySection(Pageable pageable, @Param("sect") Integer section);
+    /**
+     * Retourne une pagination d'article par ordre croissant et déterminer par leur section
+     *
+     * @param section   Le numero identifiant de la section
+     * @param visible   La visibilité des articles
+     * @param portfolio La visibilité des articiles type portfolio
+     * @param pageable  Objet qui contient le numero de page et le nombre d'éléments
+     * @return La pagination des articles
+     */
+    @Query(value = "SELECT art FROM Article art WHERE art.section.idSection = :section and art.portfolio = :ptfolio AND art.isVisibale = :visible ORDER BY art.idArticle asc")
+    Page<Article> findAllArticlesBySection(@Param("section") Integer section,
+                                           @Param("visible") boolean visible,
+                                           @Param("ptfolio") boolean portfolio,
+                                           Pageable pageable);
 
-    @Query(value = "SELECT art FROM Article art WHERE art.portfolio = false ORDER BY art.idArticle")
-    Page<Article> findAllArticlePageOrderBy(Pageable pageable);
 
-    // Retourne une page d'articles où portfolio est true (non-utiliser)
-    //Page<ArticleProjection> findByPortfolioTrueOrderByIdArticleAsc(Pageable pageable);
+    /**
+     * Retourne une pagination d'article, avec un choix sur la visibilité des articles et des portfolios.
+     * L'ordre dans lequel sont ordonnés les Articles reste à être déterminés par l'utilisateur.
+     *
+     * @param visible   La visibilité des articles
+     * @param portfolio La visibilité des articiles type portfolio
+     * @param pageable  Objet qui contient le numero de page et le nombre d'éléments
+     * @return La pagination des articles
+     */
+    @Query("SELECT art FROM Article art WHERE art.portfolio = :ptfolio AND art.isVisibale = :visible ")
+    Page<Article> findAllPortfolioArticlesByVisibility(@Param("visible") boolean visible,
+                                                       @Param("ptfolio") boolean portfolio,
+                                                       Pageable pageable);
 
-    // Version avec projection dynamique
+    /**
+     * Permet de retourner des paginations d'articles sous forme de projection dynamique.
+     * Cette méthode récupère les articles ayant la propriété "portfolio" définie à true,
+     * triés par ordre croissant de leur identifiant (idArticle).
+     *
+     * @param <T>      le type de la projection dynamique retournée, défini par l'appelant
+     * @param pageable un objet {@link Pageable} contenant les informations de pagination,
+     *                 telles que le numéro de la page et le nombre d'éléments par page
+     * @param type     la classe de la projection dynamique à utiliser pour le mapping des résultats
+     * @return une instance de {@link Page} contenant les articles paginés sous la forme de la projection spécifiée
+     */
     <T> Page<T> findByPortfolioTrueOrderByIdArticleAsc(Pageable pageable, Class<T> type);
 
     /**
      * Permet de mettre à jour les champs d'article.
      *
-     * @param dto l'objet de mise à jour.
+     * @param dto l'objet Article de mise à jour.
      * @return Un entier pour le nombre de lignes affecté.
      */
     @Modifying
@@ -46,6 +77,12 @@ public interface ArticleRepository extends JpaRepository<Article, Integer> {
             "WHERE a.idUser = :#{#dto.idUser} AND a.idArticle = :#{#dto.idArticle}")
     int updateArticleFields(@Param("dto") ArticleDto dto);
 
+    /**
+     * Permet de mettre à jour les champs d'article concidérer comme méta données
+     *
+     * @param dto l'objet Article de mise à jour.
+     * @return Un entier pour le nombre de lignes affecté.
+     */
     @Modifying
     @Transactional
     @Query("UPDATE Article a SET " +

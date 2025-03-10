@@ -7,6 +7,7 @@ import ArticleWebService.dto.ArticleDtoUpdate;
 import ArticleWebService.entities.*;
 import ArticleWebService.projection.ArticleProjection;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -25,23 +26,26 @@ public interface ArticleService {
     /**
      * Fait une recherche tous les articles.
      *
-     * @param page le numéro de la page.
-     * @param size le nombre d'articles.
+     * @param visiblity la visibilté des articles
+     * @param portfolio Avec ou sans les portfolios
+     * @param pageable  la pagination de l'Article demandé.
      * @return une pagination d'article dans l'ordre des ID.
      */
-    Page<ArticleDto> findAllArticlePageOrderBy(int page, int size);
+    Page<ArticleDto> findAllArticleWithVisiblityPageOrderBy(boolean visiblity, boolean portfolio, Pageable pageable);
 
     /**
-     * Fait une recherche d'article par leur section.
+     * Fait une recherche d'article par leur section
      *
-     * @param page      le numéro de la page.
-     * @param size      le nombre d'articles.
      * @param sectionId la section visée.
+     * @param visiblity la visibilté des articles
+     * @param portfolio Avec ou sans les portfolios
+     * @param pageable  la pagination de l'Article demandé.
      * @return une pagination d'articleDTO par leur section.
      */
-    Page<ArticleDto> findArticlesPaginationSection(int page, int size, Integer sectionId);
+    Page<ArticleDto> findArticlesPaginationSection(Integer sectionId, boolean visiblity, boolean portfolio, Pageable pageable);
 
     Page<ArticleProjection> findByPortfoliotrueWithProjection(int page, int size);
+
     /**
      * Récuéper l'article complet par son ID
      *

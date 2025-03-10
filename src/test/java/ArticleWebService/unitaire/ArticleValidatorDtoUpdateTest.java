@@ -51,7 +51,6 @@ public class ArticleValidatorDtoUpdateTest {
         ArticleDtoUpdate articleValidation = new ArticleDtoUpdate(
                 1,
                 "user1",
-                new Section(1, "Java"),
                 "user123",
                 "https://Titre valide",
                 "image.png",
@@ -84,7 +83,6 @@ public class ArticleValidatorDtoUpdateTest {
 
         // Créez un objet ArticleSave invalide
         ArticleDtoUpdate articleValidation = new ArticleDtoUpdate(
-                null,
                 null,
                 null,
                 "",

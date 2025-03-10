@@ -23,9 +23,6 @@ public class ArticleDtoUpdate {
     @NotNull(message = "L'identifiant utilisateur est absent")
     private String idUser;
 
-    @NotNull(message = "La section de l'article est obligatoire ")
-    private Section section;
-
     @NotBlank(message = "l'article doit avoir un titre ")
     @Size(min = 3, max = 100, message = "Le titre ne doit pas dépasser 100 caractères")
     private String titre;

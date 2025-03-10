@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,24 +26,24 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
 
-@Service
 @Slf4j
+@Service
 @Transactional(rollbackFor = Exception.class)
 public class ArticleServiceImpl implements ArticleService {
 
     private ArticleRepository articleRepository;
     private DomainRepository domainRepository;
     private ModelMapper modelMapper;
-
-    @Autowired
     private EntityManager entityManager;
 
     @Autowired
     public ArticleServiceImpl(ArticleRepository articleRepository,
-                              DomainRepository domainRepository) {
+                              DomainRepository domainRepository,
+                              EntityManager entityManager) {
 
         this.articleRepository = articleRepository;
         this.domainRepository = domainRepository;
+        this.entityManager = entityManager;
         this.modelMapper = new ModelMapper();
     }
 
@@ -78,10 +79,10 @@ public class ArticleServiceImpl implements ArticleService {
      * @return
      */
     @Override
-    public Page<ArticleDto> findAllArticlePageOrderBy(int page, int size) {
+    public Page<ArticleDto> findAllArticleWithVisiblityPageOrderBy(boolean visiblity, boolean portfolio, Pageable pageable) {
         try {
             Page<Article> articleData = this.articleRepository
-                    .findAllArticlePageOrderBy(PageRequest.of(page, size));
+                    .findAllPortfolioArticlesByVisibility(visiblity, portfolio, pageable);
 
             // Charger explicitement les relations Lazy pour chaque entité
             articleData.getContent().forEach(
@@ -91,7 +92,7 @@ public class ArticleServiceImpl implements ArticleService {
         } catch (DataAccessException ex) {
             String message = String
                     .format("Erreur lors de la récupération par Ordre de la page %d élément %d  message %s",
-                            page, size, ex.getMessage());
+                            pageable.getPageNumber(), pageable.getPageSize(), ex.getMessage());
 
             log.error(message);
             throw new ArticleException(String.format(message), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -109,12 +110,11 @@ public class ArticleServiceImpl implements ArticleService {
      * @return
      */
     @Override
-    public Page<ArticleDto> findArticlesPaginationSection(int page, int size, Integer sectionId) {
+    public Page<ArticleDto> findArticlesPaginationSection(Integer sectionId, boolean visibal, boolean portfolio, Pageable pageable) {
         try {
 
             Page<Article> article = this.articleRepository
-                    .findAllArticlesBySection(
-                            PageRequest.of(page, size), sectionId);
+                    .findAllArticlesBySection(sectionId, visibal, portfolio, pageable);
 
             // Charger explicitement les relations Lazy pour chaque entité
             article.getContent().forEach(
@@ -124,8 +124,8 @@ public class ArticleServiceImpl implements ArticleService {
         } catch (DataAccessException ex) {
 
             String message = String
-                    .format("Erreur lors de la récupération de la page %d élément %d section %s message %s",
-                            page, size, sectionId, ex.getMessage());
+                    .format("Erreur lors de la récupération de la page %d élément %d section %s portfolio %s message %s",
+                            pageable.getPageNumber(), pageable.getPageSize(), sectionId, portfolio, ex.getMessage());
 
             log.error(message);
             throw new ArticleException(String.format(message), HttpStatus.INTERNAL_SERVER_ERROR);

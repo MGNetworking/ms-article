@@ -84,40 +84,57 @@ INSERT INTO MS_ARTICLE.SECTION (ID_DOMAIN, DESCRIPTION) VALUES
 (1, 'Python'),
 (2, 'Bitcoin');
 
--- Insertion des articles avec valeurs booléennes (TRUE/FALSE)
-INSERT INTO MS_ARTICLE.ARTICLE (ID_SECTION, ID_USER, TITRE, ARTICLE, VISIBILITER, DESCRIPTION_ART, IMG_URL, PORTFOLIO) VALUES
+-- Définir les variables de session H2 pour les utilisateurs
+SET @USER_USER1 = '0ffd34fc-d7c6-44de-b10f-ba2a6ac686d6';
+SET @USER_USER2 = '6691ff4f-823b-4d86-ad49-4749caf85ffa';
+
+-- Insertion des articles avec tous les champs NOT NULL spécifiés
+INSERT INTO MS_ARTICLE.ARTICLE (
+    ID_SECTION,
+    ID_USER,
+    TITRE,
+    ARTICLE,
+    VISIBILITER,
+    DESCRIPTION_ART,
+    IMG_URL,
+    PORTFOLIO,
+    ID_SOURCE,
+    ID_COMMENTAIRE,
+    ID_NOTE,
+    IMGDESCRIPTION
+) VALUES
 -- Section Java (ID_SECTION = 1)
-(1, 'user1', 'Les fondamentaux de Java', 'Cet article couvre les bases du langage Java.', TRUE, 'Introduction aux concepts de base de Java pour débutants', 'https://example.com/java-basics.png', TRUE),
-(1, 'user2', 'Java 17 - Nouveautés', 'Découvrez les nouvelles fonctionnalités de Java 17.', FALSE, 'Analyse des améliorations apportées par Java 17', 'https://example.com/java17.png', TRUE),
-(1, 'user3', 'Programmation concurrentielle en Java', 'Guide sur les threads et la concurrence.', TRUE, 'Maîtrisez la programmation multi-threads avec Java', 'https://example.com/java-concurrency.png', FALSE),
-(1, 'user4', 'Collections en Java', 'Article détaillé sur les structures de données en Java.', FALSE, 'Tour d''horizon complet des collections Java', 'https://example.com/java-collections.png', FALSE),
+(1, @user_user1, 'Les fondamentaux de Java', 'Cet article couvre les bases du langage Java.', TRUE, 'Introduction aux concepts de base de Java pour débutants', 'https://example.com/java-basics.png', TRUE, NULL, NULL, NULL, 'Image illustrant les concepts de base de Java'),
+(1, @user_user2, 'Java 17 - Nouveautés', 'Découvrez les nouvelles fonctionnalités de Java 17.', FALSE, 'Analyse des améliorations apportées par Java 17', 'https://example.com/java17.png', TRUE, NULL, NULL, NULL, 'Image des nouveautés de Java 17'),
+(1, @user_user1, 'Programmation concurrentielle en Java', 'Guide sur les threads et la concurrence.', TRUE, 'Maîtrisez la programmation multi-threads avec Java', 'https://example.com/java-concurrency.png', FALSE, NULL, NULL, NULL, 'Diagramme explicatif de la concurrence en Java'),
+(1, @user_user2, 'Collections en Java', 'Article détaillé sur les structures de données en Java.', FALSE, 'Tour d''horizon complet des collections Java', 'https://example.com/java-collections.png', FALSE, NULL, NULL, NULL, 'Schéma des différentes collections Java'),
 
 -- Section Spring Boot (ID_SECTION = 2)
-(2, 'user1', 'Débuter avec Spring Boot', 'Guide de démarrage pour Spring Boot.', TRUE, 'Premiers pas avec le framework Spring Boot', 'https://example.com/spring-boot-start.png', TRUE),
-(2, 'user2', 'Microservices avec Spring Boot', 'Conception de microservices modernes.', FALSE, 'Architecture microservices basée sur Spring Boot', 'https://example.com/spring-microservices.png', TRUE),
-(2, 'user3', 'Spring Security', 'Sécurisez vos applications Spring Boot.', TRUE, 'Implémentation de la sécurité dans vos applications', 'https://example.com/spring-security.png', FALSE),
-(2, 'user4', 'Tests avec Spring Boot', 'Stratégies de test pour applications Spring Boot.', FALSE, 'Méthodologies de test unitaire et d''intégration', 'https://example.com/spring-testing.png', FALSE),
+(2, @user_user1, 'Débuter avec Spring Boot', 'Guide de démarrage pour Spring Boot.', TRUE, 'Premiers pas avec le framework Spring Boot', 'https://example.com/spring-boot-start.png', TRUE, NULL, NULL, NULL, 'Capture d''écran d''un projet Spring Boot'),
+(2, @user_user2, 'Microservices avec Spring Boot', 'Conception de microservices modernes.', FALSE, 'Architecture microservices basée sur Spring Boot', 'https://example.com/spring-microservices.png', TRUE, NULL, NULL, NULL, 'Architecture de microservices illustrée'),
+(2, @user_user1, 'Spring Security', 'Sécurisez vos applications Spring Boot.', TRUE, 'Implémentation de la sécurité dans vos applications', 'https://example.com/spring-security.png', FALSE, NULL, NULL, NULL, 'Schéma des composants de Spring Security'),
+(2, @user_user2, 'Tests avec Spring Boot', 'Stratégies de test pour applications Spring Boot.', FALSE, 'Méthodologies de test unitaire et d''intégration', 'https://example.com/spring-testing.png', FALSE, NULL, NULL, NULL, 'Processus de tests illustré'),
 
 -- Section JavaScript (ID_SECTION = 3)
-(3, 'user1', 'JavaScript moderne (ES6+)', 'Nouvelles fonctionnalités de JavaScript.', TRUE, 'Exploration des fonctionnalités modernes de JavaScript', 'https://example.com/modern-js.png', TRUE),
-(3, 'user2', 'Asynchrone en JavaScript', 'Promises, Async/Await et plus.', FALSE, 'Maîtrisez la programmation asynchrone en JavaScript', 'https://example.com/async-js.png', TRUE),
-(3, 'user3', 'TypeScript pour débutants', 'Introduction à TypeScript pour devs JS.', TRUE, 'Apprendre TypeScript quand on connaît JavaScript', 'https://example.com/typescript-intro.png', FALSE),
-(3, 'user4', 'Node.js et Express', 'Développement backend avec JavaScript.', FALSE, 'Création d''APIs RESTful avec Node.js', 'https://example.com/nodejs-express.png', FALSE),
+(3, @user_user1, 'JavaScript moderne (ES6+)', 'Nouvelles fonctionnalités de JavaScript.', TRUE, 'Exploration des fonctionnalités modernes de JavaScript', 'https://example.com/modern-js.png', TRUE, NULL, NULL, NULL, 'Syntaxe ES6+ illustrée'),
+(3, @user_user2, 'Asynchrone en JavaScript', 'Promises, Async/Await et plus.', FALSE, 'Maîtrisez la programmation asynchrone en JavaScript', 'https://example.com/async-js.png', TRUE, NULL, NULL, NULL, 'Diagramme de flux asynchrone'),
+(3, @user_user1, 'TypeScript pour débutants', 'Introduction à TypeScript pour devs JS.', TRUE, 'Apprendre TypeScript quand on connaît JavaScript', 'https://example.com/typescript-intro.png', FALSE, NULL, NULL, NULL, 'Comparaison TypeScript vs JavaScript'),
+(3, @user_user2, 'Node.js et Express', 'Développement backend avec JavaScript.', FALSE, 'Création d''APIs RESTful avec Node.js', 'https://example.com/nodejs-express.png', FALSE, NULL, NULL, NULL, 'Architecture d''une API Express'),
 
 -- Section Angular (ID_SECTION = 4)
-(4, 'user1', 'Débuter avec Angular', 'Les bases du framework Angular.', TRUE, 'Premier pas avec Angular pour développeurs frontend', 'https://example.com/angular-basics.png', TRUE),
-(4, 'user2', 'State Management dans Angular', 'NgRx et gestion d''état avancée.', FALSE, 'Gérer l''état de votre application Angular efficacement', 'https://example.com/angular-state.png', TRUE),
-(4, 'user3', 'Angular vs React', 'Comparaison des deux frameworks populaires.', TRUE, 'Analyse détaillée des différences entre Angular et React', 'https://example.com/angular-react.png', FALSE),
-(4, 'user4', 'Tests unitaires avec Angular', 'Stratégies de test pour applications Angular.', FALSE, 'Meilleures pratiques pour tester votre code Angular', 'https://example.com/angular-testing.png', FALSE),
+(4, @user_user1, 'Débuter avec Angular', 'Les bases du framework Angular.', TRUE, 'Premier pas avec Angular pour développeurs frontend', 'https://example.com/angular-basics.png', TRUE, NULL, NULL, NULL, 'Structure d''un projet Angular'),
+(4, @user_user2, 'State Management dans Angular', 'NgRx et gestion d''état avancée.', FALSE, 'Gérer l''état de votre application Angular efficacement', 'https://example.com/angular-state.png', TRUE, NULL, NULL, NULL, 'Flux de données avec NgRx'),
+(4, @user_user1, 'Angular vs React', 'Comparaison des deux frameworks populaires.', TRUE, 'Analyse détaillée des différences entre Angular et React', 'https://example.com/angular-react.png', FALSE, NULL, NULL, NULL, 'Tableau comparatif Angular vs React'),
+(4, @user_user2, 'Tests unitaires avec Angular', 'Stratégies de test pour applications Angular.', FALSE, 'Meilleures pratiques pour tester votre code Angular', 'https://example.com/angular-testing.png', FALSE, NULL, NULL, NULL, 'Configuration de Jasmine et Karma'),
 
 -- Section Python (ID_SECTION = 5)
-(5, 'user1', 'Python pour débutants', 'Introduction au langage Python.', TRUE, 'Premiers pas avec Python, de zéro à héros', 'https://example.com/python-basics.png', TRUE),
-(5, 'user2', 'Data Science avec Python', 'Pandas, NumPy et visualisation de données.', FALSE, 'Analyse de données avec les bibliothèques Python', 'https://example.com/python-datascience.png', TRUE),
-(5, 'user3', 'Django Framework', 'Développement web avec Django.', TRUE, 'Créer des applications web robustes avec Django', 'https://example.com/django.png', FALSE),
-(5, 'user4', 'Python pour l''IA', 'Introduction au Machine Learning avec Python.', FALSE, 'TensorFlow et PyTorch pour l''intelligence artificielle', 'https://example.com/python-ai.png', FALSE),
+(5, @user_user1, 'Python pour débutants', 'Introduction au langage Python.', TRUE, 'Premiers pas avec Python, de zéro à héros', 'https://example.com/python-basics.png', TRUE, NULL, NULL, NULL, 'Syntaxe Python illustrée'),
+(5, @user_user2, 'Data Science avec Python', 'Pandas, NumPy et visualisation de données.', FALSE, 'Analyse de données avec les bibliothèques Python', 'https://example.com/python-datascience.png', TRUE, NULL, NULL, NULL, 'Visualisation de données avec Matplotlib'),
+(5, @user_user1, 'Django Framework', 'Développement web avec Django.', TRUE, 'Créer des applications web robustes avec Django', 'https://example.com/django.png', FALSE, NULL, NULL, NULL, 'Architecture MVC de Django'),
+(5, @user_user2, 'Python pour l''IA', 'Introduction au Machine Learning avec Python.', FALSE, 'TensorFlow et PyTorch pour l''intelligence artificielle', 'https://example.com/python-ai.png', FALSE, NULL, NULL, NULL, 'Réseau de neurones artificiels'),
 
 -- Section Bitcoin (ID_SECTION = 6)
-(6, 'user1', 'Introduction au Bitcoin', 'Les fondamentaux de Bitcoin.', TRUE, 'Comprendre la première cryptomonnaie', 'https://example.com/bitcoin-intro.png', TRUE),
-(6, 'user2', 'Analyse technique du Bitcoin', 'Étude des graphiques et tendances.', FALSE, 'Méthodes d''analyse pour prédire les mouvements du BTC', 'https://example.com/bitcoin-analysis.png', TRUE),
-(6, 'user3', 'Sécurité et stockage de Bitcoin', 'Protection de vos investissements.', TRUE, 'Wallets et bonnes pratiques de sécurité', 'https://example.com/bitcoin-security.png', FALSE),
-(6, 'user4', 'Bitcoin vs autres cryptomonnaies', 'Comparaison avec Ethereum, etc.', FALSE, 'Analyse comparative des principales cryptomonnaies', 'https://example.com/bitcoin-altcoins.png', FALSE);
+(6, @user_user1, 'Introduction au Bitcoin', 'Les fondamentaux de Bitcoin.', TRUE, 'Comprendre la première cryptomonnaie', 'https://example.com/bitcoin-intro.png', TRUE, NULL, NULL, NULL, 'Illustration du concept de blockchain'),
+(6, @user_user2, 'Analyse technique du Bitcoin', 'Étude des graphiques et tendances.', FALSE, 'Méthodes d''analyse pour prédire les mouvements du BTC', 'https://example.com/bitcoin-analysis.png', TRUE, NULL, NULL, NULL, 'Graphique d''analyse technique BTC'),
+(6, @user_user1, 'Sécurité et stockage de Bitcoin', 'Protection de vos investissements.', TRUE, 'Wallets et bonnes pratiques de sécurité', 'https://example.com/bitcoin-security.png', FALSE, NULL, NULL, NULL, 'Types de wallets Bitcoin'),
+(6, @user_user2, 'Bitcoin vs autres cryptomonnaies', 'Comparaison avec Ethereum, etc.', FALSE, 'Analyse comparative des principales cryptomonnaies', 'https://example.com/bitcoin-altcoins.png', FALSE, NULL, NULL, NULL, 'Tableau comparatif des cryptomonnaies');
