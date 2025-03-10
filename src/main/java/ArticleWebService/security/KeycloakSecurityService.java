@@ -92,6 +92,7 @@ public class KeycloakSecurityService extends KeycloakWebSecurityConfigurerAdapte
                 .cors().disable()
                 .csrf().disable()
                 .authorizeRequests()
+                .antMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                 .antMatchers("/articles/getAllArticles",
                         "/articles/saveImages",
                         "/articles/upload",
@@ -103,7 +104,7 @@ public class KeycloakSecurityService extends KeycloakWebSecurityConfigurerAdapte
                 .antMatchers(
                         "/articles/updateArticle",
                         "/articles/deleteArticle/*",
-                        "/articles/update/*")
+                        "/articles/update/**")
                 .hasAnyAuthority("admin", "user")
                 .and()
                 .addFilterBefore(new PreApiFilter(), BasicAuthenticationFilter.class)
