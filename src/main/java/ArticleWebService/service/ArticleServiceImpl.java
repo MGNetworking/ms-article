@@ -248,6 +248,8 @@ public class ArticleServiceImpl implements ArticleService {
                                 articleDtoUpdate.getIdArticle()),
                         HttpStatus.NOT_FOUND));
 
+        Hibernate.initialize(article.getSection());
+
         // Copie des données du dto vers l'object article
         this.modelMapper.map(articleDtoUpdate, article);
         article.setDateMaj(Timestamp.valueOf(LocalDateTime.now()));
