@@ -34,8 +34,6 @@ public class ArticleDto {
     private boolean isVisibale;
     private boolean portfolio;
 
-    @Min(value = -1, message = "La valeur de 'vue' doit être au moins -1")
-    @Max(value = 1, message = "La valeur de 'vue' ne doit pas dépasser 1")
     private int vue;
 
     // Serialisation de l'objet date au format => yyyy-MM-dd HH:mm:ss

@@ -143,11 +143,6 @@ public class ArticleValidatorDtoUpdateTest {
         assertTrue(errorsByField.get("article").contains("L'article doit avoir un contenu"),
                 "Le message attendu pour 'article' est manquant. Erreurs trouvées : " + errorsByField.get("article"));
 
-        assertTrue(errorsByField.containsKey("vue"),
-                "Le champ 'vue' devrait être en erreur. Erreurs trouvées : " + errorsByField);
-        assertTrue(errorsByField.get("vue").contains("La valeur de 'vue' ne doit pas dépasser 1"),
-                "Le message attendu pour 'vue' est manquant. Erreurs trouvées : " + errorsByField.get("vue"));
-
         assertTrue(errorsByField.containsKey("dateCreation"),
                 "Le champ 'dateCreation' devrait être en erreur. Erreurs trouvées : " + errorsByField);
         assertTrue(errorsByField.get("dateCreation").contains("La date de création est obligatoire"),

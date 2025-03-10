@@ -43,8 +43,6 @@ public class ArticleDtoUpdate {
     private boolean isVisibale ;
     private boolean portfolio;
 
-    @Min(value = -1, message = "La valeur de 'vue' doit être au moins -1")
-    @Max(value = 1, message = "La valeur de 'vue' ne doit pas dépasser 1")
     private int vue;
 
     @NotNull(message = "La date de création est obligatoire")
