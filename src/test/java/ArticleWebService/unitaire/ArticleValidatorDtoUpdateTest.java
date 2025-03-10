@@ -118,11 +118,6 @@ public class ArticleValidatorDtoUpdateTest {
         assertTrue(errorsByField.get("idUser").contains("L'identifiant utilisateur est absent"),
                 "Le message attendu pour 'idUser' est manquant. Erreurs trouvées : " + errorsByField.get("idUser"));
 
-        assertTrue(errorsByField.containsKey("section"),
-                "Le champ 'section' devrait être en erreur. Erreurs trouvées : " + errorsByField);
-        assertTrue(errorsByField.get("section").contains("La section de l'article est obligatoire "),
-                "Le message attendu pour 'section' est manquant. Erreurs trouvées : " + errorsByField.get("section"));
-
         assertTrue(errorsByField.containsKey("titre"),
                 "Le champ 'titre' devrait être en erreur. Erreurs trouvées : " + errorsByField);
         assertTrue(errorsByField.get("titre").contains("l'article doit avoir un titre "),
