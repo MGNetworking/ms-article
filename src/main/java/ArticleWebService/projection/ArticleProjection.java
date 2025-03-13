@@ -6,6 +6,8 @@ public interface ArticleProjection {
 
     Integer getIdArticle();
 
+    String getIdUser();
+
     Section getSection();
 
     String getTitre();
