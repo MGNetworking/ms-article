@@ -267,7 +267,7 @@ pipeline {
 
                                 sh """
                                     mvn test -Dspring.profiles.active=test \\
-                                    -Dsurefire.report.directory=${env.WORKSPACE}/target/unitaire-reports
+                                    -Dsurefire.reportsDirectory=${env.WORKSPACE}/target/unitaire-reports
                                 """
 
                                 echo "Archivage des résultats des tests unitaires"
@@ -294,7 +294,7 @@ pipeline {
 
                                 sh """
                                     mvn verify -P integration -Dspring.profiles.active=test \\
-                                    -Dfailsafe.report.directory=${env.WORKSPACE}/target/integration-reports
+                                    -Dfailsafe.reportsDirectory=${env.WORKSPACE}/target/integration-reports
                                 """
 
                                 echo "Archivage des résultats de test"
@@ -325,7 +325,7 @@ pipeline {
                                 sh """
                                     mvn verify -P e2e -Dspring.profiles.active=${profileTest} \\
                                     -DSERVICE_CONFIG_DOCKER=http://192.168.1.56:8089 \\
-                                    -Dfailsafe.report.directory=${env.WORKSPACE}/target/e2e-reports \\
+                                    -Dfailsafe.reportsDirectory=${env.WORKSPACE}/target/e2e-reports \\
                                     -Dtest.keycloak.user.one=${TEST_USER_ONE_USR} \\
                                     -Dtest.keycloak.password.one=${TEST_USER_ONE_PSW} \\
                                     -Dtest.keycloak.user.two=${TEST_USER_TWO_USR} \\
