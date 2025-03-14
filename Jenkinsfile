@@ -324,7 +324,7 @@ pipeline {
                                 echo("Le profile utililsé pour les tests end to end: ${profileTest}")
                                 sh """
                                     mvn verify -P e2e -Dspring.profiles.active=${profileTest} \\
-                                    -DSERVICE_CONFIG_DOCKER=http://192.168.1.56:8089
+                                    -DSERVICE_CONFIG_DOCKER=http://192.168.1.56:8089 \\
                                     -Dfailsafe.report.directory=${env.WORKSPACE}/target/e2e-reports \\
                                     -Dtest.keycloak.user.one=${TEST_USER_ONE_USR} \\
                                     -Dtest.keycloak.password.one=${TEST_USER_ONE_PSW} \\
