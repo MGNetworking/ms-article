@@ -39,3 +39,6 @@ settings.xml
 ### les images de testes ###
 #src/main/resources/static/images-MockMVC
 #src/main/resources/static/innerpage
+
+### le fichier sql
+src/test/resources/data-test.sql
