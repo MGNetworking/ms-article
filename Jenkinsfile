@@ -267,14 +267,14 @@ pipeline {
 
                                 sh """
                                     mvn test -Dspring.profiles.active=test \\
-                                    -Dsurefire.reportsDirectory=${env.WORKSPACE}/target/unitaire-reports
+                                    -Dsurefire.reportsDirectory=${env.WORKSPACE}/target/unit-reports
                                 """
 
                                 echo "Archivage des résultats des tests unitaires"
-                                archiveArtifacts artifacts: 'target/unitaire-reports/*.xml', allowEmptyArchive: true
+                                archiveArtifacts artifacts: 'target/unit-reports/*.xml', allowEmptyArchive: true
 
                                 echo "Publication immédiate des résultats les tests unitaires"
-                                junit testResults: "target/unitaire-reports/*.xml", allowEmptyResults: true
+                                junit testResults: "target/unit-reports/*.xml", allowEmptyResults: true
                             }
                         }
                     }
@@ -294,14 +294,17 @@ pipeline {
 
                                 sh """
                                     mvn verify -P integration -Dspring.profiles.active=test \\
-                                    -Dfailsafe.reportsDirectory=${env.WORKSPACE}/target/integration-reports
+                                    -Dfailsafe.reportsDirectory=${env.WORKSPACE}/target/failsafe-reports
                                 """
 
+                                sh "ls -la ${env.WORKSPACE}/target/failsafe-reports"
+                                sh "find ${env.WORKSPACE} -name '*.xml'"
+
                                 echo "Archivage des résultats de test"
-                                archiveArtifacts artifacts: 'target/integration-reports/*.xml', allowEmptyArchive: true
+                                archiveArtifacts artifacts: 'target/failsafe-reports/*.xml', allowEmptyArchive: true
 
                                 echo "Publication immédiate des résultats de test d'intégration"
-                                junit testResults: "target/integration-reports/*.xml", allowEmptyResults: true
+                                junit testResults: "target/failsafe-reports/*.xml", allowEmptyResults: true
                             }
                         }
                     }
@@ -325,18 +328,22 @@ pipeline {
                                 sh """
                                     mvn verify -P e2e -Dspring.profiles.active=${profileTest} \\
                                     -DSERVICE_CONFIG_DOCKER=http://192.168.1.56:8089 \\
-                                    -Dfailsafe.reportsDirectory=${env.WORKSPACE}/target/e2e-reports \\
+                                    -Dfailsafe.reportsDirectory=${env.WORKSPACE}/target/failsafe-reports \\
                                     -Dtest.keycloak.user.one=${TEST_USER_ONE_USR} \\
                                     -Dtest.keycloak.password.one=${TEST_USER_ONE_PSW} \\
                                     -Dtest.keycloak.user.two=${TEST_USER_TWO_USR} \\
                                     -Dtest.keycloak.password.two=${TEST_USER_TWO_PSW}
                                 """
 
+                                // Vérification après l'exécution des tests
+                                sh "ls -la ${env.WORKSPACE}/target/failsafe-reports"
+                                sh "find ${env.WORKSPACE} -name '*.xml'"
+
                                 echo "Archivage des résultats de test end to end"
-                                archiveArtifacts artifacts: 'target/e2e-reports/*.xml', allowEmptyArchive: true
+                                archiveArtifacts artifacts: 'target/failsafe-reports/*.xml', allowEmptyArchive: true
 
                                 echo "Publication immédiate des résultats des tests end to end"
-                                junit testResults: "target/e2e-reports/*.xml", allowEmptyResults: true
+                                junit testResults: "target/failsafe-reports/*.xml", allowEmptyResults: true
                             }
                         }
                     }
