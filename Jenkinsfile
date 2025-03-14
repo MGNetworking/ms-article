@@ -266,7 +266,7 @@ pipeline {
                             catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
 
                                 sh """
-                                    mvn test -Dspring.profiles.active=test 
+                                    mvn test -Dspring.profiles.active=test \\
                                     -Dsurefire.report.directory=${env.WORKSPACE}/target/unitaire-reports
                                 """
 
@@ -293,7 +293,7 @@ pipeline {
                             catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
 
                                 sh """
-                                    mvn verify -P integration -Dspring.profiles.active=test
+                                    mvn verify -P integration -Dspring.profiles.active=test \\
                                     -Dfailsafe.report.directory=${env.WORKSPACE}/target/integration-reports
                                 """
 
@@ -329,7 +329,7 @@ pipeline {
                                     -Dtest.keycloak.user.one=${TEST_USER_ONE_USR} \\
                                     -Dtest.keycloak.password.one=${TEST_USER_ONE_PSW} \\
                                     -Dtest.keycloak.user.two=${TEST_USER_TWO_USR} \\
-                                    -Dtest.keycloak.password.two=${TEST_USER_TWO_PSW} \\
+                                    -Dtest.keycloak.password.two=${TEST_USER_TWO_PSW}
                                 """
 
                                 echo "Archivage des résultats de test end to end"
