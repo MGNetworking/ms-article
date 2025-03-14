@@ -50,19 +50,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 
 /**
- * Test d'intégration
- * Cette Classe test le control Article.
- * <p>
- * NB: Le service de configuration doit être en cours d'exécution
- * afin d'obtenir les properties nécessaires au fonctionnement du service.
- * Le Service Keycloak et la base de données associé doivent être en cours
- * d'exécution
+ * Test des end point.
+ * Il permet de test dans un environement contrôle le fonctionnement
+ * des end points.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ActiveProfiles(resolver = SystemPropertiesActiveProfileResolver.class,
-        profiles = {"test", "nas", "preprod", "prod"}) // Limité aux environnements spécifiques
+        profiles = {"test", "test-nas", "preprod", "prod"}) // Limité aux environnements spécifiques
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Slf4j
 public class ControllerArticleE2ETest {
