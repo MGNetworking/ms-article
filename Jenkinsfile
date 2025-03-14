@@ -12,6 +12,8 @@ pipeline {
         Prod_CREDS = credentials('PROD')
         Nexus_CREDS = credentials('nexus-credentials')
         GITHUB_TOKEN = credentials('Github')
+        TEST_USER_ONE = credentials('keycloak-test-user-one')
+        TEST_USER_TWO = credentials('keycloak-test-user-two')
     }
 
     parameters {
@@ -260,11 +262,20 @@ pipeline {
                     steps {
                         script {
                             // Si les tests échouent, le pipeline est interrompu
-                            echo("Lancement des tests unitaire")
-                            sh("mvn test -Dspring.profiles.active=test " +
-                                    "-Dsurefire.report.directory=${env.WORKSPACE}/target/surefire-reports")
-                            sh 'pwd'
-                            sh 'ls -al target/surefire-reports || echo "surefire-reports non trouvé"'
+                            echo("Lancement des tests unitaires")
+                            catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+
+                                sh """
+                                    mvn test -Dspring.profiles.active=test 
+                                    -Dsurefire.report.directory=${env.WORKSPACE}/target/unitaire-reports
+                                """
+
+                                echo "Archivage des résultats des tests unitaires"
+                                archiveArtifacts artifacts: 'target/unitaire-reports/*.xml', allowEmptyArchive: true
+
+                                echo "Publication immédiate des résultats les tests unitaires"
+                                junit testResults: "target/unitaire-reports/*.xml", allowEmptyResults: true
+                            }
                         }
                     }
                 }
@@ -278,14 +289,19 @@ pipeline {
                     }
                     steps {
                         script {
-                            // Si une erreur survient, le stage est marqué comme FAILURE, mais le pipeline continue
-                            // Le résultat global du pipeline est marqué comme UNSTABLE
-                            echo("Lancement des tests d'intégration et end to end")
+                            echo("Lancement des tests d'intégration")
                             catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                                sh("mvn verify -P integration -Dspring.profiles.active=test " +
-                                        "-Dfailsafe.report.directory=${env.WORKSPACE}/target/failsafe-reports")
-                                sh 'pwd'
-                                sh 'ls -al target/failsafe-reports || echo "failsafe-reports non trouvé"'
+
+                                sh """
+                                    mvn verify -P integration -Dspring.profiles.active=test
+                                    -Dfailsafe.report.directory=${env.WORKSPACE}/target/integration-reports
+                                """
+
+                                echo "Archivage des résultats de test"
+                                archiveArtifacts artifacts: 'target/integration-reports/*.xml', allowEmptyArchive: true
+
+                                echo "Publication immédiate des résultats de test d'intégration"
+                                junit testResults: "target/integration-reports/*.xml", allowEmptyResults: true
                             }
                         }
                     }
@@ -301,14 +317,25 @@ pipeline {
                     }
                     steps {
                         script {
-                            // Si une erreur survient, le stage est marqué comme UNSTABLE,
-                            // mais cela n’affecte pas le résultat global du pipeline.
                             echo("Lancement des tests d'intégration et end to end")
-                            catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
-                                sh "mvn verify -P e2e -Dspring.profiles.active=test " +
-                                        "-Dfailsafe.report.directory=${env.WORKSPACE}/target/failsafe-reports"
-                                sh 'pwd'
-                                sh 'ls -al target/failsafe-reports || echo "failsafe-reports non trouvé"'
+                            catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+
+                                profileTest = "test-${env.BRANCH_NAME}"
+                                echo("Le profile utililsé pour les tests end to end: ${profileTest}")
+                                sh """
+                                    mvn verify -P e2e -Dspring.profiles.active=${profileTest} \\
+                                    -Dfailsafe.report.directory=${env.WORKSPACE}/target/e2e-reports \\
+                                    -Dtest.keycloak.user.one=${TEST_USER_ONE_USR} \\
+                                    -Dtest.keycloak.password.one=${TEST_USER_ONE_PSW} \\
+                                    -Dtest.keycloak.user.two=${TEST_USER_TWO_USR} \\
+                                    -Dtest.keycloak.password.two=${TEST_USER_TWO_PSW} \\
+                                """
+
+                                echo "Archivage des résultats de test end to end"
+                                archiveArtifacts artifacts: 'target/e2e-reports/*.xml', allowEmptyArchive: true
+
+                                echo "Publication immédiate des résultats des tests end to end"
+                                junit testResults: "target/e2e-reports/*.xml", allowEmptyResults: true
                             }
                         }
                     }
@@ -572,21 +599,6 @@ pipeline {
 
 
     post {
-        always {
-            script {
-
-                echo "Gestion des rapports JUnit."
-                sh 'pwd'
-                sh 'ls -al target/surefire-reports || echo "surefire-reports non trouvé"'
-                sh 'ls -al target/failsafe-reports || echo "failsafe-reports non trouvé"'
-
-                echo "Collecte des rapports JUnit pour les tests unitaires."
-                junit testResults: "target/surefire-reports/*.xml", allowEmptyResults: true
-
-                echo "Collecte des rapports JUnit pour les tests d'intégration et E2E."
-                junit testResults: "target/failsafe-reports/*.xml", allowEmptyResults: true
-            }
-        }
         success {
             script {
                 def stack = "du déploiement de la stack avec la version du service ${env.IMAGE_VERSION}"
