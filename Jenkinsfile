@@ -281,11 +281,29 @@ pipeline {
                                     echo "ATTENTION : Aucun fichier de rapport de test trouvé !"
                                 }
 
+                                // Vérification du contenu de chaque fichier XML
+                                sh """
+                                    for file in ${env.WORKSPACE}/target/unit-reports/*.xml; do
+                                        echo "Contenu de \$file :"
+                                        cat \$file
+                                        echo "---"
+                                    done
+                                """
+
                                 echo "Archivage des résultats des tests unitaires"
                                 archiveArtifacts artifacts: 'target/unit-reports/*.xml', allowEmptyArchive: true
 
-                                echo "Publication immédiate des résultats les tests unitaires"
-                                junit testResults: "target/unit-reports/*.xml", allowEmptyResults: true
+                                // Publication des résultats avec des options de débogage
+                                try {
+                                    junit(
+                                            testResults: "target/unit-reports/*.xml",
+                                            allowEmptyResults: true,
+                                            healthScaleFactor: 1.0,
+                                            skipPublishingChecks: true
+                                    )
+                                } catch (Exception e) {
+                                    echo "Erreur lors de la publication des résultats : ${e.message}"
+                                }
                             }
                         }
                     }
