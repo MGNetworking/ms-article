@@ -270,6 +270,17 @@ pipeline {
                                     -Dsurefire.reportsDirectory=${env.WORKSPACE}/target/unit-reports
                                 """
 
+                                def xmlFiles = sh(
+                                        script: "find ${env.WORKSPACE}/target/unit-reports -name '*.xml' | wc -l",
+                                        returnStdout: true
+                                ).trim()
+
+                                echo "Nombre de fichiers de rapports XML trouvés : ${xmlFiles}"
+
+                                if (xmlFiles == '0') {
+                                    echo "ATTENTION : Aucun fichier de rapport de test trouvé !"
+                                }
+
                                 echo "Archivage des résultats des tests unitaires"
                                 archiveArtifacts artifacts: 'target/unit-reports/*.xml', allowEmptyArchive: true
 
@@ -297,8 +308,16 @@ pipeline {
                                     -Dfailsafe.reportsDirectory=${env.WORKSPACE}/target/failsafe-reports
                                 """
 
-                                sh "ls -la ${env.WORKSPACE}/target/failsafe-reports"
-                                sh "find ${env.WORKSPACE} -name '*.xml'"
+                                def xmlFiles = sh(
+                                        script: "find ${env.WORKSPACE}/target/failsafe-reports -name '*.xml' | wc -l",
+                                        returnStdout: true
+                                ).trim()
+
+                                echo "Nombre de fichiers de rapports XML trouvés : ${xmlFiles}"
+
+                                if (xmlFiles == '0') {
+                                    echo "ATTENTION : Aucun fichier de rapport de test trouvé !"
+                                }
 
                                 echo "Archivage des résultats de test"
                                 archiveArtifacts artifacts: 'target/failsafe-reports/*.xml', allowEmptyArchive: true
@@ -335,9 +354,17 @@ pipeline {
                                     -Dtest.keycloak.password.two=${TEST_USER_TWO_PSW}
                                 """
 
-                                // Vérification après l'exécution des tests
-                                sh "ls -la ${env.WORKSPACE}/target/failsafe-reports"
-                                sh "find ${env.WORKSPACE} -name '*.xml'"
+                                def xmlFiles = sh(
+                                        script: "find ${env.WORKSPACE}/target/failsafe-reports -name '*.xml' | wc -l",
+                                        returnStdout: true
+                                ).trim()
+
+                                echo "Nombre de fichiers de rapports XML trouvés : ${xmlFiles}"
+
+                                if (xmlFiles == '0') {
+                                    echo "ATTENTION : Aucun fichier de rapport de test trouvé !"
+                                }
+
 
                                 echo "Archivage des résultats de test end to end"
                                 archiveArtifacts artifacts: 'target/failsafe-reports/*.xml', allowEmptyArchive: true
