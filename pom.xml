@@ -276,10 +276,6 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <version>2.22.2</version>
-                <configuration>
-                    <!-- Configuration explicite du répertoire des rapports -->
-                    <reportsDirectory>${project.build.directory}/failsafe-reports</reportsDirectory>
-                </configuration>
                 <executions>
                     <execution>
                         <id>default</id>
@@ -325,6 +321,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-failsafe-plugin</artifactId>
                         <configuration>
+                            <reportsDirectory>${project.build.directory}/integration-reports</reportsDirectory>
                             <includes>
                                 <include>**/integration/*ITTest.java</include>
                             </includes>
@@ -353,6 +350,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-failsafe-plugin</artifactId>
                         <configuration>
+                            <reportsDirectory>${project.build.directory}/e2e-reports</reportsDirectory>
                             <includes>
                                 <include>**/endtoend/*E2ETest.java</include>
                             </includes>
