@@ -297,8 +297,8 @@ pipeline {
                                 try {
                                     junit(
                                             testResults: "target/unit-reports/*.xml",
-                                            allowEmptyResults: true,
-                                            healthScaleFactor: 1.0,
+                                            allowEmptyResults: true,    // permet de continuer même si aucun test n'est trouvé
+                                            healthScaleFactor: 1.0,     // donne un poids égal à tous les tests
                                             skipPublishingChecks: true
                                     )
                                 } catch (Exception e) {
@@ -341,7 +341,12 @@ pipeline {
                                 archiveArtifacts artifacts: 'target/failsafe-reports/*.xml', allowEmptyArchive: true
 
                                 echo "Publication immédiate des résultats de test d'intégration"
-                                junit testResults: "target/failsafe-reports/*.xml", allowEmptyResults: true
+                                junit(
+                                        testResults: "target/failsafe-reports/*.xml",
+                                        allowEmptyResults: true,
+                                        healthScaleFactor: 1.0,
+                                        skipPublishingChecks: true
+                                )
                             }
                         }
                     }
@@ -388,7 +393,12 @@ pipeline {
                                 archiveArtifacts artifacts: 'target/failsafe-reports/*.xml', allowEmptyArchive: true
 
                                 echo "Publication immédiate des résultats des tests end to end"
-                                junit testResults: "target/failsafe-reports/*.xml", allowEmptyResults: true
+                                junit(
+                                        testResults: "target/failsafe-reports/*.xml",
+                                        allowEmptyResults: true,
+                                        healthScaleFactor: 1.0,
+                                        skipPublishingChecks: true
+                                )
                             }
                         }
                     }
