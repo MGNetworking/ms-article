@@ -327,7 +327,7 @@ pipeline {
                                 """
 
                                 def xmlFiles = sh(
-                                        script: "find ${env.WORKSPACE}/target/failsafe-reports -name '*.xml' | wc -l",
+                                        script: "find ${env.WORKSPACE}/target/integration-reports -name '*.xml' | wc -l",
                                         returnStdout: true
                                 ).trim()
 
@@ -338,11 +338,11 @@ pipeline {
                                 }
 
                                 echo "Archivage des résultats de test"
-                                archiveArtifacts artifacts: 'target/failsafe-reports/*.xml', allowEmptyArchive: true
+                                archiveArtifacts artifacts: 'target/integration-reports/*.xml', allowEmptyArchive: true
 
                                 echo "Publication immédiate des résultats de test d'intégration"
                                 junit(
-                                        testResults: "target/failsafe-reports/*.xml",
+                                        testResults: "target/integration-reports/*.xml",
                                         allowEmptyResults: true,
                                         healthScaleFactor: 1.0,
                                         skipPublishingChecks: true
@@ -378,7 +378,7 @@ pipeline {
                                 """
 
                                 def xmlFiles = sh(
-                                        script: "find ${env.WORKSPACE}/target/failsafe-reports -name '*.xml' | wc -l",
+                                        script: "find ${env.WORKSPACE}/target/e2e-reports -name '*.xml' | wc -l",
                                         returnStdout: true
                                 ).trim()
 
@@ -390,11 +390,11 @@ pipeline {
 
 
                                 echo "Archivage des résultats de test end to end"
-                                archiveArtifacts artifacts: 'target/failsafe-reports/*.xml', allowEmptyArchive: true
+                                archiveArtifacts artifacts: 'target/e2e-reports/*.xml', allowEmptyArchive: true
 
                                 echo "Publication immédiate des résultats des tests end to end"
                                 junit(
-                                        testResults: "target/failsafe-reports/*.xml",
+                                        testResults: "target/e2e-reports/*.xml",
                                         allowEmptyResults: true,
                                         healthScaleFactor: 1.0,
                                         skipPublishingChecks: true
