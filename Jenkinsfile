@@ -5,7 +5,9 @@ def nexus = [:]
 def dockers = [:]
 
 pipeline {
-    agent any
+    agent {
+        label 'master'
+    }
 
     environment {
         Nas_CREDS = credentials('NAS')
@@ -432,7 +434,9 @@ pipeline {
             when {
                 expression { env.SKIP_BUILD?.toBoolean() || params.FORCE?.toBoolean() }
             }
-            agent any
+            agent {
+                label 'master'
+            }
             steps {
                 script {
                     echo("Création de l'image Docker : ${dockers.img}")
@@ -445,7 +449,9 @@ pipeline {
             when {
                 expression { env.SKIP_BUILD?.toBoolean() || params.FORCE?.toBoolean() }
             }
-            agent any
+            agent {
+                label 'master'
+            }
             steps {
                 script {
                     // TAG de l'image vers la version spécifier beta / relase
@@ -461,7 +467,9 @@ pipeline {
             when {
                 expression { env.SKIP_BUILD?.toBoolean() || params.FORCE?.toBoolean() }
             }
-            agent any
+            agent {
+                label 'master'
+            }
             steps {
                 script {
                     try {
@@ -484,7 +492,9 @@ pipeline {
             when {
                 expression { env.SKIP_BUILD?.toBoolean() || params.FORCE?.toBoolean() }
             }
-            agent any
+            agent {
+                label 'master'
+            }
             steps {
                 script {
                     try {
@@ -505,7 +515,9 @@ pipeline {
             when {
                 expression { env.SKIP_BUILD?.toBoolean() || params.FORCE?.toBoolean() }
             }
-            agent any
+            agent {
+                label 'master'
+            }
             steps {
                 script {
                     try {
@@ -529,7 +541,9 @@ pipeline {
             when {
                 expression { env.SKIP_BUILD?.toBoolean() || params.FORCE?.toBoolean() }
             }
-            agent any
+            agent {
+                label 'master'
+            }
             steps {
                 script {
                     try {
@@ -550,7 +564,9 @@ pipeline {
             when {
                 expression { env.SKIP_BUILD?.toBoolean() || params.FORCE?.toBoolean() }
             }
-            agent any
+            agent {
+                label 'master'
+            }
             steps {
                 script {
                     status = true
@@ -585,7 +601,9 @@ pipeline {
             when {
                 expression { env.SKIP_BUILD?.toBoolean() || params.FORCE?.toBoolean() }
             }
-            agent any
+            agent {
+                label 'master'
+            }
             steps {
                 script {
                     try {
@@ -622,7 +640,9 @@ pipeline {
         }
 
         stage('Close connection Nexus') {
-            agent any
+            agent {
+                label 'master'
+            }
             steps {
                 script {
                     try {
@@ -639,7 +659,9 @@ pipeline {
         }
 
         stage('Clean images') {
-            agent any
+            agent {
+                label 'master'
+            }
             when {
                 expression { env.SKIP_BUILD?.toBoolean() }
             }
