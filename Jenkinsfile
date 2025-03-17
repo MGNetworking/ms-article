@@ -413,51 +413,6 @@ pipeline {
                         }
                     }
                 }
-
-                stage('Fetch Postman Data') {
-                    agent {
-                        label 'master'
-                    }
-                    steps {
-                        echo 'Récupération des données depuis Postman...'
-
-                        // Création d'un répertoire pour stocker les fichiers
-                        sh 'mkdir -p postman_files'
-
-                        // Récupération de la collection
-                        sh '''
-                            curl -s -X GET "https://api.getpostman.com/collections/${COLLECTION_ID}" \
-                                -H "X-Api-Key: ${POSTMAN_API_KEY}" \
-                                -o postman_files/postman_response.json
-        
-                            jq '.collection' postman_files/postman_response.json > postman_files/collection.json
-        
-                            echo "Collection récupérée avec succès"
-                        '''
-
-                        // Récupération de l'environnement si spécifié
-                        sh '''
-                            if [ ! -z "${ENVIRONMENT_ID}" ]; then
-                                curl -s -X GET "https://api.getpostman.com/environments/${ENVIRONMENT_ID}" \
-                                    -H "X-Api-Key: ${POSTMAN_API_KEY}" \
-                                    -o postman_files/environment_response.json
-        
-                                jq '.environment' postman_files/environment_response.json > postman_files/environment.json
-        
-                                echo "Environnement récupéré avec succès"
-                            fi
-                        '''
-
-                        // Vérification des fichiers
-                        sh 'ls -la postman_files/'
-                        sh 'cat postman_files/collection.json'
-                        sh 'cat postman_files/environment.json'
-                        sh 'cat postman_files/environment_response.json'
-                        sh 'cat postman_files/postman_response.json'
-                        stash includes: 'postman_files/**', name: 'postman-data'
-                        sh 'ls -la postman_files/'
-                    }
-                }
             }
         }
 
@@ -646,6 +601,51 @@ pipeline {
                         error("⛔ ERROR - Le service ${NAME_SERVICE} est en echec !!!")
                     }
                 }
+            }
+        }
+
+        stage('Fetch Postman Data') {
+            agent {
+                label 'master'
+            }
+            steps {
+                echo 'Récupération des données depuis Postman...'
+
+                // Création d'un répertoire pour stocker les fichiers
+                sh 'mkdir -p postman_files'
+
+                // Récupération de la collection
+                sh '''
+                            curl -s -X GET "https://api.getpostman.com/collections/${COLLECTION_ID}" \
+                                -H "X-Api-Key: ${POSTMAN_API_KEY}" \
+                                -o postman_files/postman_response.json
+        
+                            jq '.collection' postman_files/postman_response.json > postman_files/collection.json
+        
+                            echo "Collection récupérée avec succès"
+                        '''
+
+                // Récupération de l'environnement si spécifié
+                sh '''
+                            if [ ! -z "${ENVIRONMENT_ID}" ]; then
+                                curl -s -X GET "https://api.getpostman.com/environments/${ENVIRONMENT_ID}" \
+                                    -H "X-Api-Key: ${POSTMAN_API_KEY}" \
+                                    -o postman_files/environment_response.json
+        
+                                jq '.environment' postman_files/environment_response.json > postman_files/environment.json
+        
+                                echo "Environnement récupéré avec succès"
+                            fi
+                        '''
+
+                // Vérification des fichiers
+                sh 'ls -la postman_files/'
+                sh 'cat postman_files/collection.json'
+                sh 'cat postman_files/environment.json'
+                sh 'cat postman_files/environment_response.json'
+                sh 'cat postman_files/postman_response.json'
+                stash includes: 'postman_files/**', name: 'postman-data'
+                sh 'ls -la postman_files/'
             }
         }
 
