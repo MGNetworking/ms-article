@@ -14,8 +14,16 @@ pipeline {
         Prod_CREDS = credentials('PROD')
         Nexus_CREDS = credentials('nexus-credentials')
         GITHUB_TOKEN = credentials('Github')
+
+        // User Keycloak
         TEST_USER_ONE = credentials('keycloak-test-user-one')
         TEST_USER_TWO = credentials('keycloak-test-user-two')
+
+        // Postman
+        POSTMAN_API_KEY = credentials('postman-api-key')
+        COLLECTION_ID = '11348257-10195054-8f06-449a-a1e7-43920956342d'  // ID de votre collection Postman
+        ENVIRONMENT_ID = '11348257-f8211aa2-e2d0-4d9c-b79a-8b460e24fb60' // ID de votre environnement (optionnel)
+        WORKSPACE = "${env.WORKSPACE}"
     }
 
     parameters {
@@ -406,6 +414,50 @@ pipeline {
                     }
                 }
 
+                stage('Fetch Postman Data') {
+                    agent {
+                        label 'master'
+                    }
+                    steps {
+                        echo 'Récupération des données depuis Postman...'
+
+                        // Création d'un répertoire pour stocker les fichiers
+                        sh 'mkdir -p postman_files'
+
+                        // Récupération de la collection
+                        sh '''
+                            curl -s -X GET "https://api.getpostman.com/collections/${COLLECTION_ID}" \
+                                -H "X-Api-Key: ${POSTMAN_API_KEY}" \
+                                -o postman_files/postman_response.json
+        
+                            jq '.collection' postman_files/postman_response.json > postman_files/collection.json
+        
+                            echo "Collection récupérée avec succès"
+                        '''
+
+                        // Récupération de l'environnement si spécifié
+                        sh '''
+                            if [ ! -z "${ENVIRONMENT_ID}" ]; then
+                                curl -s -X GET "https://api.getpostman.com/environments/${ENVIRONMENT_ID}" \
+                                    -H "X-Api-Key: ${POSTMAN_API_KEY}" \
+                                    -o postman_files/environment_response.json
+        
+                                jq '.environment' postman_files/environment_response.json > postman_files/environment.json
+        
+                                echo "Environnement récupéré avec succès"
+                            fi
+                        '''
+
+                        // Vérification des fichiers
+                        sh 'ls -la postman_files/'
+                        sh 'cat postman_files/collection.json'
+                        sh 'cat postman_files/environment.json'
+                        sh 'cat postman_files/environment_response.json'
+                        sh 'cat postman_files/postman_response.json'
+                        stash includes: 'postman_files/**', name: 'postman-data'
+                        sh 'ls -la postman_files/'
+                    }
+                }
             }
         }
 
@@ -593,6 +645,100 @@ pipeline {
                     if (status) {
                         error("⛔ ERROR - Le service ${NAME_SERVICE} est en echec !!!")
                     }
+                }
+            }
+        }
+
+        stage('Run Newman Tests') {
+            // Utilisation d'un agent Docker pour exécuter Newman
+            agent {
+                docker {
+                    image 'postman-tools:33'
+                    // Arguments pour le montage de volumes et le mapping de ports si nécessaire
+                    // args '-v ${WORKSPACE}/postman_files:/etc/newman'
+                }
+            }
+            steps {
+                unstash 'postman-data'
+                echo 'Exécution des tests avec Newman via Docker agent...'
+                script {
+                    if (fileExists('postman_files/environment.json')) {
+                        sh 'newman run postman_files/collection.json --environment=postman_files/environment.json -v'
+                    } else {
+                        sh 'newman run postman_files/collection.json'
+                    }
+                }
+            }
+        }
+
+        stage('Generate Reports') {
+            agent {
+                docker {
+                    // Cette image inclut Newman avec le reporter HTML préinstallé
+                    image 'dannydainton/htmlextra:latest'
+                    args '--entrypoint=""'
+                }
+            }
+            options {
+                timeout(time: 5, unit: 'MINUTES')
+            }
+            steps {
+                unstash 'postman-data'
+                echo 'Génération des rapports avec Newman...'
+                sh 'mkdir -p newman-reports' // Créer un répertoire pour les rapports
+
+                script {
+
+                    catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+
+                        if (fileExists('postman_files/environment.json')) {
+
+                            sh """
+                                newman run postman_files/collection.json \\
+                                --environment=postman_files/environment.json \\
+                                --reporters cli,htmlextra,junit \\
+                                --reporter-htmlextra-export newman-reports/report.html \\
+                                --reporter-junit-export newman-reports/junit-report.xml \\
+                                --reporter-htmlextra-useLocalAssets true \\
+                                --reporter-htmlextra-skipResources false \\
+                                --reporter-htmlextra-showOnlyFails false \\
+                                --reporter-htmlextra-browserTitle "API Tests" \\
+                                --reporter-htmlextra-title "API Test Results" \\
+                                --reporter-htmlextra-titleSize 4 || true
+                            """
+
+                        } else {
+
+                            sh """
+                                newman run postman_files/collection.json \\
+                                --reporters cli,htmlextra,junit \\
+                                --reporter-htmlextra-export newman-reports/report.html \\
+                                --reporter-junit-export newman-reports/junit-report.xml || true
+                            """
+                        }
+                    }
+
+                    // La publication des rapports se fait APRÈS le bloc catchError
+                    // Elle sera toujours exécutée, que les tests aient échoué ou non
+                    echo "Publication des rapports de test..."
+
+                    // Publication du rapport (toujours exécuté grâce à catchError)
+                    publishHTML([
+                            allowMissing         : false,
+                            alwaysLinkToLastBuild: true,
+                            keepAll              : true,
+                            reportDir            : 'newman-reports',
+                            reportFiles          : 'report.html',
+                            reportName           : 'Newman Test Report'
+                    ])
+
+                    // Publier les résultats JUnit
+                    junit(
+                            testResults: "newman-reports/junit-report.xml",
+                            allowEmptyResults: true,
+                            healthScaleFactor: 1.0,
+                            skipPublishingChecks: true
+                    )
                 }
             }
         }
