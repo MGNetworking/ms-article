@@ -277,11 +277,11 @@ pipeline {
 
                                 sh """
                                     mvn test -Dspring.profiles.active=test \\
-                                    -DreportsDirectory=${env.WORKSPACE}/target/unit-reports
+                                    -Dsurefire.reportsDirectory=target/unit-reports
                                 """
 
                                 def xmlFiles = sh(
-                                        script: "find ${env.WORKSPACE}/target/unit-reports -name '*.xml' | wc -l",
+                                        script: "find target/unit-reports -name '*.xml' | wc -l",
                                         returnStdout: true
                                 ).trim()
 
@@ -293,7 +293,7 @@ pipeline {
 
                                 // Vérification du contenu de chaque fichier XML
                                 sh """
-                                    for file in ${env.WORKSPACE}/target/unit-reports/*.xml; do
+                                    for file in target/unit-reports/*.xml; do
                                         echo "Contenu de \$file :"
                                         cat \$file
                                         echo "---"
