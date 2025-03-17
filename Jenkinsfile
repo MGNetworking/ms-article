@@ -277,7 +277,7 @@ pipeline {
 
                                 sh """
                                     mvn test -Dspring.profiles.active=test \\
-                                    -Dsurefire.reportsDirectory=${env.WORKSPACE}/target/unit-reports
+                                    -DreportsDirectory=${env.WORKSPACE}/target/unit-reports
                                 """
 
                                 def xmlFiles = sh(
