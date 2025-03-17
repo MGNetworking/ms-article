@@ -333,11 +333,11 @@ pipeline {
 
                                 sh """
                                     mvn verify -P integration -Dspring.profiles.active=test \\
-                                    -Dfailsafe.reportsDirectory=${env.WORKSPACE}/target/failsafe-reports
+                                    -Dfailsafe.reportsDirectory=target/failsafe-reports
                                 """
 
                                 def xmlFiles = sh(
-                                        script: "find ${env.WORKSPACE}/target/integration-reports -name '*.xml' | wc -l",
+                                        script: "find target/integration-reports -name '*.xml' | wc -l",
                                         returnStdout: true
                                 ).trim()
 
@@ -380,7 +380,7 @@ pipeline {
                                 sh """
                                     mvn verify -P e2e -Dspring.profiles.active=${profileTest} \\
                                     -DSERVICE_CONFIG_DOCKER=http://192.168.1.56:8089 \\
-                                    -Dfailsafe.reportsDirectory=${env.WORKSPACE}/target/failsafe-reports \\
+                                    -Dfailsafe.reportsDirectory=target/failsafe-reports \\
                                     -Dtest.keycloak.user.one=${TEST_USER_ONE_USR} \\
                                     -Dtest.keycloak.password.one=${TEST_USER_ONE_PSW} \\
                                     -Dtest.keycloak.user.two=${TEST_USER_TWO_USR} \\
@@ -388,7 +388,7 @@ pipeline {
                                 """
 
                                 def xmlFiles = sh(
-                                        script: "find ${env.WORKSPACE}/target/e2e-reports -name '*.xml' | wc -l",
+                                        script: "find target/e2e-reports -name '*.xml' | wc -l",
                                         returnStdout: true
                                 ).trim()
 
