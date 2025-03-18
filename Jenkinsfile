@@ -672,13 +672,6 @@ pipeline {
                     sh 'ls -la newman-reports/ || echo "Répertoire newman-reports vide ou inexistant"'
                     sh 'ls -la postman_files/ || echo "Répertoire postman_files vide ou inexistant"'
 
-                    junit(
-                            testResults: "newman-reports/junit-report.xml",
-                            allowEmptyResults: true,
-                            healthScaleFactor: 1.0,
-                            skipPublishingChecks: true
-                    )
-
                     publishHTML([
                             allowMissing         : true,
                             alwaysLinkToLastBuild: true,
@@ -687,6 +680,15 @@ pipeline {
                             reportFiles          : 'report.html',
                             reportName           : 'Newman HTML Report'
                     ])
+
+                    junit(
+                            testResults: "newman-reports/junit-report.xml",
+                            allowEmptyResults: true,
+                            healthScaleFactor: 1.0,
+                            skipPublishingChecks: true
+                    )
+
+
                 }
 
             }
