@@ -656,19 +656,21 @@ pipeline {
                                 --environment=postman_files/environment.json \
                                 --reporters cli,junit,htmlextra \
                                 --reporter-junit-export=newman-reports/junit-report.xml \
-                                --reporter-htmlextra-export=newman-reports/report.html || true
+                                --reporter-htmlextra-export=newman-reports/report.html
                             """
                         } else {
                             sh """
                                 newman run "${collectionUrl}" \
                                 --reporters cli,junit,htmlextra \
                                 --reporter-junit-export=newman-reports/junit-report.xml \
-                                --reporter-htmlextra-export=newman-reports/report.html || true
+                                --reporter-htmlextra-export=newman-reports/report.html
                             """
                         }
                     }
 
-                    sh 'ls -la newman-reports/'
+                    // Vérifier si les fichiers de rapport existent
+                    sh 'ls -la newman-reports/ || echo "Répertoire newman-reports vide ou inexistant"'
+                    sh 'ls -la postman_files/ || echo "Répertoire postman_files vide ou inexistant"'
 
                     junit(
                             testResults: "newman-reports/junit-report.xml",
