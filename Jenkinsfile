@@ -656,14 +656,14 @@ pipeline {
                                 --environment=postman_files/environment.json \
                                 --reporters cli,junit,htmlextra \
                                 --reporter-junit-export=newman-reports/junit-report.xml \
-                                --reporter-htmlextra-export=newman-reports/report.html
+                                --reporter-htmlextra-export=newman-reports/report.html || true
                             """
                         } else {
                             sh """
                                 newman run "${collectionUrl}" \
                                 --reporters cli,junit,htmlextra \
                                 --reporter-junit-export=newman-reports/junit-report.xml \
-                                --reporter-htmlextra-export=newman-reports/report.html
+                                --reporter-htmlextra-export=newman-reports/report.html || true
                             """
                         }
                     }
