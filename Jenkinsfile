@@ -21,9 +21,7 @@ pipeline {
 
         // Postman
         POSTMAN_API_KEY = credentials('postman-api-key')
-        COLLECTION_ID = '11348257-10195054-8f06-449a-a1e7-43920956342d'  // ID de votre collection Postman
-        ENVIRONMENT_ID = '11348257-f8211aa2-e2d0-4d9c-b79a-8b460e24fb60' // ID de votre environnement (optionnel)
-        WORKSPACE = "${env.WORKSPACE}"
+        COLLECTION_ID = credentials('MS_ARTICLE_COLLECTION_ID')
     }
 
     parameters {
@@ -115,6 +113,7 @@ pipeline {
                             Nas_CREDS_PSW           // password
                     )
 
+                    ENVIRONMENT_ID = credentials('ENV_NAS_ID')
                     echo("Version de l'application : ${dockers.img}")
                 }
             }
@@ -137,12 +136,13 @@ pipeline {
                     // les données de connection serveur
                     remote = utilsServeur.remote(
                             "${env.BRANCH_NAME}",   // name
-                            '192.168.1.70',         // host
+                            '192.168.1.xx',         // host
                             true,                   // allowAnyHosts
                             22,                     // port
                             Prod_CREDS_USR,         // user
                             Prod_CREDS_PSW)         // password
 
+                    ENVIRONMENT_ID = '' // ID de votre environnement PROD
                     echo("Version de l'application : ${dockers.img}")
                 }
             }
@@ -156,17 +156,16 @@ pipeline {
                         version_release = "${env.IMAGE_VERSION}-release"
 
                         def http_status_beta = sh(script: """
-                        curl -s -o /dev/null -w "%{http_code}" -u ${nexus.user}:${nexus.pass} \
-                        https://${nexus.domain}/repository/docker-private/v2/${env.PATH_NEXUS}/manifests/${version_beta}
-                      """, returnStdout: true).trim()
+                            curl -s -o /dev/null -w "%{http_code}" -u ${nexus.user}:${nexus.pass} \
+                            https://${nexus.domain}/repository/docker-private/v2/${env.PATH_NEXUS}/manifests/${version_beta}
+                          """, returnStdout: true).trim()
 
                         def http_status_release = sh(script: """
-                        curl -s -o /dev/null -w "%{http_code}" -u ${nexus.user}:${nexus.pass} \
-                        https://${nexus.domain}/repository/docker-private/v2/${env.PATH_NEXUS}/manifests/${version_release}
-                      """, returnStdout: true).trim()
+                            curl -s -o /dev/null -w "%{http_code}" -u ${nexus.user}:${nexus.pass} \
+                            https://${nexus.domain}/repository/docker-private/v2/${env.PATH_NEXUS}/manifests/${version_release}
+                          """, returnStdout: true).trim()
 
                         echo("HTTP Status beta: $http_status_beta et HTTP Status release: $http_status_release")
-
 
                         if (env.IMAGE_TAG == version_beta) {
 
@@ -273,7 +272,7 @@ pipeline {
                         script {
                             // Si les tests échouent, le pipeline est interrompu
                             echo("Lancement des tests unitaires")
-                            catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                            catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE', message: "Echec des tests unitaires") {
 
                                 sh """
                                     mvn test -Dspring.profiles.active=test \\
@@ -329,7 +328,7 @@ pipeline {
                     steps {
                         script {
                             echo("Lancement des tests d'intégration")
-                            catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                            catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE', message: "Echec des tests d'intégration") {
 
                                 sh """
                                     mvn verify -P integration -Dspring.profiles.active=test \\
@@ -373,7 +372,7 @@ pipeline {
                     steps {
                         script {
                             echo("Lancement des tests d'intégration et end to end")
-                            catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                            catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE', message: "Echec des test End to End") {
 
                                 profileTest = "test-${env.BRANCH_NAME}"
                                 echo("Le profile utililsé pour les tests end to end: ${profileTest}")
@@ -489,7 +488,9 @@ pipeline {
                         utilsGit.gitPullSsh(remote, commande)
 
                     } catch (Exception e) {
-                        echo "❌ FAILURE - ${e.message}"
+                        echo("❌ DÉTAILS DE L'ERREUR: - ${e.message}")
+                        error("❌ STACK TRACE: ${e.getStackTrace().join('\n')}")
+
                     }
                 }
             }
@@ -512,7 +513,8 @@ pipeline {
                         utilsDocker.dockerlsImg(true, remote)
 
                     } catch (Exception e) {
-                        echo "❌ FAILURE - ${e.message}"
+                        echo("❌ DÉTAILS DE L'ERREUR: - ${e.message}")
+                        error("❌ STACK TRACE: ${e.getStackTrace().join('\n')}")
                     }
                 }
             }
@@ -538,7 +540,8 @@ pipeline {
                                 " sur le serveur ${env.BRANCH_NAME}")
 
                     } catch (Exception e) {
-                        echo "❌ FAILURE - ${e.message}"
+                        echo("❌ DÉTAILS DE L'ERREUR: - ${e.message}")
+                        error("❌ STACK TRACE: ${e.getStackTrace().join('\n')}")
                     }
                 }
             }
@@ -561,7 +564,8 @@ pipeline {
                         utilsDocker.deployStack(cd, true, remote)
 
                     } catch (Exception e) {
-                        echo "❌ FAILURE - ${e.message}"
+                        echo("❌ DÉTAILS DE L'ERREUR: - ${e.message}")
+                        error("❌ STACK TRACE: ${e.getStackTrace().join('\n')}")
                     }
                 }
             }
@@ -576,107 +580,45 @@ pipeline {
             }
             steps {
                 script {
-                    status = true
-                    for (int index = 0; index < 10; index++) {
+                    def maxRetries = 10
+                    def retryDelay = 15
+                    def success = false
 
-                        echo("Requet CURL n° ${index} du service : ${NAME_SERVICE}")
-                        echo("à l'adresse : http://${remote.host}:${PORT}/actuator/health ")
+                    for (int i = 1; i <= maxRetries; i++) {
+                        echo "👉 Tentative ${i}/${maxRetries} de vérification du service..."
 
-                        String result = sh(script: "curl -s http://${remote.host}:${PORT}/actuator/health | " +
-                                "jq -r '.status'", returnStdout: true, returnStatus: false)
+                        try {
+                            def response = sh(script: "curl -s http://${remote.host}:${PORT}/actuator/health", returnStdout: true).trim()
+                            echo "Réponse reçue: ${response}"
 
-                        if (result.contains("UP")) {
-                            echo("Sorti : ${result}")
-                            echo("✅ SUCCESS - La mise en service de ${env.NAME_SERVICE} à été réalisé avec Succès ")
-                            status = false
-                            break
-                        } else {
-                            echo("Sorti : ${result}")
-                            echo "Le service n'est pas encore UP. Attente de 15 secondes..."
-                            echo "Tentative n° $index"
-                            sleep time: 15, unit: 'SECONDS'
+                            if (response.contains('"status":"UP"')) {
+                                echo "✅ SUCCESS - Le service ${NAME_SERVICE} est disponible après ${i} tentative(s)"
+                                success = true
+                                break
+                            } else {
+                                echo "⏳ Le service n'est pas encore disponible. Attente de ${retryDelay} secondes..."
+                                sleep time: retryDelay, unit: 'SECONDS'
+                            }
+                        } catch (Exception e) {
+                            echo "⚠️ Erreur lors de la vérification: ${e.message}"
+                            echo "⏳ Attente de ${retryDelay} secondes avant nouvelle tentative..."
+                            sleep time: retryDelay, unit: 'SECONDS'
                         }
                     }
-                    if (status) {
-                        error("⛔ ERROR - Le service ${NAME_SERVICE} est en echec !!!")
+
+                    if (!success) {
+                        error "⛔ ERROR - Le service ${NAME_SERVICE} n'est toujours pas disponible après ${maxRetries} tentatives!"
                     }
                 }
             }
         }
 
-        stage('Fetch Postman Data') {
-            agent {
-                label 'master'
-            }
-            steps {
-                echo 'Récupération des données depuis Postman...'
 
-                // Création d'un répertoire pour stocker les fichiers
-                sh 'mkdir -p postman_files'
-
-                // Récupération de la collection
-                sh '''
-                            curl -s -X GET "https://api.getpostman.com/collections/${COLLECTION_ID}" \
-                                -H "X-Api-Key: ${POSTMAN_API_KEY}" \
-                                -o postman_files/postman_response.json
-        
-                            jq '.collection' postman_files/postman_response.json > postman_files/collection.json
-        
-                            echo "Collection récupérée avec succès"
-                        '''
-
-                // Récupération de l'environnement si spécifié
-                sh '''
-                            if [ ! -z "${ENVIRONMENT_ID}" ]; then
-                                curl -s -X GET "https://api.getpostman.com/environments/${ENVIRONMENT_ID}" \
-                                    -H "X-Api-Key: ${POSTMAN_API_KEY}" \
-                                    -o postman_files/environment_response.json
-        
-                                jq '.environment' postman_files/environment_response.json > postman_files/environment.json
-        
-                                echo "Environnement récupéré avec succès"
-                            fi
-                        '''
-
-                // Vérification des fichiers
-                sh 'ls -la postman_files/'
-                sh 'cat postman_files/collection.json'
-                sh 'cat postman_files/environment.json'
-                sh 'cat postman_files/environment_response.json'
-                sh 'cat postman_files/postman_response.json'
-                stash includes: 'postman_files/**', name: 'postman-data'
-                sh 'ls -la postman_files/'
-            }
-        }
-
-        stage('Run Newman Tests') {
-            // Utilisation d'un agent Docker pour exécuter Newman
+        stage('REGRESSION') {
             agent {
                 docker {
-                    image 'postman-tools:33'
-                    // Arguments pour le montage de volumes et le mapping de ports si nécessaire
-                    // args '-v ${WORKSPACE}/postman_files:/etc/newman'
-                }
-            }
-            steps {
-                unstash 'postman-data'
-                echo 'Exécution des tests avec Newman via Docker agent...'
-                script {
-                    if (fileExists('postman_files/environment.json')) {
-                        sh 'newman run postman_files/collection.json --environment=postman_files/environment.json -v'
-                    } else {
-                        sh 'newman run postman_files/collection.json'
-                    }
-                }
-            }
-        }
-
-        stage('Generate Reports') {
-            agent {
-                docker {
-                    // Cette image inclut Newman avec le reporter HTML préinstallé
-                    image 'dannydainton/htmlextra:latest'
-                    args '--entrypoint=""'
+                    image 'postman/newman:5-alpine'
+                    args '--entrypoint="" -u root'
                 }
             }
             options {
@@ -684,62 +626,52 @@ pipeline {
             }
             steps {
                 unstash 'postman-data'
-                echo 'Génération des rapports avec Newman...'
-                sh 'mkdir -p newman-reports' // Créer un répertoire pour les rapports
+                sh 'mkdir -p newman-reports'
+                sh 'newman --version'
 
                 script {
+                    def collectionUrl = "https://api.getpostman.com/collections/${COLLECTION_ID}?apikey=${POSTMAN_API_KEY}"
 
-                    catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-
+                    // Exécution Newman avec publication continue même en cas d'échec
+                    catchError(buildResult: 'FAILURE', stageResult: 'FAILURE', message: "Echec pendant l'exécution des tests de régressions") {
                         if (fileExists('postman_files/environment.json')) {
-
                             sh """
-                                newman run postman_files/collection.json \\
-                                --environment=postman_files/environment.json \\
-                                --reporters cli,htmlextra,junit \\
-                                --reporter-htmlextra-export newman-reports/report.html \\
-                                --reporter-junit-export newman-reports/junit-report.xml \\
-                                --reporter-htmlextra-useLocalAssets true \\
-                                --reporter-htmlextra-skipResources false \\
-                                --reporter-htmlextra-showOnlyFails false \\
-                                --reporter-htmlextra-browserTitle "API Tests" \\
-                                --reporter-htmlextra-title "API Test Results" \\
-                                --reporter-htmlextra-titleSize 4 || true
+                                newman run "${collectionUrl}" \
+                                --environment=postman_files/environment.json \
+                                --reporters cli,junit,htmlextra \
+                                --reporter-junit-export=newman-reports/junit-report.xml \
+                                --reporter-htmlextra-export=newman-reports/report.html || true
                             """
-
                         } else {
-
                             sh """
-                                newman run postman_files/collection.json \\
-                                --reporters cli,htmlextra,junit \\
-                                --reporter-htmlextra-export newman-reports/report.html \\
-                                --reporter-junit-export newman-reports/junit-report.xml || true
+                                newman run "${collectionUrl}" \
+                                --reporters cli,junit,htmlextra \
+                                --reporter-junit-export=newman-reports/junit-report.xml \
+                                --reporter-htmlextra-export=newman-reports/report.html || true
                             """
                         }
                     }
 
-                    // La publication des rapports se fait APRÈS le bloc catchError
-                    // Elle sera toujours exécutée, que les tests aient échoué ou non
-                    echo "Publication des rapports de test..."
 
-                    // Publication du rapport (toujours exécuté grâce à catchError)
-                    publishHTML([
-                            allowMissing         : false,
-                            alwaysLinkToLastBuild: true,
-                            keepAll              : true,
-                            reportDir            : 'newman-reports',
-                            reportFiles          : 'report.html',
-                            reportName           : 'Newman Test Report'
-                    ])
+                    sh 'ls -la newman-reports/'
 
-                    // Publier les résultats JUnit
                     junit(
                             testResults: "newman-reports/junit-report.xml",
                             allowEmptyResults: true,
                             healthScaleFactor: 1.0,
                             skipPublishingChecks: true
                     )
+
+                    publishHTML([
+                            allowMissing         : true,
+                            alwaysLinkToLastBuild: true,
+                            keepAll              : true,
+                            reportDir            : 'newman-reports',
+                            reportFiles          : 'report.html',
+                            reportName           : 'Newman HTML Report'
+                    ])
                 }
+
             }
         }
 
@@ -770,14 +702,16 @@ pipeline {
                                     params.PUBLIC_MESSAGE)
                         } else {
 
-                            echo "⚠️ UNSTABLE - Les paramètres de la version sont manquants."
-                            echo "⚠️ UNSTABLE - Version: ${env.IMAGE_TAG}, Publication: ${params.PUBLIC_MESSAGE}"
+                            echo "⚠️ Les paramètres de la version sont manquants."
+                            echo "⚠️ Version: ${env.IMAGE_TAG}, Publication: ${params.PUBLIC_MESSAGE}"
                             currentBuild.result = 'UNSTABLE'
                         }
 
                     } catch (Exception ex) {
-                        echo "⚠️ UNSTABLE - Une erreur est survenue pendant la création de la publication."
-                        echo "⚠️ UNSTABLE - Version : ${env.IMAGE_TAG}, Message : ${ex.message}"
+                        echo "⚠️ Une erreur est survenue pendant la création de la publication " +
+                                "de l'image: ${env.IMAGE_TAG}, Publication: ${params.PUBLIC_MESSAGE}"
+                        echo "⚠️ DÉTAILS DE L'ERREUR: ${ex.message}"
+                        echo "⚠️ STACK TRACE: ${ex.getStackTrace().join('\n')}"
                         currentBuild.result = 'UNSTABLE'
                     }
 
@@ -798,7 +732,8 @@ pipeline {
                         echo("Déconnection du dépôt nexus et Jenkins")
                         utilsDocker.logoutDepot(nexus)
                     } catch (Exception e) {
-                        echo "⛔ EXCEPTION : ${e.message}"
+                        echo "⛔ DÉTAILS DE L'ERREUR: ${e.message}"
+                        echo "⛔ STACK TRACE: ${e.getStackTrace().join('\n')}"
                     }
                 }
             }
@@ -820,7 +755,8 @@ pipeline {
                         echo("Nettoyage de l'images beta / relase : ${dockers.img}")
                         utilsDocker.rmi(dockers.img)
                     } catch (Exception e) {
-                        echo "⛔ EXCEPTION : ${e.message}"
+                        echo "⛔ DÉTAILS DE L'ERREUR: ${e.message}"
+                        echo "⛔ STACK TRACE: ${e.getStackTrace().join('\n')}"
                     }
                 }
             }
@@ -861,6 +797,9 @@ pipeline {
                     utilsDocker.rmi(dockers.img, false, remote)
                 }
             }
+        }
+        unstable {
+            echo "Build instable, vérification nécessaire"
         }
     }
 
