@@ -29,7 +29,7 @@ public class ArticleDtoSave {
     @Pattern(regexp = "^https://.*$", message = "L'URL de l'image doit être une URL valide")
     private String imgUrl;
 
-    @NotEmpty(message = "La description doit être fourni")
+    @NotEmpty(message = "La description de l'image doit être fourni")
     private String imgDescription;
 
     @NotBlank(message = "L'article ne doit avoir un contenu")
