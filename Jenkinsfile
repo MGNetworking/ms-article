@@ -625,10 +625,7 @@ pipeline {
                 timeout(time: 5, unit: 'MINUTES')
             }
             steps {
-                unstash 'postman-data'
-                sh 'mkdir -p newman-reports'
                 sh 'newman --version'
-
                 script {
                     def collectionUrl = "https://api.getpostman.com/collections/${COLLECTION_ID}?apikey=${POSTMAN_API_KEY}"
 
@@ -651,7 +648,6 @@ pipeline {
                             """
                         }
                     }
-
 
                     sh 'ls -la newman-reports/'
 
