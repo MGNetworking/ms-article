@@ -627,6 +627,7 @@ pipeline {
             steps {
                 sh 'newman --version'
                 sh 'mkdir -p postman_files newman-reports' // Création d'un répertoire pour stocker les fichiers
+                sh 'npm install -g newman-reporter-htmlextra' // Installation du reporter htmlextra
 
                 script {
                     def collectionUrl = "https://api.getpostman.com/collections/${COLLECTION_ID}?apikey=${POSTMAN_API_KEY}"
