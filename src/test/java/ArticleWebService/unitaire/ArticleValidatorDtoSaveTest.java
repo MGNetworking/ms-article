@@ -79,7 +79,7 @@ public class ArticleValidatorDtoSaveTest {
     @Test
     @Order(2)
     @DisplayName("Validation en échec pour cause de données non valide")
-    void testValidationEchecAllChamps() {
+    void testValidationEchecAllFields() {
 
         // Créez un objet ArticleSave invalide
         ArticleDtoSave articleValidation = new ArticleDtoSave(
@@ -130,7 +130,7 @@ public class ArticleValidatorDtoSaveTest {
 
         assertTrue(errorsByField.containsKey("imgDescription"),
                 "Le champ 'imgDescription' devrait être en erreur. Erreurs trouvées : " + errorsByField);
-        assertTrue(errorsByField.get("imgDescription").contains("La description doit être fourni"),
+        assertTrue(errorsByField.get("imgDescription").contains("La description de l'image doit être fourni"),
                 "Le message attendu pour 'imgDescription' est manquant. Erreurs trouvées : " + errorsByField.get("imgDescription"));
 
         assertTrue(errorsByField.containsKey("description"),
