@@ -626,11 +626,30 @@ pipeline {
             }
             steps {
                 sh 'newman --version'
+                sh 'mkdir -p postman_files' // Création d'un répertoire pour stocker les fichiers
+
                 script {
                     def collectionUrl = "https://api.getpostman.com/collections/${COLLECTION_ID}?apikey=${POSTMAN_API_KEY}"
 
                     // Exécution Newman avec publication continue même en cas d'échec
                     catchError(buildResult: 'FAILURE', stageResult: 'FAILURE', message: "Echec pendant l'exécution des tests de régressions") {
+
+
+                        // Récupération de l'environnement si spécifié
+                        sh '''
+                            if [ ! -z "${ENVIRONMENT_ID}" ]; then
+                                curl -s -X GET "https://api.getpostman.com/environments/${ENVIRONMENT_ID}" \
+                                    -H "X-Api-Key: ${POSTMAN_API_KEY}" \
+                                    -o postman_files/environment_response.json
+        
+                                jq '.environment' postman_files/environment_response.json > postman_files/environment.json
+        
+                                echo "Environnement récupéré avec succès"
+                            fi
+                        '''
+
+                        sh 'ls -la postman_files/'
+
                         if (fileExists('postman_files/environment.json')) {
                             sh """
                                 newman run "${collectionUrl}" \
