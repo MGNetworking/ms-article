@@ -267,8 +267,8 @@ pipeline {
             }
             steps {
                 script {
-                    echo("Nettoyage avant exécution des tests")
-                    sh "mvn clean"
+                    cleanWs()  // Nettoie complètement le workspace
+                    echo "Workspace nettoyé"
                 }
             }
         }
