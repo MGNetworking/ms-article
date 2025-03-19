@@ -617,7 +617,9 @@ pipeline {
         stage('REGRESSION') {
             agent {
                 docker {
-                    image 'postman/newman:5-alpine'
+                    image "sonatype-nexus.backhole.ovh/newman-devops:latest"
+                    registryUrl "https://sonatype-nexus.backhole.ovh"
+                    registryCredentialsId 'nexus-credentials' // Utilisez l'ID directement, pas la variable
                     args '--entrypoint="" -u root'
                 }
             }
@@ -626,8 +628,7 @@ pipeline {
             }
             steps {
                 sh 'newman --version'
-                sh 'mkdir -p postman_files newman-reports' // Création d'un répertoire pour stocker les fichiers
-                sh 'npm install -g newman-reporter-htmlextra' // Installation du reporter htmlextra
+                sh 'mkdir -p postman_files newman-reports' // Création des répertoires pour stocker les fichiers
 
                 script {
                     def collectionUrl = "https://api.getpostman.com/collections/${COLLECTION_ID}?apikey=${POSTMAN_API_KEY}"
@@ -636,7 +637,7 @@ pipeline {
                     catchError(buildResult: 'FAILURE', stageResult: 'FAILURE', message: "Echec pendant l'exécution des tests de régressions") {
 
 
-                        // Récupération de l'environnement si spécifié
+                        // Récupération de l'environnement Postman spécifié
                         sh '''
                             if [ ! -z "${ENVIRONMENT_ID}" ]; then
                                 curl -s -X GET "https://api.getpostman.com/environments/${ENVIRONMENT_ID}" \
