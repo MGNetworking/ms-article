@@ -258,55 +258,39 @@ pipeline {
             }
         }
 
-        stage('Préparation') {
+
+        stage('UNITAIRE') {
             agent {
                 docker {
                     image 'maven:3.8.5-jdk-8-slim'
-                    args '-v /var/jenkins_home/maven/.m2:/root/.m2 -v /var/run/docker.sock:/var/run/docker.sock'
+                    args '-v /var/jenkins_home/maven/.m2:/root/.m2' +
+                            ' -v /var/run/docker.sock:/var/run/docker.sock'
                 }
             }
             steps {
                 script {
-                    cleanWs()  // Nettoie complètement le workspace
-                    echo "Workspace nettoyé"
-                }
-            }
-        }
+                    // Si les tests échouent, le pipeline est interrompu
+                    echo("Lancement des tests unitaires")
+                    catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE', message: "Echec des tests unitaires") {
 
-        stage('Tests parallèles') {
-            parallel {
-                stage('UNITAIRE') {
-                    agent {
-                        docker {
-                            image 'maven:3.8.5-jdk-8-slim'
-                            args '-v /var/jenkins_home/maven/.m2:/root/.m2' +
-                                    ' -v /var/run/docker.sock:/var/run/docker.sock'
-                        }
-                    }
-                    steps {
-                        script {
-                            // Si les tests échouent, le pipeline est interrompu
-                            echo("Lancement des tests unitaires")
-                            catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE', message: "Echec des tests unitaires") {
-
-                                sh """
-                                    mvn test -Dspring.profiles.active=test \\
+                        sh """
+                                    mvn clean test -Dspring.profiles.active=test \\
                                     -Dsurefire.reportsDirectory=target/unit-reports
                                 """
 
-                                def xmlFiles = sh(
-                                        script: "find target/unit-reports -name '*.xml' | wc -l",
-                                        returnStdout: true
-                                ).trim()
+                        def xmlFiles = sh(
+                                script: "find target/unit-reports -name '*.xml' | wc -l",
+                                returnStdout: true
+                        ).trim()
 
-                                echo "Nombre de fichiers de rapports XML trouvés : ${xmlFiles}"
+                        echo "Nombre de fichiers de rapports XML trouvés : ${xmlFiles}"
 
-                                if (xmlFiles == '0') {
-                                    echo "ATTENTION : Aucun fichier de rapport de test trouvé !"
-                                }
+                        if (xmlFiles == '0') {
+                            echo "ATTENTION : Aucun fichier de rapport de test trouvé !"
+                        }
 
-                                // Vérification du contenu de chaque fichier XML
-                                sh """
+                        // Vérification du contenu de chaque fichier XML
+                        sh """
                                     for file in target/unit-reports/*.xml; do
                                         echo "Contenu de \$file :"
                                         cat \$file
@@ -314,84 +298,84 @@ pipeline {
                                     done
                                 """
 
-                                echo "Archivage des résultats des tests unitaires"
-                                archiveArtifacts artifacts: 'target/unit-reports/*.xml', allowEmptyArchive: true
+                        echo "Archivage des résultats des tests unitaires"
+                        archiveArtifacts artifacts: 'target/unit-reports/*.xml', allowEmptyArchive: true
 
-                                // Publication des résultats avec des options de débogage
-                                try {
-                                    junit(
-                                            testResults: "target/unit-reports/*.xml",
-                                            allowEmptyResults: true,    // permet de continuer même si aucun test n'est trouvé
-                                            healthScaleFactor: 1.0,     // donne un poids égal à tous les tests
-                                            skipPublishingChecks: true
-                                    )
-                                } catch (Exception e) {
-                                    echo "Erreur lors de la publication des résultats : ${e.message}"
-                                }
-                            }
+                        // Publication des résultats avec des options de débogage
+                        try {
+                            junit(
+                                    testResults: "target/unit-reports/*.xml",
+                                    allowEmptyResults: true,    // permet de continuer même si aucun test n'est trouvé
+                                    healthScaleFactor: 1.0,     // donne un poids égal à tous les tests
+                                    skipPublishingChecks: true
+                            )
+                        } catch (Exception e) {
+                            echo "Erreur lors de la publication des résultats : ${e.message}"
                         }
                     }
                 }
-                stage('INTEGRATION') {
-                    agent {
-                        docker {
-                            image 'maven:3.8.5-jdk-8-slim'
-                            args '-v /var/jenkins_home/maven/.m2:/root/.m2' +
-                                    ' -v /var/run/docker.sock:/var/run/docker.sock'
-                        }
-                    }
-                    steps {
-                        script {
-                            echo("Lancement des tests d'intégration")
-                            catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE', message: "Echec des tests d'intégration") {
+            }
+        }
+        stage('INTEGRATION') {
+            agent {
+                docker {
+                    image 'maven:3.8.5-jdk-8-slim'
+                    args '-v /var/jenkins_home/maven/.m2:/root/.m2' +
+                            ' -v /var/run/docker.sock:/var/run/docker.sock'
+                }
+            }
+            steps {
+                script {
+                    echo("Lancement des tests d'intégration")
+                    catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE', message: "Echec des tests d'intégration") {
 
-                                sh """
+                        sh """
                                     mvn verify -P integration -Dspring.profiles.active=test \\
                                     -Dfailsafe.reportsDirectory=target/integration-reports
                                 """
 
-                                def xmlFiles = sh(
-                                        script: "find target/integration-reports -name '*.xml' | wc -l",
-                                        returnStdout: true
-                                ).trim()
+                        def xmlFiles = sh(
+                                script: "find target/integration-reports -name '*.xml' | wc -l",
+                                returnStdout: true
+                        ).trim()
 
-                                echo "Nombre de fichiers de rapports XML trouvés : ${xmlFiles}"
+                        echo "Nombre de fichiers de rapports XML trouvés : ${xmlFiles}"
 
-                                if (xmlFiles == '0') {
-                                    echo "ATTENTION : Aucun fichier de rapport de test trouvé !"
-                                }
-
-                                echo "Archivage des résultats de test"
-                                archiveArtifacts artifacts: 'target/integration-reports/*.xml', allowEmptyArchive: true
-
-                                echo "Publication immédiate des résultats de test d'intégration"
-                                junit(
-                                        testResults: "target/integration-reports/*.xml",
-                                        allowEmptyResults: true,
-                                        healthScaleFactor: 1.0,
-                                        skipPublishingChecks: true
-                                )
-                            }
+                        if (xmlFiles == '0') {
+                            echo "ATTENTION : Aucun fichier de rapport de test trouvé !"
                         }
+
+                        echo "Archivage des résultats de test"
+                        archiveArtifacts artifacts: 'target/integration-reports/*.xml', allowEmptyArchive: true
+
+                        echo "Publication immédiate des résultats de test d'intégration"
+                        junit(
+                                testResults: "target/integration-reports/*.xml",
+                                allowEmptyResults: true,
+                                healthScaleFactor: 1.0,
+                                skipPublishingChecks: true
+                        )
                     }
                 }
+            }
+        }
 
-                stage('END TO END') {
-                    agent {
-                        docker {
-                            image 'maven:3.8.5-jdk-8-slim'
-                            args '-v /var/jenkins_home/maven/.m2:/root/.m2' +
-                                    ' -v /var/run/docker.sock:/var/run/docker.sock'
-                        }
-                    }
-                    steps {
-                        script {
-                            echo("Lancement des tests d'intégration et end to end")
-                            catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE', message: "Echec des test End to End") {
+        stage('END TO END') {
+            agent {
+                docker {
+                    image 'maven:3.8.5-jdk-8-slim'
+                    args '-v /var/jenkins_home/maven/.m2:/root/.m2' +
+                            ' -v /var/run/docker.sock:/var/run/docker.sock'
+                }
+            }
+            steps {
+                script {
+                    echo("Lancement des tests d'intégration et end to end")
+                    catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE', message: "Echec des test End to End") {
 
-                                profileTest = "test-${env.BRANCH_NAME}"
-                                echo("Le profile utililsé pour les tests end to end: ${profileTest}")
-                                sh """
+                        profileTest = "test-${env.BRANCH_NAME}"
+                        echo("Le profile utililsé pour les tests end to end: ${profileTest}")
+                        sh """
                                     mvn verify -P e2e -Dspring.profiles.active=${profileTest} \\
                                     -DSERVICE_CONFIG_DOCKER=http://192.168.1.56:8089 \\
                                     -Dfailsafe.reportsDirectory=target/failsafe-reports \\
@@ -401,34 +385,33 @@ pipeline {
                                     -Dtest.keycloak.password.two=${TEST_USER_TWO_PSW}
                                 """
 
-                                def xmlFiles = sh(
-                                        script: "find target/e2e-reports -name '*.xml' | wc -l",
-                                        returnStdout: true
-                                ).trim()
+                        def xmlFiles = sh(
+                                script: "find target/e2e-reports -name '*.xml' | wc -l",
+                                returnStdout: true
+                        ).trim()
 
-                                echo "Nombre de fichiers de rapports XML trouvés : ${xmlFiles}"
+                        echo "Nombre de fichiers de rapports XML trouvés : ${xmlFiles}"
 
-                                if (xmlFiles == '0') {
-                                    echo "ATTENTION : Aucun fichier de rapport de test trouvé !"
-                                }
-
-
-                                echo "Archivage des résultats de test end to end"
-                                archiveArtifacts artifacts: 'target/e2e-reports/*.xml', allowEmptyArchive: true
-
-                                echo "Publication immédiate des résultats des tests end to end"
-                                junit(
-                                        testResults: "target/e2e-reports/*.xml",
-                                        allowEmptyResults: true,
-                                        healthScaleFactor: 1.0,
-                                        skipPublishingChecks: true
-                                )
-                            }
+                        if (xmlFiles == '0') {
+                            echo "ATTENTION : Aucun fichier de rapport de test trouvé !"
                         }
+
+
+                        echo "Archivage des résultats de test end to end"
+                        archiveArtifacts artifacts: 'target/e2e-reports/*.xml', allowEmptyArchive: true
+
+                        echo "Publication immédiate des résultats des tests end to end"
+                        junit(
+                                testResults: "target/e2e-reports/*.xml",
+                                allowEmptyResults: true,
+                                healthScaleFactor: 1.0,
+                                skipPublishingChecks: true
+                        )
                     }
                 }
             }
         }
+
 
         stage('Maven Compilation') {
             when {
@@ -438,7 +421,7 @@ pipeline {
                 docker {
                     image 'maven:3.8.5-jdk-8-slim'
                     args '-v /var/jenkins_home/maven/.m2:/root/.m2' +
-                            ' -v /var/run/docker.sock:/var/run/docker.sock'+
+                            ' -v /var/run/docker.sock:/var/run/docker.sock' +
                             ' -v ${WORKSPACE}/build-output:/app/build-output'
                 }
             }
