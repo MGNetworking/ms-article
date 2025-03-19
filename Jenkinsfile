@@ -332,7 +332,7 @@ pipeline {
 
                                 sh """
                                     mvn verify -P integration -Dspring.profiles.active=test \\
-                                    -Dfailsafe.reportsDirectory=target/failsafe-reports
+                                    -Dfailsafe.reportsDirectory=target/integration-reports
                                 """
 
                                 def xmlFiles = sh(
