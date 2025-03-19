@@ -448,10 +448,14 @@ pipeline {
             }
             steps {
                 script {
-                    // Récupérer les artifacts du Job en cours
-                    copyArtifacts projectName: "${env.JOB_NAME}", selector: specific("${env.BUILD_NUMBER}")
+                    // Récupérer le JAR archivé à l'étape précédente
+                    copyArtifacts projectName: "${env.JOB_NAME}",
+                            selector: specific("${env.BUILD_NUMBER}"),
+                            filter: 'target/*.jar',
+                            flatten: false
 
                     echo("Création de l'image Docker : ${dockers.img}")
+                    echo("Le Job: ${env.JOB_NAME} sur le build: ${env.BUILD_NUMBER}")
                     sh("docker compose build --no-cache")
                 }
             }
