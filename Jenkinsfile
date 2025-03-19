@@ -432,6 +432,9 @@ pipeline {
                     sh("mvn package -Dspring.profiles.active=${env.BRANCH_NAME} " +
                             "-DSERVICE_CONFIG_DOCKER=${env.SERVICE_CONFIG_URI}")
 
+                    // Archiver les JAR
+                    archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+
                 }
             }
         }
@@ -445,6 +448,9 @@ pipeline {
             }
             steps {
                 script {
+                    // Récupérer les artifacts du Job en cours
+                    copyArtifacts projectName: "${env.JOB_NAME}", selector: specific("${env.BUILD_NUMBER}")
+
                     echo("Création de l'image Docker : ${dockers.img}")
                     sh("docker compose build --no-cache")
                 }
