@@ -423,7 +423,8 @@ pipeline {
                 docker {
                     image 'maven:3.8.5-jdk-8-slim'
                     args '-v /var/jenkins_home/maven/.m2:/root/.m2' +
-                            ' -v /var/run/docker.sock:/var/run/docker.sock'
+                            ' -v /var/run/docker.sock:/var/run/docker.sock'+
+                            ' -v ${WORKSPACE}/build-output:/app/build-output'
                 }
             }
             steps {
@@ -432,8 +433,10 @@ pipeline {
                     sh("mvn package -Dspring.profiles.active=${env.BRANCH_NAME} " +
                             "-DSERVICE_CONFIG_DOCKER=${env.SERVICE_CONFIG_URI}")
 
-                    // Sauvegarde les fichiers JAR pour une utilisation ultérieure
-                    stash includes: 'target/*.jar', name: 'app-jar'
+                    // Copier les JAR dans le dossier partagé
+                    sh "mkdir -p /app/build-output"
+                    sh "cp target/*.jar /app/build-output/"
+                    sh "ls -la /app/build-output/"
 
                 }
             }
@@ -448,8 +451,12 @@ pipeline {
             }
             steps {
                 script {
-                    // Récupère les fichiers JAR sauvegardés précédemment
-                    unstash 'app-jar'
+                    // Vérifier que les fichiers sont bien présents
+                    sh "ls -la ${WORKSPACE}/build-output/"
+
+                    // Copier les JAR dans un emplacement où Docker peut les trouver
+                    sh "mkdir -p target"
+                    sh "cp ${WORKSPACE}/build-output/*.jar target/"
 
                     echo("Création de l'image Docker : ${dockers.img}")
                     echo("Le Job: ${env.JOB_NAME} sur le build: ${env.BUILD_NUMBER}")
