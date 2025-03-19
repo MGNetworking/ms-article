@@ -432,8 +432,8 @@ pipeline {
                     sh("mvn package -Dspring.profiles.active=${env.BRANCH_NAME} " +
                             "-DSERVICE_CONFIG_DOCKER=${env.SERVICE_CONFIG_URI}")
 
-                    // Archiver les JAR
-                    archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+                    // Sauvegarde les fichiers JAR pour une utilisation ultérieure
+                    stash includes: 'target/*.jar', name: 'app-jar'
 
                 }
             }
@@ -448,11 +448,8 @@ pipeline {
             }
             steps {
                 script {
-                    // Récupérer le JAR archivé à l'étape précédente
-                    copyArtifacts projectName: "${env.JOB_NAME}",
-                            selector: specific("${env.BUILD_NUMBER}"),
-                            filter: 'target/*.jar',
-                            flatten: false
+                    // Récupère les fichiers JAR sauvegardés précédemment
+                    unstash 'app-jar'
 
                     echo("Création de l'image Docker : ${dockers.img}")
                     echo("Le Job: ${env.JOB_NAME} sur le build: ${env.BUILD_NUMBER}")
