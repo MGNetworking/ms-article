@@ -707,7 +707,7 @@ public class ControllerArticleE2ETest {
 
         // Définir les modifications de métadonnées
         articleDto.setVue(1); // Incrémenter le nombre de vues
-        articleDto.setVisibale(false); // Modifier la visibilité
+        articleDto.setVisibiliter(false); // Modifier la visibilité
         articleDto.setPortfolio(false); // Ajouter au portfolio
 
         // Vérifier la mise à jour via la méthode du repository
@@ -744,7 +744,7 @@ public class ControllerArticleE2ETest {
 
         // Définir des modifications de métadonnées
         articleDto.setVue(1);
-        articleDto.setVisibale(true);
+        articleDto.setVisibiliter(true);
 
         // Appel du endpoint avec le token du deuxième utilisateur
         mockMvc.perform(patch("/articles/update/meta")

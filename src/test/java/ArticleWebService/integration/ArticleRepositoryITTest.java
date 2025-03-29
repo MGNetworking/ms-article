@@ -123,11 +123,11 @@ class ArticleRepositoryITTest {
     void updateArticleMeta() {
 
         Article article = this.articleRepository.findById(2).get();
-        boolean visibleArticle = article.isVisibale();
+        boolean visibleArticle = article.isVisibiliter();
         boolean portfolioArticle = article.isPortfolio();
 
         article.setVue(article.getVue() + 1);           // ajoute 1
-        article.setVisibale(!visibleArticle);           // inverse la valeur
+        article.setVisibiliter(!visibleArticle);           // inverse la valeur
         article.setPortfolio(!portfolioArticle);        // inverse la valeur
 
         ArticleDto articleDto = new ModelMapper().map(article, ArticleDto.class);
@@ -146,7 +146,7 @@ class ArticleRepositoryITTest {
         assertEquals(1, rowsUpdated, "Une ligne devrait être mise à jour");
         assertEquals(articleDto.getVue(), articleUpdate.getVue(),
                 "La vue n'est pas était incrémenter de 1 ");
-        assertNotEquals(visibleArticle, articleUpdate.isVisibale(),
+        assertNotEquals(visibleArticle, articleUpdate.isVisibiliter(),
                 "La visibilité de l'article n'a pas était modifier ");
     }
 
@@ -202,7 +202,7 @@ class ArticleRepositoryITTest {
         List<Article> articlesList = portfolioArticlesPage.getContent();
 
         articlesList.forEach(article -> {
-            assertTrue(article.isVisibale());       // Vérifie que les articles sont visibles
+            assertTrue(article.isVisibiliter());       // Vérifie que les articles sont visibles
             assertFalse(article.isPortfolio());     // Vérifie que les portfolios ne sont pas présents
         });
 

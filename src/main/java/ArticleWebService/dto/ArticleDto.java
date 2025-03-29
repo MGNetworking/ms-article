@@ -31,7 +31,7 @@ public class ArticleDto {
     private String description;
 
     private String article;
-    private boolean isVisibale;
+    private boolean visibiliter;
     private boolean portfolio;
 
     private int vue;

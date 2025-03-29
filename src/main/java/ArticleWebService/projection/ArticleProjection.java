@@ -18,7 +18,7 @@ public interface ArticleProjection {
 
     String getDescription();
 
-    boolean getIsVisibale();
+    boolean getVisibiliter();
 
     boolean getPortfolio();
 

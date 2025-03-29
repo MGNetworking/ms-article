@@ -66,7 +66,7 @@ public class Article implements Serializable {
     private String article;
 
     @Column(name = "visibiliter", nullable = false)
-    private boolean isVisibale;
+    private boolean visibiliter;
 
     @Column(name = "vue", nullable = true)
     private int vue;

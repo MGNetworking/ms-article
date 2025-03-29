@@ -25,7 +25,7 @@ public interface ArticleRepository extends JpaRepository<Article, Integer> {
      * @param pageable  Objet qui contient le numero de page et le nombre d'éléments
      * @return La pagination des articles
      */
-    @Query(value = "SELECT art FROM Article art WHERE art.section.idSection = :section and art.portfolio = :ptfolio AND art.isVisibale = :visible ORDER BY art.idArticle asc")
+    @Query(value = "SELECT art FROM Article art WHERE art.section.idSection = :section and art.portfolio = :ptfolio AND art.visibiliter = :visible ORDER BY art.idArticle asc")
     Page<Article> findAllArticlesBySection(@Param("section") Integer section,
                                            @Param("visible") boolean visible,
                                            @Param("ptfolio") boolean portfolio,
@@ -41,7 +41,7 @@ public interface ArticleRepository extends JpaRepository<Article, Integer> {
      * @param pageable  Objet qui contient le numero de page et le nombre d'éléments
      * @return La pagination des articles
      */
-    @Query("SELECT art FROM Article art WHERE art.portfolio = :ptfolio AND art.isVisibale = :visible ")
+    @Query("SELECT art FROM Article art WHERE art.portfolio = :ptfolio AND art.visibiliter = :visible ")
     Page<Article> findAllPortfolioArticlesByVisibility(@Param("visible") boolean visible,
                                                        @Param("ptfolio") boolean portfolio,
                                                        Pageable pageable);
@@ -87,7 +87,7 @@ public interface ArticleRepository extends JpaRepository<Article, Integer> {
     @Transactional
     @Query("UPDATE Article a SET " +
             "a.vue = COALESCE(a.vue + :#{#dto.vue}, a.vue), " +
-            "a.isVisibale = COALESCE(:#{#dto.isVisibale}, a.isVisibale), " +
+            "a.visibiliter = COALESCE(:#{#dto.visibiliter}, a.visibiliter), " +
             "a.portfolio = COALESCE(:#{#dto.portfolio}, a.portfolio) " +
             "WHERE a.idUser = :#{#dto.idUser} AND a.idArticle = :#{#dto.idArticle}")
     int updateArticleMeta(@Param("dto") ArticleDto dto);

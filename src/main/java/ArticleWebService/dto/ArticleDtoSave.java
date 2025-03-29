@@ -38,7 +38,7 @@ public class ArticleDtoSave {
     @NotBlank(message = "L'article doit avoir un contenu")
     private String article;
 
-    private boolean isVisibale;
+    private boolean visibiliter;
     private boolean portfolio;
 
 }
