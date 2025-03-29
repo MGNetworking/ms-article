@@ -434,6 +434,7 @@ pipeline {
                     sh "mkdir -p ${WORKSPACE}/build-output"
                     sh "cp target/*.jar ${WORKSPACE}/build-output/"
                     sh "ls -la ${WORKSPACE}/build-output/"
+                    stash includes: 'build-output/*.jar', name: 'jar-files'
 
                 }
             }
@@ -448,6 +449,8 @@ pipeline {
             }
             steps {
                 script {
+                    // Récupérer les fichiers stashés
+                    unstash 'jar-files'
                     // Vérifier que les fichiers sont bien présents
                     sh "ls -la ${WORKSPACE}/build-output/"
 
