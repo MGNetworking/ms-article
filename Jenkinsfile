@@ -421,8 +421,7 @@ pipeline {
                 docker {
                     image 'maven:3.8.5-jdk-8-slim'
                     args '-v /var/jenkins_home/maven/.m2:/root/.m2' +
-                            ' -v /var/run/docker.sock:/var/run/docker.sock' +
-                            ' -v ${WORKSPACE}/build-output:/app/build-output'
+                            ' -v /var/run/docker.sock:/var/run/docker.sock'
                 }
             }
             steps {
@@ -432,9 +431,9 @@ pipeline {
                             "-DSERVICE_CONFIG_DOCKER=${env.SERVICE_CONFIG_URI}")
 
                     // Copier les JAR dans le dossier partagé
-                    sh "mkdir -p /app/build-output"
-                    sh "cp target/*.jar /app/build-output/"
-                    sh "ls -la /app/build-output/"
+                    sh "mkdir -p ${WORKSPACE}/build-output"
+                    sh "cp target/*.jar ${WORKSPACE}/build-output/"
+                    sh "ls -la ${WORKSPACE}/build-output/"
 
                 }
             }
