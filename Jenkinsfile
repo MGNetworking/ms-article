@@ -682,6 +682,11 @@ pipeline {
                                 --reporter-htmlextra-export=newman-reports/report.html || true
                             """
                         }
+
+                        if (currentBuild.result == 'FAILURE') {
+                            echo "❌ Rollback suite à échec régression"
+                            utilsDocker.rollbackService(env.NAME_SERVICE, true, remote)
+                        }
                     }
 
                     // Vérifier si les fichiers de rapport existent
